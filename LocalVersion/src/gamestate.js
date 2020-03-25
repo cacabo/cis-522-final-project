@@ -2,6 +2,8 @@ var SAT = require('sat');
 
 // Import game settings.
 var conf = require('../config.json');
+// Import utilities.
+var util = require('./lib/util')
 
 var agents = []
 var food = []
