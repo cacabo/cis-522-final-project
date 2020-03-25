@@ -1,9 +1,12 @@
 var SAT = require('sat');
+var quadtree = require('simple-quadtree')
 
 // Import game settings.
 var conf = require('../config.json');
 // Import utilities.
 var util = require('./lib/util')
+
+var tree = quadtree(0, 0, conf.gameWidth, conf.gameHeight)
 
 var agents = []
 var food = []
@@ -43,9 +46,9 @@ function addVirus(toAdd) {
     while (toAdd--) {
         var mass = util.randomInRange(conf.virus.defaultMass.from, conf.virus.defaultMass.to, true);
         var radius = util.massToRadius(mass);
-        var position = conf.virusUniformDisposition ? util.uniformPosition(virus, radius) : util.randomPosition(radius);
+        var position = conf.virusUniformDisposition ? util.uniformPosition(viruses, radius) : util.randomPosition(radius);
         viruses.push({
-            id: ((new Date()).getTime() + '' + virus.length) >>> 0,
+            id: ((new Date()).getTime() + '' + viruses.length) >>> 0,
             x: position.x,
             y: position.y,
             radius: radius,
@@ -112,7 +115,7 @@ function balanceMass() {
         //console.log('[DEBUG] Mass rebalanced!');
     }
 
-    var virusToAdd = conf.maxVirus - virus.length;
+    var virusToAdd = conf.maxVirus - viruses.length;
 
     if (virusToAdd > 0) {
         addVirus(virusToAdd);

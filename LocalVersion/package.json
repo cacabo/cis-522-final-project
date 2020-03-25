@@ -1,0 +1,14 @@
+{
+  "name": "agar-clone-local",
+  "version": "1.0.0",
+  "description": "trying to make serverless local version",
+  "main": "app.js",
+  "scripts": {},
+  "repository": {},
+  "author": "CIS 522 UNIT",
+  "license": "MIT",
+  "dependencies": {
+    "sat": "^0.6.0",
+    "simple-quadtree": "^0.1.3"
+  }
+}
