@@ -24,6 +24,4 @@ class Player {
         this.visibleAgents = [];
         this.leaderboard = [];
     }
-
-
 }

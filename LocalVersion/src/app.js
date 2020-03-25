@@ -1,8 +1,4 @@
-var Canvas = require('./canvas');
-var global = require('./global');
-
 var playerNameInput = document.getElementById('playerNameInput');
-var reason;
 
 var debug = function(args) {
     if (console && console.log) {
@@ -25,7 +21,7 @@ function startGame(type) {
     document.getElementById('gameAreaWrapper').style.opacity = 1;
     if (!global.animLoopHandle)
         animloop();
-    
+    console.log('got to here!');
     respawn();
 }
 
@@ -129,30 +125,30 @@ function respawn() {
     // TODO: add?
     //if (util.findIndex(users, currentPlayer.id) > -1) { users.splice(util.findIndex(users, currentPlayer.id), 1); }
     initPlayer('player');
-    console.log('[INFO] User ' + users[users.length - 1].name + ' spawned in!');
+    console.log('[INFO] User ' + agents[agents.length - 1].name + ' spawned in!');
 }
 
 function initPlayer(type) {
-    player = new Player();
+    var player = new Player();
     player.name = global.playerName;
     player.screenWidth = global.screenWidth;
     player.screenHeight = global.screenHeight;
     player.target = window.canvas.target;
 
-    var radius = util.massToRadius(c.defaultPlayerMass);
-    var position = c.newPlayerInitialPosition == 'farthest' ? util.uniformPosition(users, radius) : util.randomPosition(radius);
+    var radius = massToRadius(conf.defaultPlayerMass);
+    var position = conf.newPlayerInitialPosition == 'farthest' ? uniformPosition(agents, radius) : randomPosition(radius);
     player.x = position.x;
     player.y = position.y;
     player.target.x = 0;
     player.target.y = 0;
     if(type === 'player') {
         player.cells = [{
-            mass: c.defaultPlayerMass,
+            mass: conf.defaultPlayerMass,
             x: position.x,
             y: position.y,
             radius: radius
         }];
-        player.massTotal = c.defaultPlayerMass;
+        player.massTotal = conf.defaultPlayerMass;
     }
     else {
             player.cells = [];
@@ -162,8 +158,8 @@ function initPlayer(type) {
     player.lastHeartbeat = new Date().getTime();
     player.visibleCells.push(player);
 
-    global.gameWidth = c.gameWidth;
-    global.gameHeight = c.gameHeight;
+    global.gameWidth = conf.gameWidth;
+    global.gameHeight = conf.gameHeight;
     resize();
 
     global.gameStart = true;
@@ -228,8 +224,8 @@ function drawPlayers(order) {
 
     for(var z = 0; z < order.length; z++)
     {
-        var userCurrent = users[order[z].nCell];
-        var cellCurrent = users[order[z].nCell].cells[order[z].nDiv];
+        var userCurrent = agents[order[z].nCell];
+        var cellCurrent = agents[order[z].nCell].cells[order[z].nDiv];
 
         var x=0;
         var y=0;
@@ -433,12 +429,12 @@ function gameLoop() {
                 drawborder();
             }
             var orderMass = [];
-            for(var i = 0; i < users.length; i++) {
-                for(var j = 0; j < users[i].cells.length; j++) {
+            for(var i = 0; i < agents.length; i++) {
+                for(var j = 0; j < agents[i].cells.length; j++) {
                     orderMass.push({
                         nCell: i,
                         nDiv: j,
-                        mass: users[i].cells[j].mass
+                        mass: agents[i].cells[j].mass
                     });
                 }
             }
@@ -545,10 +541,10 @@ function virusSplit(id, z) {
 function shootFood() {
     for(var i=0; i<currentPlayer.cells.length; i++)
     {
-        if(((currentPlayer.cells[i].mass >= c.defaultPlayerMass + c.fireFood) && c.fireFood > 0) || (currentPlayer.cells[i].mass >= 20 && c.fireFood === 0)){
+        if(((currentPlayer.cells[i].mass >= conf.defaultPlayerMass + conf.fireFood) && conf.fireFood > 0) || (currentPlayer.cells[i].mass >= 20 && conf.fireFood === 0)){
             var masa = 1;
-            if(c.fireFood > 0)
-                masa = c.fireFood;
+            if(conf.fireFood > 0)
+                masa = conf.fireFood;
             else
                 masa = currentPlayer.cells[i].mass*0.1;
             currentPlayer.cells[i].mass -= masa;
@@ -564,7 +560,7 @@ function shootFood() {
                 },
                 x: currentPlayer.cells[i].x,
                 y: currentPlayer.cells[i].y,
-                radius: util.massToRadius(masa),
+                radius: massToRadius(masa),
                 speed: 25
             });
         }

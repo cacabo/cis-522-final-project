@@ -1,10 +1,5 @@
 var SAT = require('sat');
-var quadtree = require('simple-quadtree')
-
-// Import game settings.
-var conf = require('../config.json');
-// Import utilities.
-var util = require('./lib/util')
+var quadtree = require('simple-quadtree');
 
 var tree = quadtree(0, 0, conf.gameWidth, conf.gameHeight)
 
@@ -21,9 +16,9 @@ var C = SAT.Circle;
 
 /*** Updating game state ***/
 function addFood(toAdd) {
-    var radius = util.massToRadius(conf.foodMass);
+    var radius = massToRadius(conf.foodMass);
     while (toAdd--) {
-        var position = conf.foodUniformDisposition ? util.uniformPosition(food, radius) : util.randomPosition(radius);
+        var position = conf.foodUniformDisposition ? uniformPosition(food, radius) : randomPosition(radius);
         food.push({
             // Make IDs unique.
             id: ((new Date()).getTime() + '' + food.length) >>> 0,
@@ -44,9 +39,9 @@ function removeFood(toRem) {
 
 function addVirus(toAdd) {
     while (toAdd--) {
-        var mass = util.randomInRange(conf.virus.defaultMass.from, conf.virus.defaultMass.to, true);
-        var radius = util.massToRadius(mass);
-        var position = conf.virusUniformDisposition ? util.uniformPosition(viruses, radius) : util.randomPosition(radius);
+        var mass = randomInRange(conf.virus.defaultMass.from, conf.virus.defaultMass.to, true);
+        var radius = massToRadius(mass);
+        var position = conf.virusUniformDisposition ? uniformPosition(viruses, radius) : randomPosition(radius);
         viruses.push({
             id: ((new Date()).getTime() + '' + viruses.length) >>> 0,
             x: position.x,
@@ -148,7 +143,7 @@ function executeVirusCollision(virusCell) {
     function splitCell(cell) {
         if(cell && cell.mass && cell.mass >= c.defaultPlayerMass*2) {
             cell.mass = cell.mass/2;
-            cell.radius = util.massToRadius(cell.mass);
+            cell.radius = massToRadius(cell.mass);
             currentPlayer.cells.push({
                 mass: cell.mass,
                 x: cell.x,
@@ -189,7 +184,7 @@ function movePlayer(player) {
         var deg = Math.atan2(target.y, target.x);
         var slowDown = 1;
         if (player.cells[i].speed <= 6.25) {
-            slowDown = util.log(player.cells[i].mass, conf.slowBase) - initMassLog + 1;
+            slowDown = log(player.cells[i].mass, conf.slowBase) - initMassLog + 1;
         }
 
         var deltaY = player.cells[i].speed * Math.sin(deg)/ slowDown;
@@ -228,7 +223,7 @@ function movePlayer(player) {
                     }
                     else if (distance < radiusTotal / 1.75) {
                         player.cells[i].mass += player.cells[j].mass;
-                        player.cells[i].radius = util.massToRadius(player.cells[i].mass);
+                        player.cells[i].radius = massToRadius(player.cells[i].mass);
                         player.cells.splice(j, 1);
                     }
                 }
@@ -315,7 +310,7 @@ function tickPlayer(currentPlayer) {
             console.log('[DEBUG] Collision info:');
             console.log(collision);
 
-            var numAgent = util.findIndex(agents, collision.bUser.id);
+            var numAgent = findIndex(agents, collision.bUser.id);
             if (numAgent > -1) {
                 if (agents[numAgent].cells.length > 1) {
                     agents[numAgent].massTotal -= collision.bUser.mass;
@@ -374,7 +369,7 @@ function tickPlayer(currentPlayer) {
         massGained += (foodEaten.length * conf.foodMass);
         currentCell.mass += massGained;
         currentPlayer.massTotal += massGained;
-        currentCell.radius = util.massToRadius(currentCell.mass);
+        currentCell.radius = massToRadius(currentCell.mass);
         playerCircle.r = currentCell.radius;
 
         tree.clear();
