@@ -121,5 +121,5 @@ clock = pygame.time.Clock()
 
 # main game loop
 init_manual_agent('CIS 522 UNIT')
-init_ai_agents(2)
+init_ai_agents(conf.NUM_AI)
 main_loop()
