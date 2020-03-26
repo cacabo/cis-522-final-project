@@ -3,7 +3,7 @@ import config as conf
 
 # determine mass from radius of circle
 def massToRadius(mass):
-    return int(4 + np.sqrt(mass) * 2)
+    return int(4 + np.sqrt(mass) * 4)
 
 # generate a random position within the field of play
 def randomPosition(radius):

@@ -11,6 +11,7 @@ foods = []
 
 text_font = pygame.font.SysFont(conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
 
+# insert food at random places on the board
 def add_food(n):
     global foods
     radius = utils.massToRadius(conf.FOOD_MASS)
@@ -19,6 +20,7 @@ def add_food(n):
         pos = utils.randomPosition(radius)
         foods.append(Food(pos[0], pos[1], radius, (255, 0, 0)))
 
+# ensure that the total mass of the game is balanced between food and players
 def balance_mass():
     global foods
     total_mass = len(foods) * conf.FOOD_MASS + sum([agent.mass for agent in agents])
@@ -31,6 +33,7 @@ def balance_mass():
         add_food(num_food_to_add)
     # TODO: removing food if necessary
 
+# if the center of a food is inside the agent, the agent eats it
 def check_food_collision(agent, food):
     return utils.isPointInCircle((food.x_pos, food.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
 
@@ -40,27 +43,20 @@ def init_manual_agent(name):
     player = Agent(pos[0], pos[1], radius, conf.AGENT_STARTING_MASS, (0, 255, 0), name, True)
     agents.append(player)
 
+def init_ai_agents(num_agents):
+    for i in range(num_agents):
+        radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
+        pos = utils.randomPosition(radius)
+        ai_agent = Agent(pos[0], pos[1], radius, conf.AGENT_STARTING_MASS, (0, 0, 255), 'Agent' + str(i), False)
+        agents.append(ai_agent)
+
 def move_agent(agent):
     if agent.manual_control:
         # get key presses
         keys = pygame.key.get_pressed()
-        # TODO: better velocity control
-        vel = int(max(conf.AGENT_STARTING_MASS - (agent.mass * 0.05), 1))
-
-        # movement based on key presses
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            agent.x_pos = max(agent.x_pos - vel, agent.radius)
-
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            agent.x_pos = min(agent.x_pos + vel, conf.BOARD_WIDTH - agent.radius)
-
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            agent.y_pos = max(agent.y_pos - vel, agent.radius)
-
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            agent.y_pos = min(agent.y_pos + vel, conf.BOARD_HEIGHT - agent.radius)
+        agent.manual_move(keys)
     else:
-        agent.x_pos += 1
+        agent.ai_move()
 
 def tick_agent(agent):
     global foods
@@ -125,4 +121,5 @@ clock = pygame.time.Clock()
 
 # main game loop
 init_manual_agent('CIS 522 UNIT')
+init_ai_agents(2)
 main_loop()
