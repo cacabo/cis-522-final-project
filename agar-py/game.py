@@ -140,7 +140,7 @@ def main_loop():
 
     running = True
     while running:
-        clock.tick(240) # 30 fps max
+        clock.tick(960) # 30 fps max
 
         # make sure food/virus/player mass is balanced on the board
         balance_mass()
