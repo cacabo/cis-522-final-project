@@ -59,6 +59,8 @@ def move_agent(agent):
 
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             agent.y_pos = min(agent.y_pos + vel, conf.BOARD_HEIGHT - agent.radius)
+    else:
+        agent.x_pos += 1
 
 def tick_agent(agent):
     global foods
@@ -97,7 +99,7 @@ def main_loop():
 
     running = True
     while running:
-        clock.tick(60) # 30 fps max
+        clock.tick(240) # 30 fps max
 
         # make sure food/virus/player mass is balanced on the board
         balance_mass()
