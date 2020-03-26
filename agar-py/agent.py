@@ -46,22 +46,26 @@ class Agent():
         self.move_down(vel)
         self.move_right(vel)
 
-    def manual_move(self, keys):
+    def manual_move(self, keys, camera):
         # TODO: better velocity control
         vel = int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
 
         # movement based on key presses
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.move_left(vel)
+            camera.move_left(vel)
 
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_right(vel)
+            camera.move_right(vel)
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.move_up(vel)
+            camera.move_up(vel)
 
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.move_down(vel)
+            camera.move_down(vel)
     
     def ai_move(self):
         # TODO: better velocity control

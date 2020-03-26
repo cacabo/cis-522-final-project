@@ -4,9 +4,11 @@ import utils
 from food import Food
 from virus import Virus
 from agent import Agent
+from camera import Camera
 
 pygame.init()
 
+camera = None
 agents = {}
 foods = []
 viruses = []
@@ -58,11 +60,12 @@ def check_agent_collision(agent, other):
         return agent.mass >= other.mass * conf.CONSUME_MASS_FACTOR and utils.isPointInCircle((other.x_pos, other.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
 
 def init_manual_agent(name):
-    global agents
+    global agents, camera
     radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
     pos = utils.randomPosition(radius)
     player = Agent(pos[0], pos[1], radius, conf.AGENT_STARTING_MASS, (0, 255, 0), name, True)
     agents[player.name] = player
+    camera = Camera((conf.SCREEN_WIDTH / 2 - player.x_pos), (conf.SCREEN_HEIGHT / 2 - player.y_pos), player.radius)
 
 def init_ai_agents(num_agents):
     global agents
@@ -76,7 +79,7 @@ def move_agent(agent):
     if agent.manual_control:
         # get key presses
         keys = pygame.key.get_pressed()
-        agent.manual_move(keys)
+        agent.manual_move(keys, camera)
     else:
         agent.ai_move()
 
@@ -105,21 +108,22 @@ def tick_agent(agent):
     agent.radius = utils.massToRadius(agent.mass)
 
 
-def draw_window(agents, foods):
+def draw_window(agents, foods, board):
     # fill screen white, to clear old frames
     WIN.fill((255, 255, 255))
+    board.fill((255, 255, 255))
 
     for food in foods:
-        pygame.draw.circle(WIN, food.color, (food.x_pos, food.y_pos), food.radius)
+        pygame.draw.circle(board, food.color, (food.x_pos, food.y_pos), food.radius)
     
     for agent in sorted(agents.values(), key=lambda x: x.mass):
-        pygame.draw.circle(WIN, agent.color, (agent.x_pos, agent.y_pos), agent.radius)
+        pygame.draw.circle(board, agent.color, (agent.x_pos, agent.y_pos), agent.radius)
         agent_name_text = text_font.render(agent.name, 1, (0,0,0))
-        WIN.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2), agent.y_pos - (agent_name_text.get_height() / 2)))
+        board.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2), agent.y_pos - (agent_name_text.get_height() / 2)))
 
     for virus in viruses:
-        pygame.draw.circle(WIN, virus.color, (virus.x_pos, virus.y_pos), virus.radius)
-        pygame.draw.circle(WIN, conf.VIRUS_OUTLINE_COLOR, (virus.x_pos, virus.y_pos), virus.radius, 4)
+        pygame.draw.circle(board, virus.color, (virus.x_pos, virus.y_pos), virus.radius)
+        pygame.draw.circle(board, conf.VIRUS_OUTLINE_COLOR, (virus.x_pos, virus.y_pos), virus.radius, 4)
     
     # draw leaderboard
     sorted_agents = list(reversed(sorted(agents.values(), key=lambda x: x.mass)))
@@ -132,11 +136,16 @@ def draw_window(agents, foods):
         text = text_font.render(str(idx + 1) + ". " + str(agent.name) + ' (' + str(agent.mass) + ')', 1, (0,0,0))
         WIN.blit(text, (x, start_y + idx * 20))
 
+    WIN.blit(board, (camera.x_pos, camera.y_pos))
+
+
+
 def is_exit_command(event):
     return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
 def main_loop():
     global agents, foods
+    board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
 
     running = True
     while running:
@@ -160,7 +169,7 @@ def main_loop():
                 running = False
 
         # redraw window then update the frame
-        draw_window(agents, foods)
+        draw_window(agents, foods, board)
         pygame.display.update()
     pygame.quit()
     quit()
