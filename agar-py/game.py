@@ -6,7 +6,7 @@ from agent import Agent
 
 pygame.init()
 
-agents = []
+agents = {}
 foods = []
 
 text_font = pygame.font.SysFont(conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
@@ -23,7 +23,7 @@ def add_food(n):
 # ensure that the total mass of the game is balanced between food and players
 def balance_mass():
     global foods
-    total_mass = len(foods) * conf.FOOD_MASS + sum([agent.mass for agent in agents])
+    total_mass = len(foods) * conf.FOOD_MASS + sum([agent.mass for agent in agents.values()])
     mass_diff = conf.GAME_MASS - total_mass
     max_num_food_to_add = conf.MAX_FOOD - len(foods)
     max_mass_food_to_add = mass_diff / conf.FOOD_MASS
@@ -37,18 +37,25 @@ def balance_mass():
 def check_food_collision(agent, food):
     return utils.isPointInCircle((food.x_pos, food.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
 
+# agent eats other if it (1) has mass greater by at least CONSUME_MASS_FACTOR and (2) agent's circle overlaps with the center of other
+def check_agent_collision(agent, other):
+    if agent.name != other.name:
+        return agent.mass >= other.mass * conf.CONSUME_MASS_FACTOR and utils.isPointInCircle((other.x_pos, other.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
+
 def init_manual_agent(name):
+    global agents
     radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
     pos = utils.randomPosition(radius)
     player = Agent(pos[0], pos[1], radius, conf.AGENT_STARTING_MASS, (0, 255, 0), name, True)
-    agents.append(player)
+    agents[player.name] = player
 
 def init_ai_agents(num_agents):
+    global agents
     for i in range(num_agents):
         radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
         pos = utils.randomPosition(radius)
         ai_agent = Agent(pos[0], pos[1], radius, conf.AGENT_STARTING_MASS, (0, 0, 255), 'Agent' + str(i), False)
-        agents.append(ai_agent)
+        agents[ai_agent.name] = ai_agent
 
 def move_agent(agent):
     if agent.manual_control:
@@ -59,7 +66,7 @@ def move_agent(agent):
         agent.ai_move()
 
 def tick_agent(agent):
-    global foods
+    global foods, agents
 
     move_agent(agent)
 
@@ -67,11 +74,19 @@ def tick_agent(agent):
     foods_remaining = [food for food in foods if not check_food_collision(agent, food)]
     num_food_eaten = len(foods) - len(foods_remaining)
     foods = foods_remaining
+    food_mass_gained = num_food_eaten * conf.FOOD_MASS
 
-    mass_gained = num_food_eaten * conf.FOOD_MASS
-
+    # get a list of all agents which have collided with the current one, and see if it eats any of them
+    eaten_agents = [other for other in agents.values() if check_agent_collision(agent, other)]
+    eaten_agent_mass_gained = sum([eaten_agent.mass for eaten_agent in eaten_agents])
+    # remove each eaten agent from the game
+    for eaten_agent in eaten_agents:
+        eaten_agent.is_alive = False
+        print('[GAME] ' + str(eaten_agent.name) + ' died! Was eaten by ' + str(agent.name))
+    
     # update the agent's mass and radius
-    agent.mass += mass_gained
+    total_mass_gained = food_mass_gained + eaten_agent_mass_gained
+    agent.mass += total_mass_gained
     agent.radius = utils.massToRadius(agent.mass)
 
 
@@ -82,10 +97,21 @@ def draw_window(agents, foods):
     for food in foods:
         pygame.draw.circle(WIN, food.color, (food.x_pos, food.y_pos), food.radius)
     
-    for agent in agents:
+    for agent in sorted(agents.values(), key=lambda x: x.mass):
         pygame.draw.circle(WIN, agent.color, (agent.x_pos, agent.y_pos), agent.radius)
         agent_name_text = text_font.render(agent.name, 1, (0,0,0))
         WIN.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2), agent.y_pos - (agent_name_text.get_height() / 2)))
+    
+    # draw leaderboard
+    sorted_agents = list(reversed(sorted(agents.values(), key=lambda x: x.mass)))
+    leaderboard_title = text_font.render("Leaderboard", 1, (0,0,0))
+    start_y = 25
+    x = conf.SCREEN_WIDTH - leaderboard_title.get_width() - 20
+    WIN.blit(leaderboard_title, (x, 5))
+    top_n = min(len(agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
+    for idx, agent in enumerate(sorted_agents[:top_n]):
+        text = text_font.render(str(idx + 1) + ". " + str(agent.name) + ' (' + str(agent.mass) + ')', 1, (0,0,0))
+        WIN.blit(text, (x, start_y + idx * 20))
 
 def is_exit_command(event):
     return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
@@ -100,8 +126,14 @@ def main_loop():
         # make sure food/virus/player mass is balanced on the board
         balance_mass()
 
-        for agent in agents:
+        # perform updates for all agents
+        for agent in agents.values():
             tick_agent(agent)
+        
+        # after ticking all the agents, remove the dead ones
+        dead_agents = [agent for agent in agents.values() if not agent.is_alive]
+        for dead_agent in dead_agents:
+            del agents[dead_agent.name]
 
         for event in pygame.event.get():
             # stop the game if user exits
@@ -116,10 +148,10 @@ def main_loop():
 
 # setup pygame window
 WIN = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
-pygame.display.set_caption("AgarAI")
+pygame.display.set_caption('CIS 522: Final Project')
 clock = pygame.time.Clock()
 
 # main game loop
-init_manual_agent('CIS 522 UNIT')
+init_manual_agent('AgarAI')
 init_ai_agents(conf.NUM_AI)
 main_loop()

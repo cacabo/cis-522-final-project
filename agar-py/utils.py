@@ -20,3 +20,7 @@ def getEuclideanDistance(p1, p2):
 # TODO: find better than brute force way to solve
 def isPointInCircle(point, circle_center, circle_radius):
     return circle_radius >= getEuclideanDistance(point, circle_center)
+
+# TODO: find better way to solve
+def areCirclesColliding(center1, radius1, center2, radius2):
+    return np.linalg.norm(np.array(center1) - np.array(center2)) < radius1 + radius2

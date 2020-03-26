@@ -10,11 +10,11 @@ class Agent():
         self.mass = mass
         self.color = color
         self.name = name
-        self.velocity = (0, 0)
+        
+        self.is_alive = True
         self.manual_control = manual_control
         self.ai_dir = None
         self.ai_steps = 0
-
         self.directions = [self.move_left, self.move_right, self.move_up, self.move_down]
     
     def move_left(self, vel):
