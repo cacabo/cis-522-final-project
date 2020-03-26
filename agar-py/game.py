@@ -2,12 +2,14 @@ import pygame
 import config as conf
 import utils
 from food import Food
+from virus import Virus
 from agent import Agent
 
 pygame.init()
 
 agents = {}
 foods = []
+viruses = []
 
 text_font = pygame.font.SysFont(conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
 
@@ -19,6 +21,15 @@ def add_food(n):
         # TODO: could include uniform distribution here
         pos = utils.randomPosition(radius)
         foods.append(Food(pos[0], pos[1], radius, (255, 0, 0)))
+
+# insert viruses at random places on the board
+def add_virus(n):
+    global viruses
+    radius = utils.massToRadius(conf.VIRUS_MASS)
+    for _ in range(n):
+        # TODO: could include uniform distribution here
+        pos = utils.randomPosition(radius)
+        viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_COLOR))
 
 # ensure that the total mass of the game is balanced between food and players
 def balance_mass():
@@ -32,6 +43,10 @@ def balance_mass():
     if num_food_to_add > 0:
         add_food(num_food_to_add)
     # TODO: removing food if necessary
+
+    num_virus_to_add = conf.MAX_VIRUSES - len(viruses)
+    if num_virus_to_add > 0:
+        add_virus(num_virus_to_add)
 
 # if the center of a food is inside the agent, the agent eats it
 def check_food_collision(agent, food):
@@ -101,6 +116,10 @@ def draw_window(agents, foods):
         pygame.draw.circle(WIN, agent.color, (agent.x_pos, agent.y_pos), agent.radius)
         agent_name_text = text_font.render(agent.name, 1, (0,0,0))
         WIN.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2), agent.y_pos - (agent_name_text.get_height() / 2)))
+
+    for virus in viruses:
+        pygame.draw.circle(WIN, virus.color, (virus.x_pos, virus.y_pos), virus.radius)
+        pygame.draw.circle(WIN, conf.VIRUS_OUTLINE_COLOR, (virus.x_pos, virus.y_pos), virus.radius, 4)
     
     # draw leaderboard
     sorted_agents = list(reversed(sorted(agents.values(), key=lambda x: x.mass)))
