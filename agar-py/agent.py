@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 import config as conf
 
+
 class Agent():
     def __init__(self, x, y, r, mass, color, name, manual_control):
         self.x_pos = x
@@ -10,30 +11,30 @@ class Agent():
         self.mass = mass
         self.color = color
         self.name = name
-        
+
         self.is_alive = True
         self.manual_control = manual_control
         self.ai_dir = None
         self.ai_steps = 0
         self.directions = [self.move_left, self.move_right, self.move_up, self.move_down,
                            self.move_upleft, self.move_upright, self.move_downleft, self.move_downright]
-    
+
     def move_left(self, vel):
         self.x_pos = max(self.x_pos - vel, self.radius)
 
     def move_right(self, vel):
         self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
-    
+
     def move_up(self, vel):
         self.y_pos = max(self.y_pos - vel, self.radius)
-    
+
     def move_down(self, vel):
         self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
 
     def move_upleft(self, vel):
         self.move_up(vel)
         self.move_left(vel)
-    
+
     def move_upright(self, vel):
         self.move_up(vel)
         self.move_right(vel)
@@ -41,7 +42,7 @@ class Agent():
     def move_downleft(self, vel):
         self.move_down(vel)
         self.move_left(vel)
-    
+
     def move_downright(self, vel):
         self.move_down(vel)
         self.move_right(vel)
@@ -66,7 +67,7 @@ class Agent():
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.move_down(vel)
             camera.move_down(vel)
-    
+
     def ai_move(self):
         # TODO: better velocity control
         vel = int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
