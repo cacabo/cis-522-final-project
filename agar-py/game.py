@@ -124,8 +124,8 @@ def handle_eat_agent(agent, other):
 
     for (agent_cell, consumed_cell) in consumed:
         agent_cell.mass += consumed_cell.mass
+        agent_cell.radius = utils.massToRadius(agent_cell.mass)
 
-    agent.radius = utils.massToRadius(agent.mass)
     consumed_cell.cells = not_consumed
 
     if len(not_consumed) == 0:
@@ -181,7 +181,7 @@ def update_agent_state(agent):
 
 
 def tick_agent(agent):
-    global foods, agents
+    global foods, agents, viruses
 
     update_agent_state(agent)
 
@@ -202,6 +202,7 @@ def tick_agent(agent):
     removed_viruses_or_none = [handle_virus(agent, virus) for virus in viruses]
     not_removed_viruses = [viruses[idx] for (
         idx, virus_or_none) in enumerate(removed_viruses_or_none) if virus_or_none is None]
+    viruses = not_removed_viruses
 
     # get a list of all agents which have collided with the current one, and see
     # if it eats any of them

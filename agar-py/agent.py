@@ -153,11 +153,17 @@ class Agent():
         return
 
     def handle_split(self):
-        if self.mass < conf.MIN_MASS_TO_SPLIT:
+        if len(self.cells) >= conf.AGENT_CELL_LIMIT:
             return
+        for cell in self.cells:
+            if cell.mass < conf.MIN_MASS_TO_SPLIT:
+                return
 
-        # TODO create other part to this agent (and if there are two parts split to 4)
-        self.mass = self.mass / 2
+        for cell in self.cells:
+            cell.mass = cell.mass / 2
+
+        # TODO actually create the split
+
         return
 
     def handle_other_keys(self, keys, camera):
