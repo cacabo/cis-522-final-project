@@ -1,6 +1,6 @@
 class Virus():
-    def __init__(self, x, y, r, color):
+    def __init__(self, x, y, r, mass):
         self.x_pos = x
         self.y_pos = y
         self.radius = r
-        self.color = color
+        self.mass = mass

@@ -31,7 +31,7 @@ def add_virus(n):
     for _ in range(n):
         # TODO: could include uniform distribution here
         pos = utils.randomPosition(radius)
-        viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_COLOR))
+        viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_MASS))
 
 # ensure that the total mass of the game is balanced between food and players
 def balance_mass():
@@ -50,14 +50,14 @@ def balance_mass():
     if num_virus_to_add > 0:
         add_virus(num_virus_to_add)
 
-# if the center of a food is inside the agent, the agent eats it
-def check_food_collision(agent, food):
-    return utils.isPointInCircle((food.x_pos, food.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
+# check if blob1's circle overlaps with blob2's center
+def check_collision(blob1, blob2):
+    return utils.isPointInCircle((blob2.x_pos, blob2.y_pos), (blob1.x_pos, blob1.y_pos), blob1.radius)
 
 # agent eats other if it (1) has mass greater by at least CONSUME_MASS_FACTOR and (2) agent's circle overlaps with the center of other
 def check_agent_collision(agent, other):
     if agent.name != other.name:
-        return agent.mass >= other.mass * conf.CONSUME_MASS_FACTOR and utils.isPointInCircle((other.x_pos, other.y_pos), (agent.x_pos, agent.y_pos), agent.radius)
+        return agent.mass >= other.mass * conf.CONSUME_MASS_FACTOR and check_collision(agent, other)
 
 def init_manual_agent(name):
     global agents, camera
@@ -89,7 +89,7 @@ def tick_agent(agent):
     move_agent(agent)
 
     # find all food items which are not currently being eaten by this agent, and update global foods list
-    foods_remaining = [food for food in foods if not check_food_collision(agent, food)]
+    foods_remaining = [food for food in foods if not check_collision(agent, food)]
     num_food_eaten = len(foods) - len(foods_remaining)
     foods = foods_remaining
     food_mass_gained = num_food_eaten * conf.FOOD_MASS
@@ -101,9 +101,22 @@ def tick_agent(agent):
     for eaten_agent in eaten_agents:
         eaten_agent.is_alive = False
         print('[GAME] ' + str(eaten_agent.name) + ' died! Was eaten by ' + str(agent.name))
+
+    # get a list of viruses which the current agent has collided with, and see how they affect it
+    colliding_viruses = [virus for virus in viruses if check_collision(agent, virus)]
+    virus_mass_gained = 0
+    for virus in colliding_viruses:
+        # if the agent consumes the virus, it either gets split or is max split
+        if agent.mass >= conf.VIRUS_CONSUME_MASS_FACTOR * virus.mass:
+            # TODO: implement once splitting is implemented
+            # if agent.cells < conf.SPLIT_LIMIT:
+            #   virusSplit(agent)
+            viruses.remove(virus)
+            virus_mass_gained += virus.mass
+    
     
     # update the agent's mass and radius
-    total_mass_gained = food_mass_gained + eaten_agent_mass_gained
+    total_mass_gained = food_mass_gained + eaten_agent_mass_gained + virus_mass_gained
     agent.mass += total_mass_gained
     agent.radius = utils.massToRadius(agent.mass)
 
@@ -122,7 +135,7 @@ def draw_window(agents, foods, board):
         board.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2), agent.y_pos - (agent_name_text.get_height() / 2)))
 
     for virus in viruses:
-        pygame.draw.circle(board, virus.color, (virus.x_pos, virus.y_pos), virus.radius)
+        pygame.draw.circle(board, conf.VIRUS_COLOR, (virus.x_pos, virus.y_pos), virus.radius)
         pygame.draw.circle(board, conf.VIRUS_OUTLINE_COLOR, (virus.x_pos, virus.y_pos), virus.radius, 4)
     
     # draw leaderboard
