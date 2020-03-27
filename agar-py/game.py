@@ -45,7 +45,7 @@ def balance_mass():
     """ensure that the total mass of the game is balanced between food and players"""
     global foods
     total_mass = len(foods) * conf.FOOD_MASS + \
-        sum([agent.mass for agent in agents.values()])
+        sum([agent.get_mass() for agent in agents.values()])
     mass_diff = conf.GAME_MASS - total_mass
     max_num_food_to_add = conf.MAX_FOOD - len(foods)
     max_mass_food_to_add = mass_diff / conf.FOOD_MASS
@@ -60,18 +60,93 @@ def balance_mass():
         add_virus(num_virus_to_add)
 
 
-# check if blob1's circle overlaps with blob2's center
-def check_collision(blob1, blob2):
-    return utils.isPointInCircle((blob2.x_pos, blob2.y_pos), (blob1.x_pos, blob1.y_pos), blob1.radius)
+def check_food_collision(agent, food):
+    """
+    if the center of a food is inside the agent, the agent eats it
+
+    @returns None if no cell can eat it
+    @returns idx of cell eating can eat
+    """
+    for (idx, cell) in enumerate(agent.cells):
+        if utils.isPointInCircle(
+            (food.x_pos, food.y_pos),
+            (cell.x_pos, cell.y_pos),
+                cell.radius):
+            return idx
+
+    return None
 
 
-def check_agent_collision(agent, other):
+def check_overlap(a, b):
+    return utils.isPointInCircle(
+        (b.x_pos, b.y_pos),
+        (a.x_pos, a.y_pos),
+        a.radius)
+
+
+def check_cell_collision(agent_cell, other_cell):
+    if agent_cell.mass < other_cell.mass * conf.CONSUME_MASS_FACTOR:
+        return False
+    return check_overlap(agent_cell, other_cell)
+
+
+def check_virus_collision(agent_cell, virus):
+    if agent_cell.mass < conf.VIRUS_CONSUME_MASS_FACTOR * virus.mass:
+        return False
+    return check_overlap(agent_cell, virus)
+
+
+def handle_eat_agent(agent, other):
     """
-    agent eats other if it (1) has mass greater by at least CONSUME_MASS_FACTOR
-    and (2) agent's circle overlaps with the center of other
+    Agent eats other if:
+
+    1. it has mass greater by at least CONSUME_MASS_FACTOR, and
+
+    2. the agent's circle overlaps with the center of other
+
+    @return boolean
     """
-    if agent.name != other.name:
-        return agent.mass >= other.mass * conf.CONSUME_MASS_FACTOR and check_collision(agent, other)
+    if agent.name == other.name:
+        return
+
+    not_consumed = []
+    consumed = []
+
+    for agent_cell in agent.cells:
+        for other_cell in other.cells:
+            if check_cell_collision(agent_cell, other_cell):
+                consumed.append((agent_cell, other_cell))
+            else:
+                not_consumed.append(other_cell)
+
+    if len(consumed) == 0:
+        return
+
+    for (agent_cell, consumed_cell) in consumed:
+        agent_cell.mass += consumed_cell.mass
+
+    agent.radius = utils.massToRadius(agent.mass)
+    consumed_cell.cells = not_consumed
+
+    if len(not_consumed) == 0:
+        print('[GAME] ' + str(other.name) +
+              ' died! Was eaten by ' + str(agent.name))
+        other.is_alive = False
+
+
+def handle_virus(agent, virus):
+    """
+    @return None if virus not effected
+    @return virus if virus should be deleted
+    """
+    for cell in agent.cells:
+        if not check_virus_collision(cell, virus):
+            continue
+
+        cell.mass += virus.mass
+        return virus
+
+    return None
 
 
 def init_manual_agent(name):
@@ -81,8 +156,8 @@ def init_manual_agent(name):
     player = Agent(pos[0], pos[1], radius,
                    conf.AGENT_STARTING_MASS, (0, 255, 0), name, True)
     agents[player.name] = player
-    camera = Camera((conf.SCREEN_WIDTH / 2 - player.x_pos),
-                    (conf.SCREEN_HEIGHT / 2 - player.y_pos), player.radius)
+    camera = Camera((conf.SCREEN_WIDTH / 2 - player.get_avg_x_pos()),
+                    (conf.SCREEN_HEIGHT / 2 - player.get_avg_y_pos()), player.get_avg_radius())
 
 
 def init_ai_agents(num_agents):
@@ -112,62 +187,54 @@ def tick_agent(agent):
 
     # find all food items which are not currently being eaten by this agent, and
     # update global foods list
-    foods_remaining = [food for food in foods if not check_collision(agent, food)]
-    num_food_eaten = len(foods) - len(foods_remaining)
+    food_collisions = [check_food_collision(agent, food) for food in foods]
+    foods_remaining = []
+    for (idx, cellidx) in enumerate(food_collisions):
+        if cellidx is None:
+            foods_remaining.append(foods[idx])
+            continue
+        cell = agent.cells[cellidx]
+        cell.mass += conf.FOOD_MASS
+
     foods = foods_remaining
-    food_mass_gained = num_food_eaten * conf.FOOD_MASS
+
+    # Iterate over all viruses, remove viruses which were eaten
+    removed_viruses_or_none = [handle_virus(agent, virus) for virus in viruses]
+    not_removed_viruses = [viruses[idx] for (
+        idx, virus_or_none) in removed_viruses_or_none if virus_or_none is None]
 
     # get a list of all agents which have collided with the current one, and see
     # if it eats any of them
-    eaten_agents = [other for other in agents.values(
-    ) if check_agent_collision(agent, other)]
-    eaten_agent_mass_gained = sum(
-        [eaten_agent.mass for eaten_agent in eaten_agents])
-
-    # remove each eaten agent from the game
-    for eaten_agent in eaten_agents:
-        eaten_agent.is_alive = False
-        print('[GAME] ' + str(eaten_agent.name) + ' died! Was eaten by ' + str(agent.name))
-
-    # get a list of viruses which the current agent has collided with, and see how they affect it
-    colliding_viruses = [virus for virus in viruses if check_collision(agent, virus)]
-    virus_mass_gained = 0
-    for virus in colliding_viruses:
-        # if the agent consumes the virus, it either gets split or is max split
-        if agent.mass >= conf.VIRUS_CONSUME_MASS_FACTOR * virus.mass:
-            # TODO: implement once splitting is implemented
-            # if agent.cells < conf.SPLIT_LIMIT:
-            #   virusSplit(agent)
-            viruses.remove(virus)
-            virus_mass_gained += virus.mass
-    
-    # update the agent's mass and radius
-    total_mass_gained = food_mass_gained + eaten_agent_mass_gained + virus_mass_gained
-    agent.mass += total_mass_gained
-    agent.radius = utils.massToRadius(agent.mass)
+    for other in agents.values():
+        handle_eat_agent(agent, other)
 
 
 def draw_window(agents, foods, board):
     # fill screen white, to clear old frames
-    WIN.fill((255, 255, 255))
-    board.fill((255, 255, 255))
+    WIN.fill(conf.WHITE_COLOR)
+    board.fill(conf.WHITE_COLOR)
 
+    # TODO don't redraw everything?
     for food in foods:
         pygame.draw.circle(board, food.color,
                            (food.x_pos, food.y_pos), food.radius)
 
-    for agent in sorted(agents.values(), key=lambda x: x.mass):
-        pygame.draw.circle(board, agent.color,
-                           (agent.x_pos, agent.y_pos), agent.radius)
-        agent_name_text = text_font.render(agent.name, 1, (0, 0, 0))
-        board.blit(agent_name_text, (agent.x_pos - (agent_name_text.get_width() / 2),
-                                     agent.y_pos - (agent_name_text.get_height() / 2)))
+    for agent in sorted(agents.values(), key=lambda a: a.get_mass()):
+        for cell in agent.cells:
+            pygame.draw.circle(board, agent.color,
+                               (cell.x_pos, cell.y_pos), cell.radius)
+            agent_name_text = text_font.render(agent.name, 1, (0, 0, 0))
+            board.blit(agent_name_text, (cell.x_pos - (agent_name_text.get_width() / 2),
+                                         cell.y_pos - (agent_name_text.get_height() / 2)))
 
     for virus in viruses:
-        pygame.draw.circle(board, conf.VIRUS_COLOR, (virus.x_pos, virus.y_pos), virus.radius)
-        pygame.draw.circle(board, conf.VIRUS_OUTLINE_COLOR, (virus.x_pos, virus.y_pos), virus.radius, 4)
+        pygame.draw.circle(board, conf.VIRUS_COLOR,
+                           (virus.x_pos, virus.y_pos), virus.radius)
+        pygame.draw.circle(board, conf.VIRUS_OUTLINE_COLOR,
+                           (virus.x_pos, virus.y_pos), virus.radius, 4)
     # draw leaderboard
-    sorted_agents = list(reversed(sorted(agents.values(), key=lambda x: x.mass)))
+    sorted_agents = list(
+        reversed(sorted(agents.values(), key=lambda x: x.get_mass())))
     leaderboard_title = text_font.render("Leaderboard", 1, (0, 0, 0))
     start_y = 25
     x = conf.SCREEN_WIDTH - leaderboard_title.get_width() - 20
@@ -175,7 +242,7 @@ def draw_window(agents, foods, board):
     top_n = min(len(agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
     for idx, agent in enumerate(sorted_agents[:top_n]):
         text = text_font.render(str(
-            idx + 1) + ". " + str(agent.name) + ' (' + str(agent.mass) + ')', 1, (0, 0, 0))
+            idx + 1) + ". " + str(agent.name) + ' (' + str(agent.get_mass()) + ')', 1, (0, 0, 0))
         WIN.blit(text, (x, start_y + idx * 20))
 
     WIN.blit(board, (camera.x_pos, camera.y_pos))

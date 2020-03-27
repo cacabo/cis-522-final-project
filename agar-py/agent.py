@@ -3,22 +3,12 @@ import numpy as np
 import config as conf
 
 
-class Agent():
-    def __init__(self, x, y, r, mass, color, name, manual_control):
+class AgentCell():
+    def __init__(self, x, y, r, mass):
         self.x_pos = x
         self.y_pos = y
         self.radius = r
         self.mass = mass
-        self.color = color
-        self.name = name
-        self.orientation = conf.UP  # For deciding direction to shoot in
-
-        self.is_alive = True
-        self.manual_control = manual_control
-        self.ai_dir = None
-        self.ai_steps = 0
-        self.directions = [self.move_left, self.move_right, self.move_up, self.move_down,
-                           self.move_upleft, self.move_upright, self.move_downleft, self.move_downright]
 
     def move_left(self, vel):
         self.x_pos = max(self.x_pos - vel, self.radius)
@@ -48,9 +38,57 @@ class Agent():
         self.move_down(vel)
         self.move_right(vel)
 
+
+class Agent():
+    orientations = [
+        conf.UP, conf.UP_RIGHT, conf.RIGHT, conf.DOWN_RIGHT, conf.DOWN,
+        conf.DOWN_LEFT, conf.LEFT, conf.UP_LEFT]
+
+    def __init__(self, x, y, r, mass, color, name, manual_control):
+        cell = AgentCell(x, y, r, mass)
+        self.cells = [cell]
+
+        self.color = color
+        self.name = name
+        self.orientation = None  # For deciding direction to shoot in
+
+        self.is_alive = True
+        self.manual_control = manual_control
+        self.ai_dir = None
+        self.ai_steps = 0
+
+    def get_avg_x_pos(self):
+        return sum([cell.x_pos for cell in self.cells]) / len(self.cells)
+
+    def get_avg_y_pos(self):
+        return sum([cell.y_pos for cell in self.cells]) / len(self.cells)
+
+    def get_avg_radius(self):
+        return sum([cell.radius for cell in self.cells]) / len(self.cells)
+
+    def get_mass(self):
+        return sum([cell.mass for cell in self.cells])
+
+    def move(self, vel):
+        if self.orientation is None:
+            return
+
+        for cell in self.cells:
+            {
+                conf.UP: cell.move_up,
+                conf.UP_RIGHT: cell.move_upright,
+                conf.RIGHT: cell.move_right,
+                conf.DOWN_RIGHT: cell.move_downright,
+                conf.DOWN: cell.move_down,
+                conf.DOWN_LEFT: cell.move_downleft,
+                conf.LEFT: cell.move_left,
+                conf.UP_LEFT: cell.move_upleft,
+            }[self.orientation](vel)
+
     def handle_move_keys(self, keys, camera):
         # TODO: better velocity control
-        vel = int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
+        # TODO want vel to be unique per cell...
+        vel = int(max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1))
 
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
         is_right = keys[pygame.K_RIGHT] or keys[pygame.K_d]
@@ -66,33 +104,29 @@ class Agent():
             is_down = False
             is_up = False
 
-        # set orientation and move
+        # set orientation
         if is_up:
             if is_left:
-                self.move_upleft(vel)
                 self.orientation = conf.UP_LEFT
             elif is_right:
-                self.move_upright(vel)
                 self.orientation = conf.UP_RIGHT
             else:
-                self.move_up(vel)
                 self.orientation = conf.UP
         elif is_down:
             if is_left:
-                self.move_downleft(vel)
                 self.orientation = conf.DOWN_LEFT
             elif is_right:
-                self.move_downright(vel)
                 self.orientation = conf.DOWN_RIGHT
             else:
-                self.move_down(vel)
                 self.orientation = conf.DOWN
         elif is_left:
-            self.move_left(vel)
             self.orientation = conf.LEFT
         elif is_right:
-            self.move_right(vel)
             self.orientation = conf.RIGHT
+        else:
+            self.orientation = None
+
+        self.move(vel)
 
         # NOTE if none of the above cases are matched, the orientation does not change
 
@@ -137,13 +171,13 @@ class Agent():
 
     def ai_move(self):
         # TODO: better velocity control
-        vel = int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
+        vel = int(max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1))
 
         # force AI to move between 5 and 10 (inclusive) steps in random direction
         if self.ai_steps <= 0:
             self.ai_steps = np.random.randint(5, 11)
-            self.ai_dir = self.directions[np.random.randint(8)]
+            self.orientation = Agent.orientations[np.random.randint(8)]
 
         # move in randomly chosen direction
-        self.ai_dir(vel)
+        self.move(vel)
         self.ai_steps -= 1

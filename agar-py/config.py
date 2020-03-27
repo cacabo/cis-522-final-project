@@ -16,7 +16,9 @@ MAX_FOOD = 200
 
 MAX_VIRUSES = 5
 VIRUS_MASS = 100
-VIRUS_CONSUME_MASS_FACTOR = 1.33    # how much larger one has to be to eat a virus
+VIRUS_CONSUME_MASS_FACTOR = 1.33  # how much larger one has to be to eat a virus
+
+WHITE_COLOR = ((255, 255, 255))
 VIRUS_COLOR = ((125, 250, 91))
 VIRUS_OUTLINE_COLOR = ((112, 226, 81))
 
@@ -26,8 +28,7 @@ MIN_MASS_TO_SPLIT = 100
 AGENT_STARTING_MASS = 20
 AGENT_STARTING_SPEED = 10
 NUM_AI = 2
-CONSUME_MASS_FACTOR = 1.1   # how much larger one has to be to eat a colliding agent
-SPLIT_LIMIT = 16            # max number of individual cells a single agent can have
+SPLIT_LIMIT = 16  # max number of individual cells a single agent can have
 
 UP = 'UP'
 DOWN = 'DOWN'
