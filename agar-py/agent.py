@@ -17,7 +17,10 @@ class AgentCell():
 
     def get_velocity(self):
         #return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
-        return max(utils.massToVelocity(self.mass), 1)
+        if self.mass > 0:
+            return max(utils.massToVelocity(self.mass), 1)
+        else:
+            return 1
 
     def set_mass(self, mass):
         if mass <= 0:
@@ -228,7 +231,9 @@ class Agent():
     def ai_move(self):
         # TODO: better velocity control
         #vel = int(max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1))
-        vel = max(utils.massToVelocity(self.get_mass()), 1)
+        vel = 1
+        if self.get_mass() > 0:
+            vel = max(utils.massToVelocity(self.get_mass()), vel)
 
         # force AI to move between 5 and 10 (inclusive) steps in random direction
         if self.ai_steps <= 0:
