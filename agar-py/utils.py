@@ -3,8 +3,13 @@ import config as conf
 
 
 def massToRadius(mass):
-    """determine mass from radius of circle"""
+    """determine radius from mass of blob"""
     return int(4 + np.sqrt(mass) * 4)
+
+
+def massToVelocity(mass):
+    """determine velocity from mass of blob"""
+    return int(2.2 * np.power(mass / 1000, -0.439))
 
 
 def randomPosition(radius):
