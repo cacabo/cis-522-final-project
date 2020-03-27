@@ -95,11 +95,12 @@ def init_ai_agents(num_agents):
         agents[ai_agent.name] = ai_agent
 
 
-def move_agent(agent):
+def update_agent_state(agent):
     if agent.manual_control:
         # get key presses
         keys = pygame.key.get_pressed()
-        agent.manual_move(keys, camera)
+        agent.handle_move_keys(keys, camera)
+        agent.handle_other_keys(keys, camera)
     else:
         agent.ai_move()
 
@@ -107,20 +108,23 @@ def move_agent(agent):
 def tick_agent(agent):
     global foods, agents
 
-    move_agent(agent)
+    update_agent_state(agent)
 
-    # find all food items which are not currently being eaten by this agent, and update global foods list
+    # find all food items which are not currently being eaten by this agent, and
+    # update global foods list
     foods_remaining = [
         food for food in foods if not check_food_collision(agent, food)]
     num_food_eaten = len(foods) - len(foods_remaining)
     foods = foods_remaining
     food_mass_gained = num_food_eaten * conf.FOOD_MASS
 
-    # get a list of all agents which have collided with the current one, and see if it eats any of them
+    # get a list of all agents which have collided with the current one, and see
+    # if it eats any of them
     eaten_agents = [other for other in agents.values(
     ) if check_agent_collision(agent, other)]
     eaten_agent_mass_gained = sum(
         [eaten_agent.mass for eaten_agent in eaten_agents])
+
     # remove each eaten agent from the game
     for eaten_agent in eaten_agents:
         eaten_agent.is_alive = False
