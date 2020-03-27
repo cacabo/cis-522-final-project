@@ -4,3 +4,6 @@ class Food():
         self.y_pos = y
         self.radius = r
         self.color = color
+
+    def get_pos(self):
+        return (self.x_pos, self.y_pos)

@@ -32,3 +32,7 @@ class Camera():
         """pan camera down"""
         bottom_bound = self.player_radius - conf.SCREEN_HEIGHT / 2
         self.y_pos = max(self.y_pos - vel, bottom_bound)
+    
+    def get_pos(self):
+        """get position tuple"""
+        return (self.x_pos, self.y_pos)

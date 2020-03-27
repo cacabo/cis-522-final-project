@@ -72,6 +72,9 @@ class AgentCell():
             conf.LEFT: self.move_left,
             conf.UP_LEFT: self.move_upleft,
         }[orientation](vel)
+    
+    def get_pos(self):
+        return (self.x_pos, self.y_pos)
 
 
 class Agent():
