@@ -32,6 +32,7 @@ MIN_MASS_TO_SPLIT = 100
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 10
 AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent
+AGENT_SECONDS_TO_MERGE_CELLS = 10  # can merge cells 10 seconds after splitting
 
 # Agent orientation options
 UP = 'UP'

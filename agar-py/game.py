@@ -44,6 +44,7 @@ def add_virus(n):
 def balance_mass():
     """ensure that the total mass of the game is balanced between food and players"""
     global foods
+
     total_mass = len(foods) * conf.FOOD_MASS + \
         sum([agent.get_mass() for agent in agents.values()])
     mass_diff = conf.GAME_MASS - total_mass
@@ -53,9 +54,11 @@ def balance_mass():
     num_food_to_add = min(max_num_food_to_add, max_mass_food_to_add)
     if num_food_to_add > 0:
         add_food(num_food_to_add)
-    # TODO: removing food if necessary
+
+    # TODO removing food if necessary
 
     num_virus_to_add = conf.MAX_VIRUSES - len(viruses)
+
     if num_virus_to_add > 0:
         add_virus(num_virus_to_add)
 
@@ -68,10 +71,7 @@ def check_food_collision(agent, food):
     @returns idx of cell eating can eat
     """
     for (idx, cell) in enumerate(agent.cells):
-        if utils.isPointInCircle(
-            (food.x_pos, food.y_pos),
-            (cell.x_pos, cell.y_pos),
-                cell.radius):
+        if check_overlap(cell, food):
             return idx
 
     return None
@@ -176,6 +176,7 @@ def update_agent_state(agent):
         keys = pygame.key.get_pressed()
         agent.handle_move_keys(keys, camera)
         agent.handle_other_keys(keys, camera)
+        agent.handle_merge()
     else:
         agent.ai_move()
 

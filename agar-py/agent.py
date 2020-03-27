@@ -1,42 +1,77 @@
 import pygame
 import numpy as np
 import config as conf
+import utils
+import time
 
 
 class AgentCell():
     def __init__(self, x, y, r, mass):
-        self.x_pos = x
-        self.y_pos = y
-        self.radius = r
+        self.x_pos = int(x)  # NOTE pygame expects ints
+        self.y_pos = int(y)
         self.mass = mass
+        if r is not None:
+            self.radius = r
+        else:
+            self.radius = utils.massToRadius(mass)
 
-    def move_left(self, vel):
+    def get_velocity(self):
+        return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
+
+    def set_mass(self, mass):
+        if mass <= 0:
+            raise Exception('Mass must be positive')
+
+        self.mass = int(mass)
+        self.radius = utils.massToRadius(mass)
+
+    def move_left(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.x_pos = max(self.x_pos - vel, self.radius)
 
-    def move_right(self, vel):
+    def move_right(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
 
-    def move_up(self, vel):
+    def move_up(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.y_pos = max(self.y_pos - vel, self.radius)
 
-    def move_down(self, vel):
+    def move_down(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
 
-    def move_upleft(self, vel):
+    def move_upleft(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.move_up(vel)
         self.move_left(vel)
 
-    def move_upright(self, vel):
+    def move_upright(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.move_up(vel)
         self.move_right(vel)
 
-    def move_downleft(self, vel):
+    def move_downleft(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.move_down(vel)
         self.move_left(vel)
 
-    def move_downright(self, vel):
+    def move_downright(self, vel=None):
+        vel = vel if vel is not None else self.get_velocity()
         self.move_down(vel)
         self.move_right(vel)
+
+    def move(self, orientation, vel):
+        {
+            conf.UP: self.move_up,
+            conf.UP_RIGHT: self.move_upright,
+            conf.RIGHT: self.move_right,
+            conf.DOWN_RIGHT: self.move_downright,
+            conf.DOWN: self.move_down,
+            conf.DOWN_LEFT: self.move_downleft,
+            conf.LEFT: self.move_left,
+            conf.UP_LEFT: self.move_upleft,
+        }[orientation](vel)
 
 
 class Agent():
@@ -56,6 +91,7 @@ class Agent():
         self.manual_control = manual_control
         self.ai_dir = None
         self.ai_steps = 0
+        self.last_split = 0
 
     def get_avg_x_pos(self):
         return sum([cell.x_pos for cell in self.cells]) / len(self.cells)
@@ -69,27 +105,14 @@ class Agent():
     def get_mass(self):
         return sum([cell.mass for cell in self.cells])
 
-    def move(self, vel):
+    def move(self, vel=None):
         if self.orientation is None:
             return
 
         for cell in self.cells:
-            {
-                conf.UP: cell.move_up,
-                conf.UP_RIGHT: cell.move_upright,
-                conf.RIGHT: cell.move_right,
-                conf.DOWN_RIGHT: cell.move_downright,
-                conf.DOWN: cell.move_down,
-                conf.DOWN_LEFT: cell.move_downleft,
-                conf.LEFT: cell.move_left,
-                conf.UP_LEFT: cell.move_upleft,
-            }[self.orientation](vel)
+            cell.move(self.orientation, vel)
 
     def handle_move_keys(self, keys, camera):
-        # TODO: better velocity control
-        # TODO want vel to be unique per cell...
-        vel = int(max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1))
-
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
         is_right = keys[pygame.K_RIGHT] or keys[pygame.K_d]
         is_up = keys[pygame.K_UP] or keys[pygame.K_w]
@@ -123,25 +146,12 @@ class Agent():
             self.orientation = conf.LEFT
         elif is_right:
             self.orientation = conf.RIGHT
-        else:
-            self.orientation = None
+        # else:
+        #     self.orientation = None
 
-        self.move(vel)
+        self.move()
 
-        # NOTE if none of the above cases are matched, the orientation does not change
-
-        # move camera
-        if is_left:
-            camera.move_left(vel)
-
-        if is_right:
-            camera.move_right(vel)
-
-        if is_up:
-            camera.move_up(vel)
-
-        if is_down:
-            camera.move_down(vel)
+        camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
         if self.mass < conf.MIN_MASS_TO_SHOOT:
@@ -152,7 +162,37 @@ class Agent():
         # TODO shoot
         return
 
+    def handle_merge(self):
+        # TODO normally this should only happen if the user moves cells near each other
+        if len(self.cells) < 2:
+            return
+
+        curr_time = time.time()
+        if curr_time < self.last_split + conf.AGENT_SECONDS_TO_MERGE_CELLS:
+            return
+
+        # Merge pairs of cells in the body
+        self.last_split = curr_time
+        merged_cells = []
+        mid_idx = int(len(self.cells) / 2)
+        for idx in range(0, mid_idx):
+            cell = self.cells[idx]
+            other_cell = self.cells[idx + mid_idx]
+            avg_x_pos = (cell.x_pos + other_cell.x_pos) / 2
+            avg_y_pos = (cell.y_pos + other_cell.y_pos) / 2
+            merged_cell = AgentCell(
+                avg_x_pos, avg_y_pos, r=None, mass=cell.mass + other_cell.mass)
+            merged_cells.append(merged_cell)
+
+        if len(self.cells) % 2 == 1:
+            # Append last cell if there are an odd number
+            merged_cells.append(self.cells[-1])
+
+        self.cells = merged_cells
+
     def handle_split(self):
+        if self.orientation is None:
+            return
         if len(self.cells) >= conf.AGENT_CELL_LIMIT:
             return
         for cell in self.cells:
@@ -160,11 +200,17 @@ class Agent():
                 return
 
         for cell in self.cells:
-            cell.mass = cell.mass / 2
+            cell.set_mass(cell.mass / 2)
 
-        # TODO actually create the split
+        new_cells = []
+        for cell in self.cells:
+            new_cell = AgentCell(cell.x_pos, cell.y_pos,
+                                 cell.radius, cell.mass)
+            new_cell.move(self.orientation, cell.radius * 2)
+            new_cells.append(new_cell)
 
-        return
+        self.cells = self.cells + new_cells
+        self.last_split = time.time()
 
     def handle_other_keys(self, keys, camera):
         is_split = keys[pygame.K_SPACE]
