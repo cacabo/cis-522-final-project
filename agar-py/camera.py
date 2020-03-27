@@ -7,7 +7,11 @@ class Camera():
     def __init__(self, x, y, player_radius):
         self.x_pos = x
         self.y_pos = y
-        self.player_radius = player_radius
+        self.player_radius = player_radius  # TODO this never changes?
+
+    def pan(self, x, y):
+        self.x_pos = conf.SCREEN_WIDTH / 2 - x
+        self.y_pos = conf.SCREEN_HEIGHT / 2 - y
 
     def move_left(self, vel):
         """pan camera to the left"""

@@ -14,26 +14,35 @@ FOOD_MASS = 1
 GAME_MASS = 20000
 MAX_FOOD = 200
 
+# Virus state
 MAX_VIRUSES = 5
 VIRUS_MASS = 100
-VIRUS_CONSUME_MASS_FACTOR = 1.33    # how much larger one has to be to eat a virus
+VIRUS_CONSUME_MASS_FACTOR = 1.33  # how much larger one has to be to eat a virus
+
+# Colors
+WHITE_COLOR = ((255, 255, 255))
 VIRUS_COLOR = ((125, 250, 91))
 VIRUS_OUTLINE_COLOR = ((112, 226, 81))
 
+# Agent state
+AGENT_STARTING_MASS = 400
 SHOOT_MASS = 10
 MIN_MASS_TO_SHOOT = 50
 MIN_MASS_TO_SPLIT = 100
-AGENT_STARTING_MASS = 20
+CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 10
-NUM_AI = 2
-CONSUME_MASS_FACTOR = 1.1   # how much larger one has to be to eat a colliding agent
-SPLIT_LIMIT = 16            # max number of individual cells a single agent can have
+AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent
+AGENT_SECONDS_TO_MERGE_CELLS = 10  # can merge cells 10 seconds after splitting
 
+# Agent orientation options
 UP = 'UP'
-DOWN = 'DOWN'
-LEFT = 'LEFT'
-RIGHT = 'RIGHT'
-UP_LEFT = 'UP_LEFT'
 UP_RIGHT = 'UP_RIGHT'
-DOWN_LEFT = 'DOWN_LEFT'
+RIGHT = 'RIGHT'
 DOWN_RIGHT = 'DOWN_RIGHT'
+DOWN = 'DOWN'
+DOWN_LEFT = 'DOWN_LEFT'
+LEFT = 'LEFT'
+UP_LEFT = 'UP_LEFT'
+
+# AI state
+NUM_AI = 2
