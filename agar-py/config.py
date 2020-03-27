@@ -16,6 +16,7 @@ MAX_FOOD = 200
 
 MAX_VIRUSES = 5
 VIRUS_MASS = 100
+CELL_CONSUME_MASS_FACTOR = 1.1
 VIRUS_CONSUME_MASS_FACTOR = 1.33  # how much larger one has to be to eat a virus
 
 WHITE_COLOR = ((255, 255, 255))
@@ -31,10 +32,10 @@ NUM_AI = 2
 SPLIT_LIMIT = 16  # max number of individual cells a single agent can have
 
 UP = 'UP'
-DOWN = 'DOWN'
-LEFT = 'LEFT'
-RIGHT = 'RIGHT'
-UP_LEFT = 'UP_LEFT'
 UP_RIGHT = 'UP_RIGHT'
-DOWN_LEFT = 'DOWN_LEFT'
+RIGHT = 'RIGHT'
 DOWN_RIGHT = 'DOWN_RIGHT'
+DOWN = 'DOWN'
+DOWN_LEFT = 'DOWN_LEFT'
+LEFT = 'LEFT'
+UP_LEFT = 'UP_LEFT'

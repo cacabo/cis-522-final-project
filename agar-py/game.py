@@ -85,7 +85,7 @@ def check_overlap(a, b):
 
 
 def check_cell_collision(agent_cell, other_cell):
-    if agent_cell.mass < other_cell.mass * conf.CONSUME_MASS_FACTOR:
+    if agent_cell.mass < other_cell.mass * conf.CELL_CONSUME_MASS_FACTOR:
         return False
     return check_overlap(agent_cell, other_cell)
 
@@ -201,7 +201,7 @@ def tick_agent(agent):
     # Iterate over all viruses, remove viruses which were eaten
     removed_viruses_or_none = [handle_virus(agent, virus) for virus in viruses]
     not_removed_viruses = [viruses[idx] for (
-        idx, virus_or_none) in removed_viruses_or_none if virus_or_none is None]
+        idx, virus_or_none) in enumerate(removed_viruses_or_none) if virus_or_none is None]
 
     # get a list of all agents which have collided with the current one, and see
     # if it eats any of them
