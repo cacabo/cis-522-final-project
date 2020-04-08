@@ -6,7 +6,7 @@ from virus import Virus
 from agent import Agent
 from camera import Camera
 
-GUI_MODE = True
+GUI_MODE = False
 
 pygame.init()
 
@@ -72,6 +72,7 @@ def check_food_collision(agent, food):
     """
     for (idx, cell) in enumerate(agent.cells):
         if check_overlap(cell, food):
+            print('[FOOD] %s ate food item %s' % (agent.name, food.id))
             return idx
 
     return None
@@ -112,6 +113,7 @@ def handle_eat_agent(agent, other):
     for agent_cell in agent.cells:
         for other_cell in other.cells:
             if check_cell_collision(agent_cell, other_cell):
+                print('[CELL] %s ate one of %s\'s cells' % (agent.name, other.name))
                 consumed.append((agent_cell, other_cell))
             else:
                 not_consumed.append(other_cell)
@@ -139,7 +141,7 @@ def handle_virus(agent, virus):
     for cell in agent.cells:
         if not check_virus_collision(cell, virus):
             continue
-
+        print('[VIRUS] %s ate virus %s' % (agent.name, virus.id))
         cell.mass += virus.mass
         return virus
 
@@ -178,8 +180,9 @@ def update_agent_state(agent):
         else:
             agent.ai_move()
     else:
-        # TODO: implement without key presses, should just take in actions
-        raise ValueError("GUI_MODE=False not implemented")
+        # TODO: implement without key presses, should take in actions. Right now just moves randomly
+        agent.ai_move()
+        #raise ValueError("GUI_MODE=False not implemented")
 
 
 def tick_agent(agent):
@@ -292,13 +295,18 @@ def main_loop():
         pygame.quit()
         quit()
     else:
-        raise ValueError("GUI_MODE=false not implemented")
+        GAME_ITERS = 5000
+        for _ in range(GAME_ITERS):
+            update_game_state()
+        pygame.quit()
+        quit()
 
 
 # setup pygame window
-WIN = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
-pygame.display.set_caption('CIS 522: Final Project')
-clock = pygame.time.Clock()
+if GUI_MODE:
+    WIN = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+    pygame.display.set_caption('CIS 522: Final Project')
+    clock = pygame.time.Clock()
 
 # main game loop
 init_manual_agent('AgarAI')
