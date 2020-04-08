@@ -6,6 +6,8 @@ from virus import Virus
 from agent import Agent
 from camera import Camera
 
+GUI_MODE = True
+
 pygame.init()
 
 camera = None
@@ -166,14 +168,18 @@ def init_ai_agents(num_agents):
 
 
 def update_agent_state(agent):
-    if agent.manual_control:
-        # get key presses
-        keys = pygame.key.get_pressed()
-        agent.handle_move_keys(keys, camera)
-        agent.handle_other_keys(keys, camera)
-        agent.handle_merge()
+    if GUI_MODE:
+        if agent.manual_control:
+            # get key presses
+            keys = pygame.key.get_pressed()
+            agent.handle_move_keys(keys, camera)
+            agent.handle_other_keys(keys, camera)
+            agent.handle_merge()
+        else:
+            agent.ai_move()
     else:
-        agent.ai_move()
+        # TODO: implement without key presses, should just take in actions
+        raise ValueError("GUI_MODE=False not implemented")
 
 
 def tick_agent(agent):
@@ -206,7 +212,9 @@ def tick_agent(agent):
         handle_eat_agent(agent, other)
 
 
-def draw_window(agents, foods, board):
+def draw_window(board):
+    global agents, foods
+
     # fill screen white, to clear old frames
     WIN.fill(conf.WHITE_COLOR)
     board.fill(conf.WHITE_COLOR)
@@ -246,37 +254,45 @@ def is_exit_command(event):
     return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
 
-def main_loop():
+def update_game_state():
     global agents, foods
-    board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
 
-    running = True
-    while running:
-        clock.tick(960)  # 30 fps max
+    # make sure food/virus/player mass is balanced on the board
+    balance_mass()
 
-        # make sure food/virus/player mass is balanced on the board
-        balance_mass()
+    # perform updates for all agents
+    for agent in agents.values():
+        tick_agent(agent)
 
-        # perform updates for all agents
-        for agent in agents.values():
-            tick_agent(agent)
+    # after ticking all the agents, remove the dead ones
+    dead_agents = [agent for agent in agents.values()
+                    if not agent.is_alive]
+    for dead_agent in dead_agents:
+        del agents[dead_agent.name]
 
-        # after ticking all the agents, remove the dead ones
-        dead_agents = [agent for agent in agents.values()
-                       if not agent.is_alive]
-        for dead_agent in dead_agents:
-            del agents[dead_agent.name]
 
-        for event in pygame.event.get():
-            # stop the game if user exits
-            if is_exit_command(event):
-                running = False
 
-        # redraw window then update the frame
-        draw_window(agents, foods, board)
-        pygame.display.update()
-    pygame.quit()
-    quit()
+def main_loop():
+    if GUI_MODE:
+        board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
+        running = True
+        while running:
+            clock.tick(conf.CLOCK_TICK)
+            update_game_state()
+
+            # if the GUI is enabled, take in user input and draw/update the game board
+            for event in pygame.event.get():
+                # stop the game if user exits
+                if is_exit_command(event):
+                    running = False
+            # redraw window then update the frame
+            draw_window(board)
+            pygame.display.update()
+
+        pygame.quit()
+        quit()
+    else:
+        raise ValueError("GUI_MODE=false not implemented")
 
 
 # setup pygame window

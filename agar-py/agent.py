@@ -161,6 +161,7 @@ class Agent():
         camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
+        # TODO: this crashes, needs to be handled for each specific split cell
         if self.mass < conf.MIN_MASS_TO_SHOOT:
             return
 
