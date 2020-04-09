@@ -2,28 +2,38 @@ import pygame
 import numpy as np
 import config as conf
 import utils
-import time
 
 
 class AgentCell():
-    def __init__(self, x, y, r, mass):
+    def __init__(self, x, y, radius=None, mass=None):
+        """
+        An AgentCell is a single cell of an Agent
+
+        @param x
+        @param y
+        @param radius
+        @param mass
+        """
         self.x_pos = int(x)  # NOTE pygame expects ints
         self.y_pos = int(y)
+
         self.mass = mass
-        if r is not None:
-            self.radius = r
+
+        if radius is not None:
+            self.radius = radius
         else:
             self.radius = utils.massToRadius(mass)
 
     def get_velocity(self):
-        #return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
+        # return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
         if self.mass > 0:
             return max(utils.massToVelocity(self.mass), 1)
         else:
+            # TODO what is this case for?
             return 1
 
     def set_mass(self, mass):
-        if mass <= 0:
+        if mass is None or mass <= 0:
             raise Exception('Mass must be positive')
 
         self.mass = int(mass)
@@ -66,6 +76,12 @@ class AgentCell():
         self.move_right(vel)
 
     def move(self, orientation, vel):
+        """
+        Move in the direction specified by `orientation`
+
+        @param orientation
+        @param vel
+        """
         {
             conf.UP: self.move_up,
             conf.UP_RIGHT: self.move_upright,
@@ -76,7 +92,7 @@ class AgentCell():
             conf.LEFT: self.move_left,
             conf.UP_LEFT: self.move_upleft,
         }[orientation](vel)
-    
+
     def get_pos(self):
         return (self.x_pos, self.y_pos)
 
@@ -86,8 +102,23 @@ class Agent():
         conf.UP, conf.UP_RIGHT, conf.RIGHT, conf.DOWN_RIGHT, conf.DOWN,
         conf.DOWN_LEFT, conf.LEFT, conf.UP_LEFT]
 
-    def __init__(self, x, y, r, mass, color, name, manual_control):
-        cell = AgentCell(x, y, r, mass)
+    def __init__(self, game, x, y, radius, mass=None, color=None, name=None, manual_control=False):
+        """
+        An `Agent` is a player in the `Game`. An `Agent` can have many
+        `AgentCells` (just one to start out with).
+
+        @param game          - game that this `Agent` belongs to
+        @param x
+        @param y
+        @param radius
+        @param mass
+        @param color
+        @param name           - unique ID for the agent, displayed on the game
+        @param manual_control - if should be controlled by user's keyboard
+        """
+        self.game = game
+
+        cell = AgentCell(x, y, radius=radius, mass=mass)
         self.cells = [cell]
 
         self.color = color
@@ -98,18 +129,30 @@ class Agent():
         self.manual_control = manual_control
         self.ai_dir = None
         self.ai_steps = 0
-        self.last_split = 0
+        self.last_split = self.game.get_time()
 
     def get_avg_x_pos(self):
+        """
+        @returns average x pos of all `AgentCells` belonging to this `Agent`
+        """
         return sum([cell.x_pos for cell in self.cells]) / len(self.cells)
 
     def get_avg_y_pos(self):
+        """
+        @returns average y pos of all `AgentCells` belonging to this `Agent`
+        """
         return sum([cell.y_pos for cell in self.cells]) / len(self.cells)
 
     def get_avg_radius(self):
+        """
+        @returns average radius of all `AgentCells` belonging to this `Agent`
+        """
         return sum([cell.radius for cell in self.cells]) / len(self.cells)
 
     def get_mass(self):
+        """
+        @returns summed mass of all `AgentCells` belonging to this `Agent`
+        """
         return sum([cell.mass for cell in self.cells])
 
     def move(self, vel=None):
@@ -161,22 +204,24 @@ class Agent():
         camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
+        raise Exception('Not implemented')
         # TODO: this crashes, needs to be handled for each specific split cell
-        if self.mass < conf.MIN_MASS_TO_SHOOT:
-            return
+        # if self.mass < conf.MIN_MASS_TO_SHOOT:
+        #     return
 
-        self.mass = self.mass - conf.SHOOT_MASS
+        # self.mass = self.mass - conf.SHOOT_MASS
 
         # TODO shoot
-        return
+        # return
 
     def handle_merge(self):
         # TODO normally this should only happen if the user moves cells near each other
         if len(self.cells) < 2:
             return
 
-        curr_time = time.time()
-        if curr_time < self.last_split + conf.AGENT_SECONDS_TO_MERGE_CELLS:
+        # TODO make this in terms of number of ticks, not time
+        curr_time = self.game.get_time()
+        if curr_time < self.last_split + conf.AGENT_TICKS_TO_MERGE_CELLS:
             return
 
         # Merge pairs of cells in the body
@@ -188,8 +233,9 @@ class Agent():
             other_cell = self.cells[idx + mid_idx]
             avg_x_pos = (cell.x_pos + other_cell.x_pos) / 2
             avg_y_pos = (cell.y_pos + other_cell.y_pos) / 2
+            merged_mass = cell.mass + other_cell.mass
             merged_cell = AgentCell(
-                avg_x_pos, avg_y_pos, r=None, mass=cell.mass + other_cell.mass)
+                avg_x_pos, avg_y_pos, radius=None, mass=merged_mass)
             merged_cells.append(merged_cell)
 
         if len(self.cells) % 2 == 1:
@@ -199,11 +245,19 @@ class Agent():
         self.cells = merged_cells
 
     def handle_split(self):
+        # TODO make sure that orientation persists after moving
         if self.orientation is None:
             return
-        if len(self.cells) >= conf.AGENT_CELL_LIMIT:
+        if len(self.cells) * 2 >= conf.AGENT_CELL_LIMIT:
+            # Limit the nubmer of cells that an agent can be in
             return
+
+        curr_time = self.game.get_time()
+        if curr_time < self.last_split + conf.AGENT_TICKS_TO_SPLIT_AGAIN:
+            return
+
         for cell in self.cells:
+            # Each cell needs to be at least a certain size in order to split
             if cell.mass < conf.MIN_MASS_TO_SPLIT:
                 return
 
@@ -218,7 +272,7 @@ class Agent():
             new_cells.append(new_cell)
 
         self.cells = self.cells + new_cells
-        self.last_split = time.time()
+        self.last_split = self.game.get_time()
 
     def handle_other_keys(self, keys, camera):
         is_split = keys[pygame.K_SPACE]
