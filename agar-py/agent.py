@@ -2,10 +2,14 @@ import pygame
 import numpy as np
 import config as conf
 import utils
+import math
+
+NORMAL_MODE = 'normal'
+SHOOTING_MODE = 'shooting'
 
 
 class AgentCell():
-    def __init__(self, x, y, radius=None, mass=None):
+    def __init__(self, x, y, radius=None, mass=None, mode=NORMAL_MODE):
         """
         An AgentCell is a single cell of an Agent
 
@@ -13,11 +17,13 @@ class AgentCell():
         @param y
         @param radius
         @param mass
+        @param mode
         """
         self.x_pos = int(x)  # NOTE pygame expects ints
         self.y_pos = int(y)
 
         self.mass = mass
+        self.mode = mode
 
         if radius is not None:
             self.radius = radius
@@ -57,8 +63,9 @@ class AgentCell():
 
     def move_upleft(self, vel=None):
         vel = vel if vel is not None else self.get_velocity()
-        self.move_up(vel)
-        self.move_left(vel)
+        sqrt_vel = math.sqrt(vel)
+        self.move_up(sqrt_vel)
+        self.move_left(sqrt_vel)
 
     def move_upright(self, vel=None):
         vel = vel if vel is not None else self.get_velocity()
@@ -67,21 +74,39 @@ class AgentCell():
 
     def move_downleft(self, vel=None):
         vel = vel if vel is not None else self.get_velocity()
-        self.move_down(vel)
-        self.move_left(vel)
+        sqrt_vel = math.sqrt(vel)
+        self.move_down(sqrt_vel)
+        self.move_left(sqrt_vel)
 
     def move_downright(self, vel=None):
         vel = vel if vel is not None else self.get_velocity()
-        self.move_down(vel)
-        self.move_right(vel)
+        sqrt_vel = math.sqrt(vel)
+        self.move_down(sqrt_vel)
+        self.move_right(sqrt_vel)
 
-    def move(self, orientation, vel):
-        """
-        Move in the direction specified by `orientation`
+    def shoot(self, orientation):
+        self.mode = SHOOTING_MODE
+        self.shooting_orientation = orientation
+        self.shooting_velocity = self.radius * 2
+        self.shooting_acceleration = self.radius / 2
 
-        @param orientation
-        @param vel
+    def move_shoot(self):
         """
+        Move in response to being shot
+        """
+        self.move_normal(self.shooting_orientation, self.shooting_velocity)
+        self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
+
+        if self.shooting_velocity <= 0:
+            # Change the mode
+            self.mode = NORMAL_MODE
+
+            # Clean out shooting state
+            self.shooting_acceleration = None
+            self.shooting_velocity = None
+            self.shooting_acceleration = None
+
+    def move_normal(self, orientation, vel):
         {
             conf.UP: self.move_up,
             conf.UP_RIGHT: self.move_upright,
@@ -92,6 +117,20 @@ class AgentCell():
             conf.LEFT: self.move_left,
             conf.UP_LEFT: self.move_upleft,
         }[orientation](vel)
+
+    def move(self, orientation, vel):
+        """
+        Move in the direction specified by `orientation`
+
+        If `mode` is `shooting`, move behavior gets overriden
+
+        @param orientation
+        @param vel
+        """
+        if self.mode == SHOOTING_MODE:
+            self.move_shoot()
+        else:
+            self.move_normal(orientation, vel)
 
     def get_pos(self):
         return (self.x_pos, self.y_pos)
@@ -159,8 +198,40 @@ class Agent():
         if self.orientation is None:
             return
 
+        avg_x = self.get_avg_x_pos()
+        avg_y = self.get_avg_y_pos()
+        dest_radius = 800
+        sqrt_dest_radius = math.sqrt(dest_radius)
+
+        if self.orientation == conf.UP:
+            dest_x = avg_x
+            dest_y = avg_y + dest_radius
+        elif self.orientation == conf.UP_RIGHT:
+            dest_x = avg_x + sqrt_dest_radius
+            dest_y = avg_y + sqrt_dest_radius
+        elif self.orientation == conf.RIGHT:
+            dest_x = avg_x + dest_radius
+            dest_y = avg_y
+        elif self.orientation == conf.DOWN_RIGHT:
+            dest_x = avg_x + sqrt_dest_radius
+            dest_y = avg_y - sqrt_dest_radius
+        elif self.orientation == conf.DOWN:
+            dest_x = avg_x
+            dest_y = avg_y - dest_radius
+        elif self.orientation == conf.DOWN_LEFT:
+            dest_x = avg_x - sqrt_dest_radius
+            dest_y = avg_y - sqrt_dest_radius
+        elif self.orientation == conf.LEFT:
+            dest_x = avg_x - dest_radius
+            dest_y = avg_y
+        elif self.orientation == conf.UP_LEFT:
+            dest_x = avg_x - sqrt_dest_radius
+            dest_y = avg_y + sqrt_dest_radius
+
         for cell in self.cells:
             cell.move(self.orientation, vel)
+            # TODO have some notion of penalty?
+            # TODO also handle cells overlapping with each other
 
     def handle_move_keys(self, keys, camera):
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
@@ -219,7 +290,6 @@ class Agent():
         if len(self.cells) < 2:
             return
 
-        # TODO make this in terms of number of ticks, not time
         curr_time = self.game.get_time()
         if curr_time < self.last_split + conf.AGENT_TICKS_TO_MERGE_CELLS:
             return
@@ -245,7 +315,7 @@ class Agent():
         self.cells = merged_cells
 
     def handle_split(self):
-        # TODO make sure that orientation persists after moving
+        print('[AGENT] handle split')
         if self.orientation is None:
             return
         if len(self.cells) * 2 >= conf.AGENT_CELL_LIMIT:
@@ -268,7 +338,7 @@ class Agent():
         for cell in self.cells:
             new_cell = AgentCell(cell.x_pos, cell.y_pos,
                                  cell.radius, cell.mass)
-            new_cell.move(self.orientation, cell.radius * 2)
+            new_cell.shoot(self.orientation)
             new_cells.append(new_cell)
 
         self.cells = self.cells + new_cells

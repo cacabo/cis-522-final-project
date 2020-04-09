@@ -12,9 +12,6 @@ from camera import Camera
 
 GUI_MODE = True
 
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
 pygame.init()
 text_font = pygame.font.SysFont(
     conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
@@ -181,7 +178,7 @@ class Game():
             pos[1],
             radius,
             mass=conf.AGENT_STARTING_MASS,
-            color=GREEN,
+            color=conf.GREEN_COLOR,
             name=name,
             manual_control=True,
         )
@@ -208,7 +205,7 @@ class Game():
                 pos[1],
                 radius,
                 mass=conf.AGENT_STARTING_MASS,
-                color=BLUE,
+                color=conf.BLUE_COLOR,
                 name='Agent' + str(i),
                 manual_control=False,
             )
@@ -257,6 +254,14 @@ class Game():
         for other in self.agents.values():
             self.handle_eat_agent(agent, other)
 
+    def draw_circle(self, board, obj, color=None, stroke=None):
+        x, y = obj.get_pos()
+        pos = (round(x), round(y))
+        if stroke is not None:
+            pygame.draw.circle(board, color, pos, obj.radius, stroke)
+        else:
+            pygame.draw.circle(board, color, pos, obj.radius)
+
     def draw_window(self, board):
         # fill screen white, to clear old frames
         WIN.fill(conf.WHITE_COLOR)
@@ -264,21 +269,21 @@ class Game():
 
         # TODO don't redraw everything?
         for food in self.foods:
-            pygame.draw.circle(board, food.color, food.get_pos(), food.radius)
+            self.draw_circle(board, food, color=food.color)
 
         for agent in sorted(self.agents.values(), key=lambda a: a.get_mass()):
             for cell in agent.cells:
-                pygame.draw.circle(board, agent.color,
-                                   cell.get_pos(), cell.radius)
+                self.draw_circle(board, cell, color=agent.color)
                 agent_name_text = text_font.render(agent.name, 1, (0, 0, 0))
                 board.blit(agent_name_text, (cell.x_pos - (agent_name_text.get_width() / 2),
                                              cell.y_pos - (agent_name_text.get_height() / 2)))
 
         for virus in self.viruses:
-            pygame.draw.circle(board, conf.VIRUS_COLOR,
-                               virus.get_pos(), virus.radius)
-            pygame.draw.circle(board, conf.VIRUS_OUTLINE_COLOR,
-                               virus.get_pos(), virus.radius, 4)
+            self.draw_circle(board, virus, color=conf.VIRUS_COLOR)
+            # pygame.draw.circle(board, conf.VIRUS_COLOR,
+            #    virus.get_pos(), virus.radius)
+            self.draw_circle(
+                board, virus, color=conf.VIRUS_OUTLINE_COLOR, stroke=4)
 
         WIN.blit(board, self.camera.get_pos())
 
