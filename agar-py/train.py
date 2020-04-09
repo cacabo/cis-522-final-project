@@ -1,19 +1,21 @@
 import numpy as np
+from game import Game
 
 
 EPISODES = 10 # the number of games we're playing
 
-# Exploration
+# Exploration (this could be moved to the agent instead though)
 epsilon = 0.99 
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.001
 
 # TODO: define environment 
+env = Game()
 # TODO: define the DQNAgent
 
 for episode in range(EPISODES):
     done = False # whether game is done or not (terminal state)
-    state =  # reset the environment to fresh starting state
+    state =  env.reset() # reset the environment to fresh starting state TODO: implement reset in game.py
     episode_reward = 0 # some notion of the reward in this episode
     # steps? (essentially game ticks? if want to cap # of ticks so game doesn't go on indefinitely)
 

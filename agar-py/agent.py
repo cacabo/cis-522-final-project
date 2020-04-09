@@ -368,3 +368,7 @@ class Agent():
         # move in randomly chosen direction
         self.move(vel)
         self.ai_steps -= 1
+
+    def act(self, action):
+        #TODO: parse actions
+        return

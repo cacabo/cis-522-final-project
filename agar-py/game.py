@@ -211,7 +211,7 @@ class Game():
             )
             self.agents[ai_agent.name] = ai_agent
 
-    def update_agent_state(self, agent):
+    def update_agent_state(self, agent, action):
         if GUI_MODE:
             if agent.manual_control:
                 # get key presses
@@ -224,9 +224,10 @@ class Game():
         else:
             # TODO: implement without key presses, should take in actions. Right now just moves randomly
             agent.ai_move()
+            #agent.act(action)
 
-    def tick_agent(self, agent):
-        self.update_agent_state(agent)
+    def tick_agent(self, agent, action):
+        self.update_agent_state(agent, action)
 
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
@@ -303,13 +304,13 @@ class Game():
     def is_exit_command(self, event):
         return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
-    def update_game_state(self):
+    def update_game_state(self, action):
         # make sure food/virus/player mass is balanced on the board
         self.balance_mass()
 
         # perform updates for all agents
         for agent in self.agents.values():
-            self.tick_agent(agent)
+            self.tick_agent(agent, action)
 
         # after ticking all the agents, remove the dead ones
         dead_agents = [agent for agent in self.agents.values()
@@ -319,13 +320,15 @@ class Game():
 
         self.time = self.time + 1
 
+        #TODO: reward, next state, terminated
+
     def main_loop(self):
         if GUI_MODE:
             board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
             running = True
             while running:
                 clock.tick(conf.CLOCK_TICK)
-                self.update_game_state()
+                self.update_game_state(action=None)
 
                 # if the GUI is enabled, take in user input and draw/update the game board
                 for event in pygame.event.get():
@@ -342,10 +345,17 @@ class Game():
         else:
             GAME_ITERS = 5000
             for _ in range(GAME_ITERS):
-                self.update_game_state()
+                self.update_game_state(action=None)
             pygame.quit()
             quit()
 
+    def reset(self):
+        #TODO: reset game 
+        self.__init__()
+        self.init_manual_agent('AgarAI')
+        self.init_ai_agents(conf.NUM_AI)
+        game.main_loop() #TODO: remove
+        #return TODO: return inital state
 
 game = Game()
 
