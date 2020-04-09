@@ -288,6 +288,7 @@ def main_loop():
                 # stop the game if user exits
                 if is_exit_command(event):
                     running = False
+
             # redraw window then update the frame
             draw_window(board)
             pygame.display.update()
