@@ -18,7 +18,7 @@ for episode in range(EPISODES):
     while not done: #game loop, can also incorporate steps here
 
         action = agent.get_action(state)
-        next_state, reward, done = #environment determines new state, reward, whether terminal, based on action taken
+        next_state, reward, done = env.update_game_state(action) #environment determines new state, reward, whether terminal, based on action taken #TODO: implement in game.py
         episode_reward += reward
 
         # update replay memory and train network
