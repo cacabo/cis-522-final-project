@@ -61,32 +61,9 @@ class AgentCell():
         vel = vel if vel is not None else self.get_velocity()
         self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
 
-    def move_upleft(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        sqrt_vel = math.sqrt(vel)
-        self.move_up(sqrt_vel)
-        self.move_left(sqrt_vel)
-
-    def move_upright(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.move_up(vel)
-        self.move_right(vel)
-
-    def move_downleft(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        sqrt_vel = math.sqrt(vel)
-        self.move_down(sqrt_vel)
-        self.move_left(sqrt_vel)
-
-    def move_downright(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        sqrt_vel = math.sqrt(vel)
-        self.move_down(sqrt_vel)
-        self.move_right(sqrt_vel)
-
-    def shoot(self, orientation):
+    def shoot(self, angle):
         self.mode = SHOOTING_MODE
-        self.shooting_orientation = orientation
+        self.shooting_angle = angle
         self.shooting_velocity = self.radius * 2
         self.shooting_acceleration = self.radius / 2
 
@@ -94,7 +71,7 @@ class AgentCell():
         """
         Move in response to being shot
         """
-        self.move_normal(self.shooting_orientation, self.shooting_velocity)
+        self.move_normal(self.shooting_angle, self.shooting_velocity)
         self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
 
         if self.shooting_velocity <= 0:
@@ -106,40 +83,54 @@ class AgentCell():
             self.shooting_velocity = None
             self.shooting_acceleration = None
 
-    def move_normal(self, orientation, vel):
-        {
-            conf.UP: self.move_up,
-            conf.UP_RIGHT: self.move_upright,
-            conf.RIGHT: self.move_right,
-            conf.DOWN_RIGHT: self.move_downright,
-            conf.DOWN: self.move_down,
-            conf.DOWN_LEFT: self.move_downleft,
-            conf.LEFT: self.move_left,
-            conf.UP_LEFT: self.move_upleft,
-        }[orientation](vel)
+    def move_normal(self, angle, vel):
+        vel = vel if vel is not None else self.get_velocity()
+        radians = angle / 180 * math.pi
+        dx = math.cos(radians) * vel
+        dy = math.sin(radians) * vel
+        if dx > 0:
+            self.move_right(dx)
+        elif dx < 0:
+            self.move_left(dx * -1)
+        if dy > 0:
+            self.move_up(dy)
+        elif dy < 0:
+            self.move_down(dy * -1)
 
-    def move(self, orientation, vel):
+    def move(self, angle, vel):
         """
-        Move in the direction specified by `orientation`
+        Move in the direction specified by `angle` from the x axis in pos dir
 
         If `mode` is `shooting`, move behavior gets overriden
 
-        @param orientation
+        @param angle
         @param vel
         """
         if self.mode == SHOOTING_MODE:
             self.move_shoot()
         else:
-            self.move_normal(orientation, vel)
+            self.move_normal(angle, vel)
+
+    def shift(self, dx=None, dy=None):
+        """
+        Adjust position by dx and dy
+
+        NOTE does not check for collisions, borders, etc.
+
+        @param dx
+        @param dy
+        """
+        if dx is not None:
+            self.x_pos += dx
+        if dy is not None:
+            self.y_pos += dy
 
     def get_pos(self):
         return (self.x_pos, self.y_pos)
 
 
 class Agent():
-    orientations = [
-        conf.UP, conf.UP_RIGHT, conf.RIGHT, conf.DOWN_RIGHT, conf.DOWN,
-        conf.DOWN_LEFT, conf.LEFT, conf.UP_LEFT]
+    angles = [0, 45, 90, 135, 180, 225, 270, 315]
 
     def __init__(self, game, x, y, radius, mass=None, color=None, name=None, manual_control=False):
         """
@@ -162,7 +153,7 @@ class Agent():
 
         self.color = color
         self.name = name
-        self.orientation = None  # For deciding direction to shoot in
+        self.angle = None  # For deciding direction to move in
 
         self.is_alive = True
         self.manual_control = manual_control
@@ -195,41 +186,72 @@ class Agent():
         return sum([cell.mass for cell in self.cells])
 
     def move(self, vel=None):
-        if self.orientation is None:
+        if self.angle is None:
             return
 
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
-        dest_radius = 800
-        sqrt_dest_radius = math.sqrt(dest_radius)
+        # dest_radius = 800
+        # sqrt_dest_radius = math.sqrt(dest_radius)
 
-        if self.orientation == conf.UP:
-            dest_x = avg_x
-            dest_y = avg_y + dest_radius
-        elif self.orientation == conf.UP_RIGHT:
-            dest_x = avg_x + sqrt_dest_radius
-            dest_y = avg_y + sqrt_dest_radius
-        elif self.orientation == conf.RIGHT:
-            dest_x = avg_x + dest_radius
-            dest_y = avg_y
-        elif self.orientation == conf.DOWN_RIGHT:
-            dest_x = avg_x + sqrt_dest_radius
-            dest_y = avg_y - sqrt_dest_radius
-        elif self.orientation == conf.DOWN:
-            dest_x = avg_x
-            dest_y = avg_y - dest_radius
-        elif self.orientation == conf.DOWN_LEFT:
-            dest_x = avg_x - sqrt_dest_radius
-            dest_y = avg_y - sqrt_dest_radius
-        elif self.orientation == conf.LEFT:
-            dest_x = avg_x - dest_radius
-            dest_y = avg_y
-        elif self.orientation == conf.UP_LEFT:
-            dest_x = avg_x - sqrt_dest_radius
-            dest_y = avg_y + sqrt_dest_radius
+        # if self.orientation == conf.UP:
+        #     dest_x = avg_x
+        #     dest_y = avg_y + dest_radius
+        # elif self.orientation == conf.UP_RIGHT:
+        #     dest_x = avg_x + sqrt_dest_radius
+        #     dest_y = avg_y + sqrt_dest_radius
+        # elif self.orientation == conf.RIGHT:
+        #     dest_x = avg_x + dest_radius
+        #     dest_y = avg_y
+        # elif self.orientation == conf.DOWN_RIGHT:
+        #     dest_x = avg_x + sqrt_dest_radius
+        #     dest_y = avg_y - sqrt_dest_radius
+        # elif self.orientation == conf.DOWN:
+        #     dest_x = avg_x
+        #     dest_y = avg_y - dest_radius
+        # elif self.orientation == conf.DOWN_LEFT:
+        #     dest_x = avg_x - sqrt_dest_radius
+        #     dest_y = avg_y - sqrt_dest_radius
+        # elif self.orientation == conf.LEFT:
+        #     dest_x = avg_x - dest_radius
+        #     dest_y = avg_y
+        # elif self.orientation == conf.UP_LEFT:
+        #     dest_x = avg_x - sqrt_dest_radius
+        #     dest_y = avg_y + sqrt_dest_radius
 
         for cell in self.cells:
-            cell.move(self.orientation, vel)
+            (x, y) = cell.get_pos()
+
+            dx = x - avg_x
+            dy = avg_y - y
+
+            penalty = -2
+
+            if dx == 0 and dy != 0:
+                angle = 90 if dy > 0 else 270
+                print()
+                print('angle', angle, 'pen', penalty)
+                cell.move(angle, penalty)
+            elif dy == 0 and dx != 0:
+                angle = 0 if dx > 0 else 180
+                print('angle', angle, 'pen', penalty)
+                cell.move(angle, penalty)
+            elif dx != 0:
+                radians = math.atan(abs(dy / dx))
+                if dx < 0 and dy > 0:
+                    radians += math.pi / 2
+                elif dy < 0 and dx < 0:
+                    radians += math.pi
+                elif dy < 0:
+                    radians += 3 * math.pi / 2
+
+                # radians = radians if dx > 0 else radians + math.pi / 2
+                angle = radians / math.pi * 180
+                print('angle', angle, 'pen', penalty)
+                cell.move(angle, penalty)
+
+            cell.move(self.angle, vel)
+
             # TODO have some notion of penalty?
             # TODO also handle cells overlapping with each other
 
@@ -248,27 +270,27 @@ class Agent():
             is_down = False
             is_up = False
 
-        # set orientation
+        # set angle
         if is_up:
             if is_left:
-                self.orientation = conf.UP_LEFT
+                self.angle = 135
             elif is_right:
-                self.orientation = conf.UP_RIGHT
+                self.angle = 45
             else:
-                self.orientation = conf.UP
+                self.angle = 90
         elif is_down:
             if is_left:
-                self.orientation = conf.DOWN_LEFT
+                self.angle = 225
             elif is_right:
-                self.orientation = conf.DOWN_RIGHT
+                self.angle = 315
             else:
-                self.orientation = conf.DOWN
+                self.angle = 270
         elif is_left:
-            self.orientation = conf.LEFT
+            self.angle = 180
         elif is_right:
-            self.orientation = conf.RIGHT
+            self.angle = 0
         # else:
-        #     self.orientation = None
+        #     self.angle = None
 
         self.move()
 
@@ -316,7 +338,7 @@ class Agent():
 
     def handle_split(self):
         print('[AGENT] handle split')
-        if self.orientation is None:
+        if self.angle is None:
             return
         if len(self.cells) * 2 >= conf.AGENT_CELL_LIMIT:
             # Limit the nubmer of cells that an agent can be in
@@ -338,7 +360,7 @@ class Agent():
         for cell in self.cells:
             new_cell = AgentCell(cell.x_pos, cell.y_pos,
                                  cell.radius, cell.mass)
-            new_cell.shoot(self.orientation)
+            new_cell.shoot(self.angle)
             new_cells.append(new_cell)
 
         self.cells = self.cells + new_cells
@@ -363,7 +385,7 @@ class Agent():
         # force AI to move between 5 and 10 (inclusive) steps in random direction
         if self.ai_steps <= 0:
             self.ai_steps = np.random.randint(5, 11)
-            self.orientation = Agent.orientations[np.random.randint(8)]
+            self.angle = Agent.angles[np.random.randint(8)]
 
         # move in randomly chosen direction
         self.move(vel)
