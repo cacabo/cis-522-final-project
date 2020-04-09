@@ -1,3 +1,8 @@
+# Mac OS metadata
 .DS_Store
+
+# JS files
 node_modules/
+
+# Python builds
 __pycache__/
