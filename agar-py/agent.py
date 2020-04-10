@@ -3,6 +3,7 @@ import numpy as np
 import config as conf
 import utils
 import math
+from actions import Action
 
 NORMAL_MODE = 'normal'
 SHOOTING_MODE = 'shooting'
@@ -163,6 +164,29 @@ class Agent():
         self.ai_dir = None
         self.ai_steps = 0
         self.last_split = self.game.get_time()
+
+    def do_action(self, action):
+        if action == Action.MOVE_RIGHT:
+            self.angle = 0
+        elif action == Action.MOVE_UP_RIGHT:
+            self.angle = 45
+        elif action == Action.MOVE_UP:
+            self.angle = 90
+        elif action == Action.MOVE_UP_LEFT:
+            self.angle = 135
+        elif action == Action.MOVE_LEFT:
+            self.angle = 180
+        elif action == Action.MOVE_DOWN_LEFT:
+            self.angle = 225
+        elif action == Action.MOVE_DOWN:
+            self.angle = 270
+        elif action == Action.MOVE_DOWN_RIGHT:
+            self.angle = 315
+        else:
+            raise ValueError('Agent received bad action in do_action()')
+        
+        self.move()
+        #camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def get_avg_x_pos(self):
         """
