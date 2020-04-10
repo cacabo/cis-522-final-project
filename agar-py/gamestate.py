@@ -101,20 +101,6 @@ class GameState():
         if num_virus_to_add > 0:
             self.add_virus(num_virus_to_add)
 
-    def check_food_collision(self, agent, food):
-        """
-        if the center of a food is inside the agent, the agent eats it
-
-        @returns None if no cell can eat it
-        @returns idx of cell eating the food
-        """
-        for (idx, cell) in enumerate(agent.cells):
-            if self.check_overlap(cell, food):
-                print('[FOOD] %s ate food item %s' % (agent.name, food.id))
-                return idx
-
-        return None
-
     def check_overlap(self, a, b):
         """
         Check if two generic objects with `get_pos` function and `radius`
@@ -133,6 +119,9 @@ class GameState():
         if agent_cell.mass < conf.VIRUS_CONSUME_MASS_FACTOR * virus.mass:
             return False
         return self.check_overlap(agent_cell, virus)
+
+    def check_food_collision(self, agent_cell, food):
+        return self.check_overlap(agent_cell, food)
 
     def handle_eat_agent(self, agent, other):
         """
@@ -166,6 +155,15 @@ class GameState():
             print('[GAME] ' + str(other.name) +
                   ' died! Was eaten by ' + str(agent.name))
             other.is_alive = False
+
+    def handle_food(self, agent, food):
+        for cell in agent.cells:
+            if not self.check_food_collision(cell, food):
+                continue
+            print('[FOOD] %s ate food item %s' %
+                  (agent.name, food.id))
+            cell.mass += food.mass
+            return food
 
     def handle_mass(self, agent, mass):
         for cell in agent.cells:
@@ -233,17 +231,8 @@ class GameState():
     def tick_agent(self, agent):
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
-        food_collisions = [self.check_food_collision(
-            agent, food) for food in self.foods]
-        foods_remaining = []
-        for (idx, cellidx) in enumerate(food_collisions):
-            if cellidx is None:
-                foods_remaining.append(self.foods[idx])
-                continue
-            cell = agent.cells[cellidx]
-            cell.mass += conf.FOOD_MASS
-
-        self.foods = foods_remaining
+        self.foods = self._filter_objects(
+            agent, self.foods, self.handle_food)
 
         # Iterate over all masses, remove those which were eaten
         self.masses = self._filter_objects(

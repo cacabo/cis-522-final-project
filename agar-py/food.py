@@ -1,3 +1,6 @@
+import config as conf
+
+
 class Food():
     ID_counter = 0
 
@@ -6,6 +9,7 @@ class Food():
         self.y_pos = y
         self.radius = r
         self.color = color
+        self.mass = conf.FOOD_MASS
 
         # give unique IDs to objects for debug purposes
         self.id = Food.ID_counter
