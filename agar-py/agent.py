@@ -182,7 +182,7 @@ class AgentCell():
 class Agent():
     angles = [0, 45, 90, 135, 180, 225, 270, 315]
 
-    def __init__(self, game, x, y, radius, mass=None, color=None, name=None, manual_control=False):
+    def __init__(self, game, model, x, y, radius, mass=None, color=None, name=None, manual_control=False):
         """
         An `Agent` is a player in the `Game`. An `Agent` can have many
         `AgentCells` (just one to start out with).
@@ -197,6 +197,7 @@ class Agent():
         @param manual_control - if should be controlled by user's keyboard
         """
         self.game = game
+        self.model = model
 
         self.color = color
         self.name = name
@@ -249,6 +250,12 @@ class Agent():
         @returns average y pos of all `AgentCells` belonging to this `Agent`
         """
         return sum([cell.y_pos for cell in self.cells]) / len(self.cells)
+
+    def get_avg_pos(self):
+        """
+        @returns tuple of average x and y pos of all `AgentCells` belonging to this `Agent`
+        """
+        return (self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def get_avg_radius(self):
         """
@@ -423,22 +430,6 @@ class Agent():
         elif is_shoot:
             self.handle_shoot()
 
-    def ai_move(self):
-        # TODO: better velocity control
-        # vel = max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1)
-        vel = 1
-        if self.get_mass() > 0:
-            vel = max(utils.massToVelocity(self.get_mass()), vel)
-
-        # force AI to move between 5 and 10 (inclusive) steps in random direction
-        if self.ai_steps <= 0:
-            self.ai_steps = np.random.randint(5, 11)
-            self.angle = Agent.angles[np.random.randint(8)]
-
-        # move in randomly chosen direction
-        self.move(vel)
-        self.ai_steps -= 1
-
-    def act(self, action):
-        # TODO: parse actions
-        return
+    def act(self, state):
+        action = self.model.get_action(state)
+        self.do_action(action)

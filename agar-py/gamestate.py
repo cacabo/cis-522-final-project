@@ -28,6 +28,9 @@ class GameState():
         self.masses = []
         self.time = 0
 
+        # set up the game state with balanced mass
+        self.balance_mass()
+
     def get_player_names(self):
         return list(self.agents.keys())
 
@@ -313,15 +316,15 @@ class GameState():
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
     # ------------------------------------------------------------------------------
-    # TODO: rename. only used for interactive mode
-    def update_agent_state(self, agent):
+    # only used for interactive mode
+    def update_interactive_state(self, agent):
         if agent.manual_control:
             # get key presses
             keys = pygame.key.get_pressed()
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
         else:
-            agent.ai_move()
+            agent.act(self.get_state())
 
         agent.handle_merge()
 
@@ -330,6 +333,7 @@ class GameState():
         pos = utils.randomPosition(radius)
         player = Agent(
             self,
+            None,
             pos[0],
             pos[1],
             radius,
@@ -343,20 +347,23 @@ class GameState():
                              (conf.SCREEN_HEIGHT / 2 - player.get_avg_y_pos()),
                              player.get_avg_radius())
 
-    def init_ai_agents(self, num_agents):
+    def init_ai_agents(self, num_agents, model):
         """
         Create agents which have self-contained strategies
 
         @param num_agents - how many agents to create
         """
         if num_agents is None or num_agents <= 0:
-            raise Exception('num_agents must be positive')
+            raise ValueError('num_agents must be positive')
+        if model is None:
+            raise ValueError('invalid model given')
 
         for i in range(num_agents):
             radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
             pos = utils.randomPosition(radius)
             ai_agent = Agent(
                 self,
+                model,
                 pos[0],
                 pos[1],
                 radius,
@@ -365,7 +372,7 @@ class GameState():
                 name='Agent' + str(i),
                 manual_control=False,
             )
-            self.agents[ai_agent.name] = ai_agent
+            self.agents[model.id] = ai_agent
 
     def is_exit_command(self, event):
         """
@@ -427,7 +434,7 @@ class GameState():
             window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
         else:
-            window = pygame.dispaly.set_mode(
+            window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         pygame.display.set_caption('CIS 522: Final Project')
         board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
@@ -437,7 +444,7 @@ class GameState():
             clock.tick(conf.CLOCK_TICK)
 
             for agent in self.agents.values():
-                self.update_agent_state(agent)
+                self.update_interactive_state(agent)
 
             print('[DEBUG] done with update agent state')
 

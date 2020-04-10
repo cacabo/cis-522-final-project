@@ -1,5 +1,6 @@
 from gamestate import GameState
 from models.RandomModel import RandomModel
+from models.HeuristicModel import HeuristicModel
 from operator import add
 # from models.DQNModel import DQNModel
 
@@ -32,7 +33,8 @@ env = GameState()
 
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-models = [rand_model_1, rand_model_2]
+heuristic_model = HeuristicModel()
+models = [heuristic_model]
 episode_rewards = [0 for _ in models]
 
 # for episode in range(EPISODES):
