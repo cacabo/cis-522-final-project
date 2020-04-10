@@ -4,17 +4,44 @@ import config as conf
 
 
 def massToRadius(mass):
-    """determine radius from mass of blob"""
+    """
+    Determine radius from mass of blob
+
+    Parameters:
+
+        mass - number
+
+    Returns number
+    """
     return int(4 + np.sqrt(mass) * 4)
 
 
 def massToVelocity(mass):
-    """determine velocity from mass of blob"""
+    """
+    Determine velocity from mass of blob
+
+    Parameters:
+
+        mass - number
+
+    Returns number
+    """
     return int(2.2 * np.power(mass / 1000, -0.439))
 
 
 def randomPosition(radius):
-    """generate a random position within the field of play"""
+    """
+    Generate a random position within the field of play. NOTE the `radius` is
+    used to position within bounds of the board.
+
+    Parameters
+
+        radius : number
+
+    Returns
+
+        tuple (x y)
+    """
     return (
         randomInRange(radius, conf.BOARD_WIDTH - radius),
         randomInRange(radius, conf.BOARD_HEIGHT - radius),
@@ -22,18 +49,52 @@ def randomPosition(radius):
 
 
 def randomInRange(lo, hi):
-    """generate random int in the range lo to hi"""
+    """
+    Generate random int in the range lo to hi
+
+    Parameters
+
+        lo : number
+        hi : number
+
+    Returns
+
+        number
+    """
     return int(np.floor(np.random.random() * (hi - lo)) + lo)
 
 
 def getEuclideanDistance(p1, p2):
-    """calculate euclidean distance"""
+    """
+    Calculate euclidean distance between two points
+
+    Parameters
+
+        p1 : tuple (x, y)
+        p2 : tuple (x, y)
+
+    Returns
+
+        number
+    """
     return np.linalg.norm(np.array(p1) - np.array(p2))
 
 
-def isPointInCircle(point, circle_center, circle_radius):
-    """TODO: find better than brute force way to solve"""
-    return circle_radius >= getEuclideanDistance(point, circle_center)
+def isPointInCircle(point, circle, radius):
+    """
+    Return if the provided point is within the circle
+
+    Parameters
+
+        point  : tuple (x, y)
+        circle : tuple (x, y)
+        radius : number
+
+    Returns
+
+        boolean
+    """
+    return radius >= getEuclideanDistance(point, circle)
 
 
 def getCircleOverlap(c1, r1, c2, r2):
@@ -43,12 +104,16 @@ def getCircleOverlap(c1, r1, c2, r2):
     NOTE this is more positive the more cirlces overlap, this is negative if the
     circles do not overlap
 
-    Parameters:
+    Parameters
 
         c1 - tuple (x, y) position of circle
         r1 - radius
         c2 - tuple (x, y) position of circle
         r2 - radius
+
+    Returns
+
+        number
     """
     dist_btwn_centers = np.linalg.norm(np.array(c1) - np.array(c2))
     sum_radii = r1 + r2
@@ -61,14 +126,14 @@ def getObjectOverlap(a, b):
 
 def areCirclesColliding(c1, r1, c2, r2):
     """
-    Parameters:
+    Parameters
 
-        c1 - tuple (x, y) position of circle
-        r1 - radius
-        c2 - tuple (x, y) position of circle
-        r2 - radius
+        c1 : tuple (x, y) position of circle
+        r1 : radius
+        c2 : tuple (x, y) position of circle
+        r2 : radius
 
-    Returns: boolean if the circles overlap
+    Returns boolean if the circles overlap
     """
     overlap = getCircleOverlap(c1, r1, c2, r2)
     return overlap > 0
@@ -76,9 +141,12 @@ def areCirclesColliding(c1, r1, c2, r2):
 
 def getAngleBetweenPoints(p1, p2):
     """
-    @param p1 - tuple (x, y)
-    @param p2 - tuple (x, y)
-    @returns angle in degrees of line drawn between points and positive x dir
+    Parameters
+
+        p1 : tuple (x, y)
+        p2 : tuple (x, y)
+
+    Returns angle in degrees of line drawn between points and positive x dir
     """
     (x1, y1) = p1
     (x2, y2) = p2

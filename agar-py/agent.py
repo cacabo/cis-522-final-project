@@ -31,6 +31,7 @@ class AgentCell():
 
         self.mass = mass
         self.mode = mode
+        self.is_alive = True
 
         if radius is not None:
             self.radius = radius
@@ -67,30 +68,58 @@ class AgentCell():
         return new_cell
 
     def eat_virus(self, virus):
+        """
+        Have this `AgentCell` consume the provided `Virus`
+
+        Increases cell mass, but causes the cell to split into as many cells as
+        possible limited by:
+
+        1. An `Agent` can have at most a certain number of cells
+
+        2. An `AgentCell` needs to have at least a certain mass
+
+        The above values are specified in the configuration file.
+
+        Update the parent `Agent` object to house the state of all of the newly
+        created cells.
+
+        Parameters
+
+            virus : Virus
+
+        Returns
+
+            list of newly created cells
+        """
         if virus is None:
             raise Exception('Cannot eat virus which is None')
 
         self.mass += virus.mass
+        virus.is_alive = False
 
-        # TODO
         max_cells_based_on_count = conf.AGENT_CELL_LIMIT - \
             len(self.agent.cells) + 1
-        max_cells_based_on_size = int(self.mass / (conf.MIN_MASS_TO_SPLIT / 2))
+        max_cells_based_on_size = int(self.mass / conf.MIN_CELL_SIZE)
         num_cells_to_split_into = min(
             max_cells_based_on_count, max_cells_based_on_size)
+
+        print('[DEBUG] splitting into %s cells' %
+              (str(num_cells_to_split_into)))
 
         new_cells = []
 
         new_mass = self.mass / num_cells_to_split_into
-        self.mass = new_mass
+        self.set_mass(new_mass)
 
         for _ in range(1, num_cells_to_split_into):
             new_cell = AgentCell(self.agent, self.x_pos,
                                  self.y_pos, mass=new_mass)
             new_cells.append(new_cell)
 
-        self.agent.cells = self.agent.cells + new_cells
-        self.agent.last_split = self.agent.game.get_time()
+        self.agent.update_last_split()
+        return new_cells
+
+        print('[DEBUG] Done splitting:', self.agent.cells)
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -177,10 +206,14 @@ class Agent():
         self.manual_control = manual_control
         self.ai_dir = None
         self.ai_steps = 0
-        self.last_split = self.game.get_time()
+
+        self.update_last_split()
 
         cell = AgentCell(self, x, y, radius=radius, mass=mass)
         self.cells = [cell]
+
+    def update_last_split(self):
+        self.last_split = self.game.get_time()
 
     def do_action(self, action):
         if action == Action.MOVE_RIGHT:
@@ -236,7 +269,7 @@ class Agent():
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
 
-        for (idx, cell) in enumerate(self.cells):
+        for cell in self.cells:
             # Handle converging towards the middle
             penalty = -2  # Move this many pixels towards the center
             angle_to_avg = utils.getAngleBetweenPoints(
@@ -245,6 +278,7 @@ class Agent():
             if angle_to_avg is not None:
                 cell.move(angle_to_avg, penalty)
 
+        for (idx, cell) in enumerate(self.cells):
             # Handle overlapping cells
             for otherIdx in range(idx + 1, len(self.cells)):
                 otherCell = self.cells[otherIdx]
@@ -254,7 +288,9 @@ class Agent():
                 dist_to_move = overlap / 2
                 angle = utils.getAngleBetweenObjects(cell, otherCell)
                 if angle is None:
+                    # If they totally overlap with each other
                     angle = random.randrange(360)
+
                 cell.move(angle, -1 * dist_to_move)
                 otherCell.move(angle, dist_to_move)
 
@@ -331,8 +367,9 @@ class Agent():
         if curr_time < self.last_split + conf.AGENT_TICKS_TO_MERGE_CELLS:
             return
 
+        self.update_last_split()
+
         # Merge pairs of cells in the body
-        self.last_split = curr_time
         merged_cells = []
         mid_idx = int(len(self.cells) / 2)
         for idx in range(0, mid_idx):
@@ -365,7 +402,7 @@ class Agent():
 
         for cell in self.cells:
             # Each cell needs to be at least a certain size in order to split
-            if cell.mass < conf.MIN_MASS_TO_SPLIT:
+            if (cell.mass / 2) < conf.MIN_CELL_SIZE:
                 return
 
         new_cells = []
@@ -375,7 +412,7 @@ class Agent():
             new_cells.append(new_cell)
 
         self.cells = self.cells + new_cells
-        self.last_split = self.game.get_time()
+        self.update_last_split()
 
     def handle_other_keys(self, keys, camera):
         is_split = keys[pygame.K_SPACE]
