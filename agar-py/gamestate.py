@@ -5,6 +5,7 @@ from food import Food
 from virus import Virus
 from agent import Agent
 from camera import Camera
+from models.DQNModel import DQNModel
 
 # ------------------------------------------------------------------------------
 # Constants and config
@@ -373,7 +374,11 @@ class GameState():
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
         else:
-            agent.act(self.get_state())
+            print(isinstance(agent.model, DQNModel))
+            if (isinstance(agent.model, DQNModel)):
+                agent.act(self.get_board_state())
+            else:
+                agent.act(self.get_state())
 
         agent.handle_merge()
 
@@ -425,6 +430,7 @@ class GameState():
                 name=name,
                 manual_control=False,
             )
+            print(model.id)
             self.agents[model.id] = ai_agent
 
     def is_exit_command(self, event):
@@ -487,8 +493,9 @@ class GameState():
             self.window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
         else:
-            self.window = pygame.dispaly.set_mode(
+            self.window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+
         pygame.display.set_caption('CIS 522: Final Project')
         self.board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
         clock = pygame.time.Clock()

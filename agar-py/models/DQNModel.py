@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from models.ModelInterface import ModelInterface
 from actions import Action
+from models.DQN import DQN
 
 # Exploration (this could be moved to the agent instead though)
 EPSILON = 0.95
@@ -39,6 +40,7 @@ class DQN(nn.Module):
 
 class DQNModel(ModelInterface):
     def __init__(self):
+        super().__init__()
         # init replay buffer
         self.replay_buffer = deque(maxlen=BUFFER_LENGTH)
 
