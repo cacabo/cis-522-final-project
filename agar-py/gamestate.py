@@ -419,8 +419,10 @@ class GameState():
             window.blit(text, (x, start_y + idx * 20))
 
     def main_loop(self):
-        window = pygame.display.set_mode(
-            (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+        if conf.FULL_SCREEN:
+            window = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
+        else:
+            window = pygame.dispaly.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         pygame.display.set_caption('CIS 522: Final Project')
         board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
         clock = pygame.time.Clock()
