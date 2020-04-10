@@ -3,6 +3,7 @@ import numpy as np
 import config as conf
 import utils
 import math
+from mass import Mass
 
 NORMAL_MODE = 'normal'
 SHOOTING_MODE = 'shooting'
@@ -45,21 +46,17 @@ class AgentCell():
         self.mass = mass
         self.radius = utils.massToRadius(mass)
 
-    def move_left(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.x_pos = max(self.x_pos - vel, self.radius)
+    # def move_left(self, vel):
+    #     self.x_pos = max(self.x_pos - vel, self.radius)
 
-    def move_right(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
+    # def move_right(self, vel):
+    #     self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
 
-    def move_up(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.y_pos = max(self.y_pos - vel, self.radius)
+    # def move_up(self, vel):
+    #     self.y_pos = max(self.y_pos - vel, self.radius)
 
-    def move_down(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
+    # def move_down(self, vel):
+    #     self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -71,7 +68,7 @@ class AgentCell():
         """
         Move in response to being shot
         """
-        self.move_normal(self.shooting_angle, self.shooting_velocity)
+        utils.moveObject(self, self.shooting_angle, self.shooting_velocity)
         self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
 
         if self.shooting_velocity <= 0:
@@ -82,23 +79,6 @@ class AgentCell():
             self.shooting_acceleration = None
             self.shooting_velocity = None
             self.shooting_acceleration = None
-
-    def move_normal(self, angle, vel):
-        if angle is None:
-            return
-
-        vel = vel if vel is not None else self.get_velocity()
-        radians = angle / 180 * math.pi
-        dx = math.cos(radians) * vel
-        dy = math.sin(radians) * vel
-        if dx > 0:
-            self.move_right(dx)
-        elif dx < 0:
-            self.move_left(dx * -1)
-        if dy > 0:
-            self.move_up(dy)
-        elif dy < 0:
-            self.move_down(dy * -1)
 
     def move(self, angle, vel):
         """
@@ -112,7 +92,8 @@ class AgentCell():
         if self.mode == SHOOTING_MODE:
             self.move_shoot()
         else:
-            self.move_normal(angle, vel)
+            vel = vel if vel is not None else self.get_velocity()
+            utils.moveObject(self, angle, vel)
 
     def shift(self, dx=None, dy=None):
         """
@@ -261,15 +242,23 @@ class Agent():
         camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
-        raise Exception('Not implemented')
-        # TODO: this crashes, needs to be handled for each specific split cell
-        # if self.mass < conf.MIN_MASS_TO_SHOOT:
-        #     return
+        # You can only shoot if you are a single cell
+        if len(self.cells) > 1:
+            return
 
-        # self.mass = self.mass - conf.SHOOT_MASS
+        if self.get_mass() < conf.MIN_MASS_TO_SHOOT:
+            return
 
-        # TODO shoot
-        # return
+        # Must be moving in a direction in order to shoot
+        if self.angle is None:
+            return
+
+        cell = self.cells[0]
+        cell.mass = cell.mass - conf.MASS_MASS
+
+        (mass_x, mass_y) = cell.get_pos()
+        mass = Mass(mass_x, mass_y, self.color, self.angle, cell.radius)
+        self.game.add_mass(mass)
 
     def handle_merge(self):
         # TODO normally this should only happen if the user moves cells near each other

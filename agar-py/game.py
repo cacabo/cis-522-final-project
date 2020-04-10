@@ -27,10 +27,14 @@ class Game():
         self.agents = {}
         self.foods = []
         self.viruses = []
+        self.masses = []
         self.time = 0
 
     def get_time(self):
         return self.time
+
+    def add_mass(self, mass):
+        self.masses.append(mass)
 
     def add_food(self, n):
         """
@@ -155,6 +159,14 @@ class Game():
                   ' died! Was eaten by ' + str(agent.name))
             other.is_alive = False
 
+    def handle_mass(self, agent, mass):
+        for cell in agent.cells:
+            if not self.check_cell_collision(cell, mass):
+                continue
+            print('[MASS] %s ate mass %s' % (agent.name, mass.id))
+            cell.mass += mass.mass
+            return mass
+
     def handle_virus(self, agent, virus):
         """
         @return None if virus not effected
@@ -226,6 +238,21 @@ class Game():
             agent.ai_move()
             # agent.act(action)
 
+    def _filter_objects(self, agent, arr, handler):
+        """
+        Parameters:
+
+            agent   - current agent
+            arr     - list of objects the agent might interact with
+            handler - takes in `agent` and items from `arr` on by one, returns
+                      the object if it should be removed else returns None
+        """
+        obj_or_none = [handler(
+            agent, obj) for obj in arr]
+        not_removed_objs = [arr[idx] for (
+            idx, obj_or_none) in enumerate(obj_or_none) if obj_or_none is None]
+        return not_removed_objs
+
     def tick_agent(self, agent, action):
         self.update_agent_state(agent, action)
 
@@ -243,12 +270,13 @@ class Game():
 
         self.foods = foods_remaining
 
+        # Iterate over all masses, remove those which were eaten
+        self.masses = self._filter_objects(
+            agent, self.masses, self.handle_mass)
+
         # Iterate over all viruses, remove viruses which were eaten
-        removed_viruses_or_none = [self.handle_virus(
-            agent, virus) for virus in self.viruses]
-        not_removed_viruses = [self.viruses[idx] for (
-            idx, virus_or_none) in enumerate(removed_viruses_or_none) if virus_or_none is None]
-        self.viruses = not_removed_viruses
+        self.viruses = self._filter_objects(
+            agent, self.viruses, self.handle_virus)
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
@@ -268,6 +296,9 @@ class Game():
         # fill screen white, to clear old frames
         WIN.fill(conf.WHITE_COLOR)
         board.fill(conf.WHITE_COLOR)
+
+        for mass in self.masses:
+            self.draw_circle(board, mass, color=mass.color)
 
         # TODO don't redraw everything?
         for food in self.foods:
@@ -308,6 +339,11 @@ class Game():
     def update_game_state(self, action):
         # make sure food/virus/player mass is balanced on the board
         self.balance_mass()
+
+        # move all mass
+        for mass in self.masses:
+            if mass.is_moving():
+                mass.move()
 
         # perform updates for all agents
         for agent in self.agents.values():
