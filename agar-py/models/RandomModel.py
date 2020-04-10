@@ -3,6 +3,7 @@ import ModelInterface
 
 class RandomModel(ModelInterface):
     def __init__(self, min_steps, max_steps):
+        super().__init__()
         self.min_steps = min_steps
         self.max_steps = max_steps
         self.steps_remaining = 0

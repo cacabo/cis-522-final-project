@@ -210,6 +210,29 @@ class Game():
                 manual_control=False,
             )
             self.agents[ai_agent.name] = ai_agent
+    
+    def init_model_agent(self, model):
+        """
+        Initialize a game agent for the given learning model
+        @param model - the learning model to create an agent for
+        """
+        if model is None:
+            raise ValueError('asked to initialize agent for None model')
+        
+        radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
+        pos = utils.randomPosition(radius)
+        # TODO: make model name better, maybe give ID to Agent() instead
+        model_agent = Agent(
+            self,
+            pos[0],
+            pos[1],
+            radius,
+            mass=conf.AGENT_STARTING_MASS,
+            color=conf.BLUE_COLOR,
+            name='Agent' + str(model.id),
+            manual_control=False
+        )
+        self.agents[model.id] = model_agent
 
     def update_agent_state(self, agent, action):
         if GUI_MODE:
@@ -353,9 +376,11 @@ class Game():
     # ------------------------------------------------------------------------------
     # Methods for interfacing with learning models
     # ------------------------------------------------------------------------------
-    # reset the game to its initial state
-    def reset(self):
+    # reset the game to its initial state, and initialize a game agent for each model
+    def reset(self, models):
         self.__init__()
+        for model in models:
+            self.init_model_agent(model)
 
     # get the current game state
     def get_state(self):
@@ -363,6 +388,7 @@ class Game():
 
     # update the game state based on actions taken by models
     def update_game_state_w(self, models, actions):
+
 
 game = Game()
 
