@@ -40,4 +40,5 @@ class HeuristicModel(ModelInterface):
         # otherwise, get the direction that goes most directly to the nearest food object
         else:
             angle_to_food = utils.getAngleBetweenPoints(my_pos, nearest_food.get_pos())
+            print(angle_to_food)
             return utils.getActionClosestToAngle(angle_to_food)

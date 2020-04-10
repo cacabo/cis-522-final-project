@@ -278,7 +278,11 @@ class GameState():
         dead_agents = [agent for agent in self.agents.values()
                        if not agent.is_alive]
         for dead_agent in dead_agents:
-            del self.agents[dead_agent.name]
+            # TODO: handle this better. interactive player is keyed on name, rest are keyed on model ID
+            if dead_agent.manual_control:
+                del self.agents[dead_agent.name]
+            else:
+                del self.agents[dead_agent.model.id]
 
         self.time += 1
 

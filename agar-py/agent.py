@@ -201,8 +201,6 @@ class Agent():
 
         self.is_alive = True
         self.manual_control = manual_control
-        self.ai_dir = None
-        self.ai_steps = 0
 
         self.update_last_split()
 
@@ -314,30 +312,27 @@ class Agent():
             is_down = False
             is_up = False
 
-        # set angle
+        # perform appropriate action for key press
         if is_up:
             if is_left:
-                self.angle = 135
+                self.do_action(Action.MOVE_UP_LEFT)
             elif is_right:
-                self.angle = 45
+                self.do_action(Action.MOVE_UP_RIGHT)
             else:
-                self.angle = 90
+                self.do_action(Action.MOVE_UP)
         elif is_down:
             if is_left:
-                self.angle = 225
+                self.do_action(Action.MOVE_DOWN_LEFT)
             elif is_right:
-                self.angle = 315
+                self.do_action(Action.MOVE_DOWN_RIGHT)
             else:
-                self.angle = 270
+                self.do_action(Action.MOVE_DOWN)
         elif is_left:
-            self.angle = 180
+            self.do_action(Action.MOVE_LEFT)
         elif is_right:
-            self.angle = 0
-        # else:
-        #     self.angle = None
+            self.do_action(Action.MOVE_RIGHT)
 
         self.move()
-
         camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
