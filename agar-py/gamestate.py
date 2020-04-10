@@ -14,10 +14,8 @@ text_font = pygame.font.SysFont(
     conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
 
 # ------------------------------------------------------------------------------
-# Game class
+# GameState class
 # ------------------------------------------------------------------------------
-
-
 class GameState():
     def __init__(self):
         self.camera = None
