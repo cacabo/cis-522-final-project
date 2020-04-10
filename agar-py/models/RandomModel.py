@@ -25,3 +25,21 @@ class RandomModel(ModelInterface):
     # no optimization occurs for RandomModel
     def optimize(self, reward):
         return
+    
+    def remember(self, *args):
+        return
+
+
+# class RandomAgent:
+#     def __init__(self, action_space):
+#         self.action_space = action_space
+#         pass
+
+#     def get_action(self):
+#         return self.action_space[random.randrange(len(self.action_space))]
+
+#     def remember(self, *args):
+#         return
+
+#     def train(self):
+#         return

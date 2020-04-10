@@ -1,5 +1,6 @@
 from gamestate import GameState
 from models.RandomModel import RandomModel
+from operator import add
 # from models.DQNModel import DQNModel
 
 
@@ -16,6 +17,10 @@ def optimize_models(models, rewards):
     for (model, reward) in zip(models, rewards):
         model.optimize(reward)
 
+def update_models_memory(models, state, actions, next_state, rewards, dones):
+    for (model, action, reward, done) in zip(models, actions, rewards, dones):
+        model.remember(state, action, next_state, reward, done)
+
 
 EPISODES = 10  # the number of games we're playing
 MAX_STEPS = 1000
@@ -28,6 +33,7 @@ env = GameState()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 models = [rand_model_1, rand_model_2]
+episode_rewards = [0 for _ in models]
 
 # for episode in range(EPISODES):
 #     # done = False # whether game is done or not (terminal state)
@@ -66,33 +72,34 @@ models = [rand_model_1, rand_model_2]
 #             break
 
 for episode in range(EPISODES):
-    done = False  # whether game is done or not (terminal state)
+    # done = False  # whether game is done or not (terminal state)
     # reset the environment to fresh starting state with game agents initialized for models
     env.reset(models)
     # episode_reward = 0 # some notion of the reward in this episode
-    # steps? (essentially game ticks? if want to cap # of ticks so game doesn't go on indefinitely)
 
-    # get the first state
-    state = env.get_state()
-    while not done:  # game loop, can also incorporate steps here
+    state = env.get_state() # get the first state
+
+    for step in range(MAX_STEPS): # cap the num of game ticks
         actions = select_model_actions(models, state)
 
         # environment determines new state, reward, whether terminal, based on actions taken by all models
-        rewards, done = env.update_game_state(models, actions)
-
-        # look at the new state
-        if not done:
-            next_state = env.get_state()
-        else:
-            next_state = None
-        # update replay memory
-        # memory.remember(state, action, next_state, reward)
-
-        state = next_state  # update the state
+        rewards, dones = env.update_game_state(models, actions)
+        next_state = env.get_state()
+        episode_rewards = list(map(add, episode_rewards, rewards)) #update rewards
+        update_models_memory(models, state, actions, next_state, rewards, dones) # update replay memory
 
         # optimize models
         optimize_models(models, rewards)
 
-        # check for termination?
-        if done:
+        # commented out because we will always need the next_state
+        # # look at the new state
+        # if not done:
+        #     next_state = env.get_state()
+        # else:
+        #     next_state = None
+
+        # check for termination of our player #TODO
+        if dones[0]:
             break
+
+        state = next_state  # update the state
