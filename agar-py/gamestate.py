@@ -137,24 +137,24 @@ class GameState():
                 if not other_cell.is_alive:
                     continue
                 elif self.check_cell_collision(agent_cell, other_cell):
-                    print('[CELL] %s ate one of %s\'s cells' %
-                          (agent.name, other.name))
+                    print('[%s] [CELL] %s ate one of %s\'s cells' %
+                          (self.get_time(), agent.name, other.name))
                     agent_cell.set_mass(agent_cell.mass + other_cell.mass)
                     other_cell.is_alive = False
 
         other.cells = [cell for cell in other.cells if cell.is_alive]
 
         if len(other.cells) == 0:
-            print('[GAME] ' + str(other.name) +
-                  ' died! Was eaten by ' + str(agent.name))
+            print('[%s] [GAME] %s died! Was eaten by %s' %
+                  (self.get_time(), other.name, agent.name))
             other.is_alive = False
 
     def handle_food(self, agent, food):
         for cell in agent.cells:
             if not self.check_food_collision(cell, food):
                 continue
-            print('[FOOD] %s ate food item %s' %
-                  (agent.name, food.id))
+            print('[%s] [FOOD] %s ate food item %s' %
+                  (self.get_time(), agent.name, food.id))
             cell.mass += food.mass
             return food
 
@@ -162,7 +162,8 @@ class GameState():
         for cell in agent.cells:
             if not self.check_cell_collision(cell, mass):
                 continue
-            print('[MASS] %s ate mass %s' % (agent.name, mass.id))
+            print('[%s] [MASS] %s ate mass %s' %
+                  (self.get_time(), agent.name, mass.id))
             cell.mass += mass.mass
             return mass
 
@@ -175,7 +176,8 @@ class GameState():
         for cell in agent.cells:
             if not virus.is_alive or not self.check_virus_collision(cell, virus):
                 continue
-            print('[VIRUS] %s ate virus %s' % (agent.name, virus.id))
+            print('[%s] [VIRUS] %s ate virus %s' %
+                  (self.get_time(), agent.name, virus.id))
             new_cells = cell.eat_virus(virus)
             break
 
@@ -184,7 +186,6 @@ class GameState():
         # return virus
         if len(new_cells) > 0:
             agent.cells = agent.cells + new_cells
-            print('num new cells', len(new_cells))
             return virus
 
         return None
@@ -253,8 +254,6 @@ class GameState():
         # Iterate over all viruses, remove viruses which were eaten
         self.viruses = self._filter_objects(
             agent, self.viruses, self.handle_virus)
-
-        print('agent length', len(agent.cells))
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
@@ -446,11 +445,7 @@ class GameState():
             for agent in self.agents.values():
                 self.update_interactive_state(agent)
 
-            print('[DEBUG] done with update agent state')
-
             self.tick_game_state()
-
-            print('[DEBUG] done with tick game state')
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():

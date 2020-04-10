@@ -28,12 +28,8 @@ class HeuristicModel(ModelInterface):
         nearest_food_dist = np.inf
         for food in foods:
             food_pos = food.get_pos()
-            print(my_pos)
-            print(food_pos)
             curr_dist = utils.getEuclideanDistance(my_pos, food_pos)
-            print(curr_dist)
             if curr_dist < nearest_food_dist:
-                print('new food!')
                 nearest_food = food
                 nearest_food_dist = curr_dist
 

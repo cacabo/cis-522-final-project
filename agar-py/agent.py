@@ -103,9 +103,6 @@ class AgentCell():
         num_cells_to_split_into = min(
             max_cells_based_on_count, max_cells_based_on_size)
 
-        print('[DEBUG] splitting into %s cells' %
-              (str(num_cells_to_split_into)))
-
         new_cells = []
 
         new_mass = self.mass / num_cells_to_split_into
@@ -118,8 +115,6 @@ class AgentCell():
 
         self.agent.update_last_split()
         return new_cells
-
-        print('[DEBUG] Done splitting:', self.agent.cells)
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -188,6 +183,7 @@ class Agent():
         `AgentCells` (just one to start out with).
 
         @param game          - game that this `Agent` belongs to
+        @param model         - the decision making model for this `Agent`
         @param x
         @param y
         @param radius
@@ -237,7 +233,6 @@ class Agent():
             raise ValueError('Agent received bad action in do_action()')
 
         self.move()
-        #camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def get_avg_x_pos(self):
         """
