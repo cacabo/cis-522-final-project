@@ -3,7 +3,9 @@ import torch
 import numpy as np
 import random
 import torch
-from nets import DQN
+import torch.nn as nn
+from models.ModelInterface import ModelInterface
+from actions import Action
 
 # Exploration (this could be moved to the agent instead though)
 EPSILON = 0.95
@@ -16,14 +18,31 @@ batch_size = 32
 BUFFER_LENGTH = 1000
 
 
-class DQNModel:
+class DQN(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(DQN, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.fc1 = nn.Linear(self.input_dim, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, output_dim)
+
+        self.relu = nn.ReLU()
+
+    def forward(self, state):
+        x = self.relu(self.fc1(state))
+        x = self.relu(self.fc2(x))
+        qvals = self.fc3(x)
+        return qvals
+
+class DQNModel(ModelInterface):
     def __init__(self):
         # init replay buffer
         self.replay_buffer = deque(maxlen=BUFFER_LENGTH)
 
         # init model
-        self.model = DQN(observation_space.shape, len(
-            action_space))  # TODO: fix w/ observation space
+        self.model = DQN(observation_space.shape, len(Action))  # TODO: fix w/ observation space
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.loss = torch.nn.SmoothL1Loss()
         self.device = "cpu"
@@ -34,18 +53,25 @@ class DQNModel:
         self.gamma = GAMMA
 
     def get_action(self, state):
+        if self.done:
+            return None
         if random.random() > self.epsilon:
             q_values = self.model.predict(state)
             action = np.argmax(q_values)  # TODO: placeholder
         else:
-            action = self.action_space[random.randrange(
-                len(self.action_space))]  # random action
+            action = Action(np.random.randint(len(Action))) # random action
         return action
 
     def remember(self, state, action, next_state, reward, done):
-        self.replay_buffer.append((state, action, next_state, reward, done))
+        if self.done:
+            return
+        else:
+            self.replay_buffer.append((state, action, next_state, reward, done))
+            self.done = done
 
-    def train(self):  # or experience replay
+    def optimize(self):  # or experience replay
+        if self.done:
+            return
         # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < batch_size:
             return
@@ -74,18 +100,3 @@ class DQNModel:
         # Decay epislon
         self.epsilon *= EPSILON_DECAY
         self.epsilon = max(MIN_EPSILON, self.epsilon)
-
-
-class RandomAgent:
-    def __init__(self, action_space):
-        self.action_space = action_space
-        pass
-
-    def get_action(self):
-        return self.action_space[random.randrange(len(self.action_space))]
-
-    def remember(self, *args):
-        return
-
-    def train(self):
-        return

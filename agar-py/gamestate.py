@@ -301,13 +301,14 @@ class GameState():
         # first, update the current game state by performing each model's selected
         # action with its agent
         for (model, action) in zip(models, actions):
-            agent = self.agents[model.id]
-            agent.do_action(action)
+            if model.id in self.agents:
+                agent = self.agents[model.id]
+                agent.do_action(action)
 
-        rewards = self.tick_game_state()
+        rewards = self.tick_game_state() #TODO: abstract away computation of rewards?
 
         # TODO: go through rewards to see if anyone died and if so, add "done"
-        return [None for model in models], False
+        return [0 for model in models], [False for model in models]
 
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
