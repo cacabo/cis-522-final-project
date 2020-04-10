@@ -52,9 +52,11 @@ class GameState():
 
     def add_food(self, n):
         """
-        insert food at random places on the board
+        Insert food at random places on the board
 
-        @param n - number of food to spawn
+        Parameters
+
+            n : number of food to spawn
         """
         if n is None or n <= 0:
             raise Exception('n must be positive')
@@ -67,9 +69,11 @@ class GameState():
 
     def add_virus(self, n):
         """
-        insert viruses at random places on the board
+        Insert viruses at random places on the board
 
-        @param n - number of viruses to spawn
+        Parameters
+
+            n : number of viruses to spawn
         """
         if n is None or n <= 0:
             raise Exception('n must be positive')
