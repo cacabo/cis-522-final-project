@@ -134,23 +134,17 @@ class Game():
             return
 
         not_consumed = []
-        consumed = []
+        # consumed = []
 
         for agent_cell in agent.cells:
             for other_cell in other.cells:
                 if self.check_cell_collision(agent_cell, other_cell):
-                    print('[CELL] %s ate one of %s\'s cells' %
+                    print(self.time + ' [CELL] %s ate one of %s\'s cells' %
                           (agent.name, other.name))
-                    consumed.append((agent_cell, other_cell))
+                    # consumed.append((agent_cell, other_cell))
+                    agent_cell.set_mass(agent_cell.mass + other_cell.mass)
                 else:
                     not_consumed.append(other_cell)
-
-        if len(consumed) == 0:
-            return
-
-        for (agent_cell, consumed_cell) in consumed:
-            agent_cell.mass += consumed_cell.mass
-            agent_cell.radius = utils.massToRadius(agent_cell.mass)
 
         other.cells = not_consumed
 
@@ -177,6 +171,9 @@ class Game():
                 continue
             print('[VIRUS] %s ate virus %s' % (agent.name, virus.id))
             cell.eat_virus(virus)
+
+            # Return early without considering other cells
+            # That is, the virus can only be eaten once
             return virus
 
         return None

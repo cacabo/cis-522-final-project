@@ -21,7 +21,8 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Make it such that an agent cannot split after a certain number of clock ticks not ms
 - [x] Checks to see if AgentCells are overlapping
 - [x] Eating mass
-- [ ] Abstract out stupid AI with interface that could be used by RL agent (Mak)
-- [ ] Split into many pieces when eats virus
+- [x] Split into many pieces when eats virus
+- [x] Case where cells totally overlap (pick random angle)
 - [ ] Shooting viruses
-- [ ] Case where cells totally overlap (pick random angle)
+- [ ] Abstract out stupid AI with interface that could be used by RL agent (Mak)
+- [ ] Bug with eating parts of agents

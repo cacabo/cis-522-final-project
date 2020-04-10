@@ -3,6 +3,7 @@ import numpy as np
 import config as conf
 import utils
 import math
+import random
 from mass import Mass
 
 NORMAL_MODE = 'normal'
@@ -44,6 +45,11 @@ class AgentCell():
             return 1
 
     def set_mass(self, mass):
+        """
+        Setter method for the mass
+
+        Also updates AgentCell radius
+        """
         if mass is None or mass <= 0:
             raise Exception('Mass must be positive')
 
@@ -64,7 +70,26 @@ class AgentCell():
             raise Exception('Cannot eat virus which is None')
 
         self.mass += virus.mass
-        # TODO split
+
+        # TODO
+        max_cells_based_on_count = conf.AGENT_CELL_LIMIT - \
+            len(self.agent.cells) + 1
+        max_cells_based_on_size = int(self.mass / (conf.MIN_MASS_TO_SPLIT / 2))
+        num_cells_to_split_into = min(
+            max_cells_based_on_count, max_cells_based_on_size)
+
+        new_cells = []
+
+        new_mass = self.mass / num_cells_to_split_into
+        self.mass = new_mass
+
+        for i in range(1, num_cells_to_split_into):
+            new_cell = AgentCell(self.agent, self.x_pos,
+                                 self.y_pos, mass=new_mass)
+            new_cells.append(new_cell)
+
+        self.agent.cells = self.agent.cells + new_cells
+        self.agent.last_split = self.agent.game.get_time()
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -187,7 +212,7 @@ class Agent():
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
 
-        for cell in self.cells:
+        for (idx, cell) in enumerate(self.cells):
             # Handle converging towards the middle
             penalty = -2  # Move this many pixels towards the center
             angle_to_avg = utils.getAngleBetweenPoints(
@@ -197,14 +222,15 @@ class Agent():
                 cell.move(angle_to_avg, penalty)
 
             # Handle overlapping cells
-            for otherCell in self.cells:
-                if otherCell == cell:
-                    continue
+            for otherIdx in range(idx + 1, len(self.cells)):
+                otherCell = self.cells[otherIdx]
                 overlap = utils.getObjectOverlap(cell, otherCell)
                 if overlap < 0:
                     continue
                 dist_to_move = overlap / 2
                 angle = utils.getAngleBetweenObjects(cell, otherCell)
+                if angle is None:
+                    angle = random.randrange(360)
                 cell.move(angle, -1 * dist_to_move)
                 otherCell.move(angle, dist_to_move)
 
