@@ -91,13 +91,6 @@ for episode in range(EPISODES):
         # optimize models
         optimize_models(models, rewards)
 
-        # commented out because we will always need the next_state
-        # # look at the new state
-        # if not done:
-        #     next_state = env.get_state()
-        # else:
-        #     next_state = None
-
         # check for termination of our player #TODO
         if dones[0]:
             break
