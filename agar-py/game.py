@@ -22,6 +22,19 @@ text_font = pygame.font.SysFont(
 
 
 class Game():
+    ACTION_SPACE = {
+        0: conf.UP,
+        1: conf.UP_RIGHT,
+        2: conf.RIGHT,
+        3: conf.DOWN_RIGHT,
+        4: conf.DOWN,
+        5: conf.DOWN_LEFT,
+        6: conf.LEFT,
+        7: conf.UP_RIGHT,
+        9: "SHOOT",
+        10: "SPLIT",
+    }
+
     def __init__(self):
         self.camera = None
         self.agents = {}

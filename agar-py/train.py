@@ -1,5 +1,5 @@
 from game import Game
-from DQNAgent import DQNAgent
+from DQNAgent import VanillaAgent
 
 
 EPISODES = 10 # the number of games we're playing
@@ -7,7 +7,7 @@ EPISODES = 10 # the number of games we're playing
 # Define environment 
 env = Game()
 # Define the DQNAgent
-agent = DQNAgent()
+agent = VanillaAgent(env.ACTION_SPACE, None) #TODO: update observation space
 
 for episode in range(EPISODES):
     done = False # whether game is done or not (terminal state)
