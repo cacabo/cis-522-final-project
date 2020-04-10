@@ -17,6 +17,8 @@ text_font = pygame.font.SysFont(
 # ------------------------------------------------------------------------------
 # GameState class
 # ------------------------------------------------------------------------------
+
+
 class GameState():
     def __init__(self):
         self.camera = None
@@ -317,9 +319,10 @@ class GameState():
             keys = pygame.key.get_pressed()
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
-            agent.handle_merge()
         else:
             agent.ai_move()
+
+        agent.handle_merge()
 
     def init_manual_agent(self, name):
         radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
@@ -420,9 +423,11 @@ class GameState():
 
     def main_loop(self):
         if conf.FULL_SCREEN:
-            window = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
+            window = pygame.display.set_mode(
+                (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
         else:
-            window = pygame.dispaly.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+            window = pygame.dispaly.set_mode(
+                (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         pygame.display.set_caption('CIS 522: Final Project')
         board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
         clock = pygame.time.Clock()

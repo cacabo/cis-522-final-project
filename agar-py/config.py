@@ -51,7 +51,7 @@ MIN_CELL_SIZE = 50
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 20
 AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent can have
-AGENT_TICKS_TO_MERGE_CELLS = 100  # can merge cells this many ticks after splitting
+AGENT_TICKS_TO_MERGE_CELLS = 400  # can merge cells this many ticks after splitting
 
 # must wait a certain number of ticks after splitting before splitting again
 AGENT_TICKS_TO_SPLIT_AGAIN = 5

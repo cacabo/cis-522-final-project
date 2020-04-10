@@ -124,8 +124,8 @@ class AgentCell():
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
         self.shooting_angle = angle
-        self.shooting_velocity = self.radius * 2
-        self.shooting_acceleration = self.radius / 2
+        self.shooting_velocity = self.radius
+        self.shooting_acceleration = self.radius / 8
 
     def move_shoot(self):
         """
