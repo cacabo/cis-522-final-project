@@ -222,38 +222,22 @@ class Agent():
         for cell in self.cells:
             (x, y) = cell.get_pos()
 
-            dx = x - avg_x
-            dy = avg_y - y
+            # Handle overlapping cells
+            # TODO
 
-            penalty = -2
+            # Handle converging towards the middle
+            # dx = x - avg_x
+            # dy = avg_y - y
 
-            if dx == 0 and dy != 0:
-                angle = 90 if dy > 0 else 270
-                print()
-                print('angle', angle, 'pen', penalty)
-                cell.move(angle, penalty)
-            elif dy == 0 and dx != 0:
-                angle = 0 if dx > 0 else 180
-                print('angle', angle, 'pen', penalty)
-                cell.move(angle, penalty)
-            elif dx != 0:
-                radians = math.atan(abs(dy / dx))
-                if dx < 0 and dy > 0:
-                    radians += math.pi / 2
-                elif dy < 0 and dx < 0:
-                    radians += math.pi
-                elif dy < 0:
-                    radians += 3 * math.pi / 2
+            penalty = -2  # Move this many pixels towards the center
+            angle_to_avg = utils.getAngleBetweenPoints((avg_x, avg_y), (x, y))
 
-                # radians = radians if dx > 0 else radians + math.pi / 2
-                angle = radians / math.pi * 180
-                print('angle', angle, 'pen', penalty)
-                cell.move(angle, penalty)
+            if angle_to_avg is not None:
+                cell.move(angle_to_avg, penalty)
 
             cell.move(self.angle, vel)
 
-            # TODO have some notion of penalty?
-            # TODO also handle cells overlapping with each other
+            # TODO finish handle cells overlapping with each other
 
     def handle_move_keys(self, keys, camera):
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
