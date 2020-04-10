@@ -224,7 +224,7 @@ class Game():
         else:
             # TODO: implement without key presses, should take in actions. Right now just moves randomly
             agent.ai_move()
-            #agent.act(action)
+            # agent.act(action)
 
     def tick_agent(self, agent, action):
         self.update_agent_state(agent, action)
@@ -257,11 +257,12 @@ class Game():
 
     def draw_circle(self, board, obj, color=None, stroke=None):
         x, y = obj.get_pos()
-        pos = (round(x), round(y))
+        pos = (int(round(x)), int(round(y)))
+        radius = int(round(obj.radius))
         if stroke is not None:
-            pygame.draw.circle(board, color, pos, obj.radius, stroke)
+            pygame.draw.circle(board, color, pos, radius, stroke)
         else:
-            pygame.draw.circle(board, color, pos, obj.radius)
+            pygame.draw.circle(board, color, pos, radius)
 
     def draw_window(self, board):
         # fill screen white, to clear old frames
@@ -320,7 +321,7 @@ class Game():
 
         self.time = self.time + 1
 
-        #TODO: reward, next state, terminated
+        # TODO: reward, next state, terminated
 
     def main_loop(self):
         if GUI_MODE:
