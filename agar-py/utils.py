@@ -33,9 +33,42 @@ def isPointInCircle(point, circle_center, circle_radius):
     return circle_radius >= getEuclideanDistance(point, circle_center)
 
 
-def areCirclesColliding(center1, radius1, center2, radius2):
-    """TODO: find better way to solve"""
-    return np.linalg.norm(np.array(center1) - np.array(center2)) < radius1 + radius2
+def getCircleOverlap(c1, r1, c2, r2):
+    """
+    Measure overlap between two circles
+
+    NOTE this is more positive the more cirlces overlap, this is negative if the
+    circles do not overlap
+
+    Parameters:
+
+        c1 - tuple (x, y) position of circle
+        r1 - radius
+        c2 - tuple (x, y) position of circle
+        r2 - radius
+    """
+    dist_btwn_centers = np.linalg.norm(np.array(c1) - np.array(c2))
+    sum_radii = r1 + r2
+    return sum_radii - dist_btwn_centers
+
+
+def getObjectOverlap(a, b):
+    return getCircleOverlap(a.get_pos(), a.radius, b.get_pos(), b.radius)
+
+
+def areCirclesColliding(c1, r1, c2, r2):
+    """
+    Parameters:
+
+        c1 - tuple (x, y) position of circle
+        r1 - radius
+        c2 - tuple (x, y) position of circle
+        r2 - radius
+
+    Returns: boolean if the circles overlap
+    """
+    overlap = getCircleOverlap(c1, r1, c2, r2)
+    return overlap > 0
 
 
 def getAngleBetweenPoints(p1, p2):
@@ -69,3 +102,7 @@ def getAngleBetweenPoints(p1, p2):
         return angle
     else:
         return None
+
+
+def getAngleBetweenObjects(a, b):
+    return getAngleBetweenPoints(a.get_pos(), b.get_pos())
