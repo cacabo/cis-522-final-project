@@ -2,6 +2,7 @@ from collections import deque
 import torch
 import numpy as np
 import random
+from models.DQN.DQNConv import DQNConv
 
 # Exploration (this could be moved to the agent instead though)
 epsilon = 0.99 
@@ -17,9 +18,9 @@ class DQNModel:
         self.replay_buffer = deque(maxlen = BUFFER_LENGTH)
 
         #init model
-        self.model = 
+        self.model = DQNConv()
         self.optimizer = torch.optim.Adam(self.model.parameters())
-        self.loss = 
+        self.loss = None
         self.device = "cpu"
         if torch.cuda.is_available():
             self.device = "cuda"

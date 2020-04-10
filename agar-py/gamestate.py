@@ -29,6 +29,8 @@ class GameState():
         self.viruses = []
         self.masses = []
         self.time = 0
+        self.board = None
+        self.window = None
 
         # set up the game state with balanced mass
         self.balance_mass()
@@ -339,6 +341,11 @@ class GameState():
     def get_state(self):
         return self.agents, self.foods, self.viruses, self.time
 
+    # get game board image
+    def get_board_state(self):
+        state = pygame.surfarray.array3d(self.window)
+        return state
+
     # update the game state based on actions taken by models
     def update_game_state(self, models, actions):
         # first, update the current game state by performing each model's selected
@@ -477,13 +484,13 @@ class GameState():
 
     def main_loop(self):
         if conf.FULL_SCREEN:
-            window = pygame.display.set_mode(
+            self.window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
         else:
-            window = pygame.display.set_mode(
+            self.window = pygame.dispaly.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         pygame.display.set_caption('CIS 522: Final Project')
-        board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
+        self.board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
         clock = pygame.time.Clock()
         running = True
         while running:
@@ -501,7 +508,7 @@ class GameState():
                     running = False
 
             # redraw window then update the frame
-            self.draw_window(board, window)
+            self.draw_window(self.board, self.window)
             pygame.display.update()
 
         pygame.quit()
