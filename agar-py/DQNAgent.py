@@ -55,7 +55,7 @@ class VanillaAgent:
         actions = torch.Tensor(list(actions)).to(self.device)
         rewards = torch.Tensor(list(rewards)).to(self.device)
         next_states = torch.Tensor(list(next_states)).to(self.device)
-        dones = torch.Tensor(list(dones)).to(self.device)
+        dones = torch.Tensor(list(dones)).to(self.device) #what about these/considering terminating states
 
         # do Q computation TODO: understand the equations
         currQ = self.model(states).gather(1, actions) #TODO: understand this

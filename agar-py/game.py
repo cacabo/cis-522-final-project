@@ -41,6 +41,9 @@ class Game():
         self.foods = []
         self.viruses = []
         self.time = 0
+    
+    def get_player_names(self):
+        return list(self.agents.keys())
 
     def get_time(self):
         return self.time
