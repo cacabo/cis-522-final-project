@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import config as conf
+from actions import Action
 
 
 def massToRadius(mass):
@@ -178,6 +179,31 @@ def getAngleBetweenPoints(p1, p2):
 def getAngleBetweenObjects(a, b):
     return getAngleBetweenPoints(a.get_pos(), b.get_pos())
 
+
+def getActionClosestToAngle(angle):
+    half_angle = 45 / 2
+    if angle <= (45 - half_angle):
+        return Action.MOVE_RIGHT
+    elif angle <= (90 - half_angle):
+        return Action.MOVE_UP_RIGHT
+    elif angle <= (135 - half_angle):
+        return Action.MOVE_UP
+    elif angle <= (180 - half_angle):
+        return Action.MOVE_UP_LEFT
+    elif angle <= (225 - half_angle):
+        return Action.MOVE_LEFT
+    elif angle <= (270 - half_angle):
+        return Action.MOVE_DOWN_LEFT
+    elif angle <= (315 - half_angle):
+        return Action.MOVE_DOWN
+    elif angle <= (360 - half_angle):
+        return Action.MOVE_DOWN_RIGHT
+    else:
+        return Action.MOVE_RIGHT
+
+
+def getRandomAction():
+    return Action(np.random.randint(8))
 
 def moveObjectLeft(obj, vel):
     obj.x_pos = max(obj.x_pos - vel, obj.radius)

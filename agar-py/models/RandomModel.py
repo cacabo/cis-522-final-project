@@ -1,4 +1,5 @@
 import numpy as np
+import utils
 from models.ModelInterface import ModelInterface
 from actions import Action
 
@@ -17,7 +18,7 @@ class RandomModel(ModelInterface):
         if self.steps_remaining <= 0:
             self.steps_remaining = np.random.randint(
                 self.min_steps, self.max_steps)
-            self.curr_action = Action(np.random.randint(8))
+            self.curr_action = utils.getRandomAction()
 
         self.steps_remaining -= 1
         return self.curr_action
@@ -26,20 +27,6 @@ class RandomModel(ModelInterface):
     def optimize(self, reward):
         return
     
-    def remember(self, *args):
+    # no remembering occurs for RandomModel
+    def remember(self, state, action, next_state, reward, done):
         return
-
-
-# class RandomAgent:
-#     def __init__(self, action_space):
-#         self.action_space = action_space
-#         pass
-
-#     def get_action(self):
-#         return self.action_space[random.randrange(len(self.action_space))]
-
-#     def remember(self, *args):
-#         return
-
-#     def train(self):
-#         return
