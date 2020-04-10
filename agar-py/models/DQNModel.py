@@ -12,7 +12,7 @@ MIN_EPSILON = 0.001
 batch_size = 32
 BUFFER_LENGTH = 1000
 
-class DQNAgent:
+class DQNModel:
     def __init__(self):        
         #init replay buffer
         self.replay_buffer = deque(maxlen = BUFFER_LENGTH)

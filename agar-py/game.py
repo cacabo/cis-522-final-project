@@ -349,13 +349,19 @@ class Game():
             pygame.quit()
             quit()
 
+    # ------------------------------------------------------------------------------
+    # Methods for interfacing with learning models
+    # ------------------------------------------------------------------------------
+    # reset the game to its initial state
     def reset(self):
-        #TODO: reset game 
         self.__init__()
-        self.init_manual_agent('AgarAI')
-        self.init_ai_agents(conf.NUM_AI)
-        game.main_loop() #TODO: remove
-        #return TODO: return inital state
+
+    # get the current game state
+    def get_state(self):
+        return self.agents, self.foods, self.viruses, self.time
+
+    # update the game state based on actions taken by models
+    def update_game_state_w(self, models, actions):
 
 game = Game()
 
