@@ -22,3 +22,6 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Checks to see if AgentCells are overlapping
 - [x] Eating mass
 - [ ] Abstract out stupid AI with interface that could be used by RL agent (Mak)
+- [ ] Split into many pieces when eats virus
+- [ ] Shooting viruses
+- [ ] Case where cells totally overlap (pick random angle)

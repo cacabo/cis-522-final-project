@@ -176,7 +176,7 @@ class Game():
             if not self.check_virus_collision(cell, virus):
                 continue
             print('[VIRUS] %s ate virus %s' % (agent.name, virus.id))
-            cell.mass += virus.mass
+            cell.eat_virus(virus)
             return virus
 
         return None
@@ -329,8 +329,9 @@ class Game():
         WIN.blit(leaderboard_title, (x, 5))
         top_n = min(len(self.agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
         for idx, agent in enumerate(sorted_agents[:top_n]):
+            score = int(round(agent.get_mass()))
             text = text_font.render(str(
-                idx + 1) + ". " + str(agent.name) + ' (' + str(agent.get_mass()) + ')', 1, (0, 0, 0))
+                idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
             WIN.blit(text, (x, start_y + idx * 20))
 
     def is_exit_command(self, event):

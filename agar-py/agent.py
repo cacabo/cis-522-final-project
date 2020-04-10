@@ -10,16 +10,20 @@ SHOOTING_MODE = 'shooting'
 
 
 class AgentCell():
-    def __init__(self, x, y, radius=None, mass=None, mode=NORMAL_MODE):
+    def __init__(self, agent, x, y, radius=None, mass=None, mode=NORMAL_MODE):
         """
         An AgentCell is a single cell of an Agent
 
-        @param x
-        @param y
-        @param radius
-        @param mass
-        @param mode
+        Parameters:
+
+            agent  - pointer to agent
+            x      - x position
+            y      - y position
+            radius - optional radius of the cell
+            mass   - mass of the cell
+            mode   - either NORMAL_MODE or SPLITTING_MODE
         """
+        self.agent = agent
         self.x_pos = x
         self.y_pos = y
 
@@ -46,17 +50,21 @@ class AgentCell():
         self.mass = mass
         self.radius = utils.massToRadius(mass)
 
-    # def move_left(self, vel):
-    #     self.x_pos = max(self.x_pos - vel, self.radius)
+    def split(self):
+        """
+        Split this cell and return the newly created cell
+        """
+        self.set_mass(self.mass / 2)
+        new_cell = AgentCell(self.agent, self.x_pos, self.y_pos,
+                             self.radius, self.mass)
+        return new_cell
 
-    # def move_right(self, vel):
-    #     self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
+    def eat_virus(self, virus):
+        if virus is None:
+            raise Exception('Cannot eat virus which is None')
 
-    # def move_up(self, vel):
-    #     self.y_pos = max(self.y_pos - vel, self.radius)
-
-    # def move_down(self, vel):
-    #     self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
+        self.mass += virus.mass
+        # TODO split
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -72,6 +80,9 @@ class AgentCell():
         self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
 
         if self.shooting_velocity <= 0:
+            # We are done being controlled by acceleration and can be controlled
+            # by agent decisions
+
             # Change the mode
             self.mode = NORMAL_MODE
 
@@ -132,9 +143,6 @@ class Agent():
         """
         self.game = game
 
-        cell = AgentCell(x, y, radius=radius, mass=mass)
-        self.cells = [cell]
-
         self.color = color
         self.name = name
         self.angle = None  # For deciding direction to move in
@@ -144,6 +152,9 @@ class Agent():
         self.ai_dir = None
         self.ai_steps = 0
         self.last_split = self.game.get_time()
+
+        cell = AgentCell(self, x, y, radius=radius, mass=mass)
+        self.cells = [cell]
 
     def get_avg_x_pos(self):
         """
@@ -261,6 +272,7 @@ class Agent():
         self.game.add_mass(mass)
 
     def handle_merge(self):
+        # TODO merge with actual sibling cell if possible, not just arbitrary index?
         # TODO normally this should only happen if the user moves cells near each other
         if len(self.cells) < 2:
             return
@@ -280,7 +292,7 @@ class Agent():
             avg_y_pos = (cell.y_pos + other_cell.y_pos) / 2
             merged_mass = cell.mass + other_cell.mass
             merged_cell = AgentCell(
-                avg_x_pos, avg_y_pos, radius=None, mass=merged_mass)
+                self, avg_x_pos, avg_y_pos, radius=None, mass=merged_mass)
             merged_cells.append(merged_cell)
 
         if len(self.cells) % 2 == 1:
@@ -306,13 +318,9 @@ class Agent():
             if cell.mass < conf.MIN_MASS_TO_SPLIT:
                 return
 
-        for cell in self.cells:
-            cell.set_mass(cell.mass / 2)
-
         new_cells = []
         for cell in self.cells:
-            new_cell = AgentCell(cell.x_pos, cell.y_pos,
-                                 cell.radius, cell.mass)
+            new_cell = cell.split()
             new_cell.shoot(self.angle)
             new_cells.append(new_cell)
 
