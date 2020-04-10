@@ -4,6 +4,7 @@ import config as conf
 import utils
 import math
 import random
+import statistics
 from mass import Mass
 from actions import Action
 
@@ -18,12 +19,12 @@ class AgentCell():
 
         Parameters:
 
-            agent  - pointer to agent
-            x      - x position
-            y      - y position
-            radius - optional radius of the cell
-            mass   - mass of the cell
-            mode   - either NORMAL_MODE or SPLITTING_MODE
+            agent  (Agent)  : pointer to agent
+            x      (number) : x position
+            y      (number) : y position
+            radius (number) : optional radius of the cell
+            mass   (number) : mass of the cell
+            mode   (string) : either NORMAL_MODE or SPLITTING_MODE
         """
         self.agent = agent
         self.x_pos = x
@@ -54,6 +55,10 @@ class AgentCell():
         Setter method for the mass
 
         Also updates AgentCell radius
+
+        Parameters
+
+            mass (number)
         """
         if mass is None or mass <= 0:
             raise Exception('Mass must be positive')
@@ -75,7 +80,7 @@ class AgentCell():
         if food is None:
             raise ValueError('Cannot eat food which is None')
         self.add_mass(food.mass)
-    
+
     def eat_mass(self, mass):
         if mass is None:
             raise ValueError('Cannot eat mass which is None')
@@ -99,15 +104,15 @@ class AgentCell():
 
         Parameters
 
-            virus : Virus
+            virus (Virus)
 
         Returns
 
-            list of newly created cells
+            cells (AgentCell[]) : list of newly created cells
         """
         if virus is None:
             raise ValueError('Cannot eat virus which is None')
-        
+
         self.add_mass(virus.mass)
         virus.is_alive = False
 
@@ -165,8 +170,10 @@ class AgentCell():
 
         If `mode` is `shooting`, move behavior gets overriden
 
-        @param angle
-        @param vel
+        Parameters
+
+            angle (number) : between 0 and 360
+            vel   (number) : can be positive or negative
         """
         if self.mode == SHOOTING_MODE:
             self.move_shoot()
@@ -180,8 +187,10 @@ class AgentCell():
 
         NOTE does not check for collisions, borders, etc.
 
-        @param dx
-        @param dy
+        Parameters
+
+            dx (number)
+            dy (number)
         """
         if dx is not None:
             self.x_pos += dx
@@ -193,22 +202,23 @@ class AgentCell():
 
 
 class Agent():
-    angles = [0, 45, 90, 135, 180, 225, 270, 315]
-
     def __init__(self, game, model, x, y, radius, mass=None, color=None, name=None, manual_control=False, camera_follow=False):
         """
         An `Agent` is a player in the `Game`. An `Agent` can have many
         `AgentCells` (just one to start out with).
 
-        @param game          - game that this `Agent` belongs to
-        @param model         - the decision making model for this `Agent`
-        @param x
-        @param y
-        @param radius
-        @param mass
-        @param color
-        @param name           - unique ID for the agent, displayed on the game
-        @param manual_control - if should be controlled by user's keyboard
+        Parameters
+
+            game           (Game)      : game that this `Agent` belongs to
+            model          (nn.Module) : the decision making model for this `Agent`
+            x              (number)
+            y              (number)
+            radius         (number)
+            mass           (number)
+            color         
+            name           (string)    : unique ID for the agent, displayed on the game
+            manual_control (boolean)   : if should be controlled by user's keyboard
+            camera_follow  (boolean)
         """
         self.game = game
         self.model = model
@@ -219,7 +229,8 @@ class Agent():
 
         self.is_alive = True
         self.manual_control = manual_control
-        self.camera_follow = camera_follow      # True if the game camera is following this agent
+        # True if the game camera is following this agent
+        self.camera_follow = camera_follow
 
         self.update_last_split()
 
@@ -263,17 +274,28 @@ class Agent():
         """
         return sum([cell.y_pos for cell in self.cells]) / len(self.cells)
 
-    def get_avg_pos(self):
+    def get_pos(self):
         """
         @returns tuple of average x and y pos of all `AgentCells` belonging to this `Agent`
         """
         return (self.get_avg_x_pos(), self.get_avg_y_pos())
+
+    def get_avg_pos(self):
+        return self.get_pos()
 
     def get_avg_radius(self):
         """
         @returns average radius of all `AgentCells` belonging to this `Agent`
         """
         return sum([cell.radius for cell in self.cells]) / len(self.cells)
+
+    def get_avg_mass(self):
+        return self.get_mass() / len(self.cells)
+
+    def get_stdev_mass(self):
+        if len(self.cells) < 2:
+            return 0
+        return statistics.stdev([cell.mass for cell in self.cells])
 
     def get_mass(self):
         """
@@ -315,11 +337,10 @@ class Agent():
 
             # Handle normal movement
             cell.move(self.angle, vel)
-        
+
         # if the game camera is following this agent, pan it
         if self.camera_follow:
             self.game.camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
-
 
     def handle_move_keys(self, keys, camera):
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]

@@ -226,11 +226,12 @@ class GameState():
         """
         Parameters:
 
-            agent   - current agent
-            arr     - list of objects the agent might interact with
-            handler - takes in `agent` and items from `arr` on by one, returns
-                      the object if it should be removed else returns None
-                      April 10th: returns what remains, and an mask of None (for remaining objs)/objs
+            agent   (Agent)    : current agent
+            arr     (object[]) : list of objects the agent might interact with
+            handler (function) : takes in `agent` and items from `arr` on by
+                one, returns the object if it should be removed else returns
+                None. April 10th: returns what remains, and an mask of None (for
+                remaining objs)/objs
         """
         obj_or_none = [handler(
             agent, obj) for obj in arr]
@@ -245,7 +246,7 @@ class GameState():
 
         Parameters
 
-            agent : Agent
+            agent (Agent)
 
         Returns
 
@@ -341,7 +342,7 @@ class GameState():
 
     def get_state(self):
         """get the current game state"""
-        return self.agents, self.foods, self.viruses, self.time
+        return self.agents, self.foods, self.viruses, self.masses, self.time
 
     def get_board_state(self):
         """get game board image"""
@@ -387,7 +388,8 @@ class GameState():
 
     def set_camera(self, agent):
         if self.camera is not None:
-            raise ValueError('Camera was set multiple times. Please ensure only one agent is being followed by camera.')
+            raise ValueError(
+                'Camera was set multiple times. Please ensure only one agent is being followed by camera.')
         self.camera = Camera((conf.SCREEN_WIDTH / 2 - agent.get_avg_x_pos()),
                              (conf.SCREEN_HEIGHT / 2 - agent.get_avg_y_pos()),
                              agent.get_avg_radius())
@@ -414,10 +416,12 @@ class GameState():
         """
         Create agents which have self-contained strategies
 
-        @param num_agents - how many agents to create
-        @param model - the learning model which will decide actions
-        @param name - the display name for the agent
-        @param camera_follow - whether or not the GUI camera should follow this agent
+        Parameters
+
+            num_agents    (number)    : how many agents to create
+            model         (nn.Module) : the learning model which will decide actions
+            name          (string)    : the display name for the agent
+            camera_follow (boolean)   : whether or not the GUI camera should follow this agent
         """
         if model is None:
             raise ValueError('invalid model given')
@@ -509,7 +513,8 @@ class GameState():
 
     def main_loop(self):
         if self.camera == None:
-            raise ValueError('Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
+            raise ValueError(
+                'Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
 
         if conf.FULL_SCREEN:
             self.window = pygame.display.set_mode(
@@ -544,21 +549,25 @@ class GameState():
         quit()
 
 
-#-------------------------------
+# -------------------------------
 # Functions for displaying trained models mid-training
-#-------------------------------
+# -------------------------------
 def start_game(other_models):
     game = GameState()
+
     # initialize player agent
     game.init_manual_agent('AgarAI')
 
     # initialize all other agents
     for (name, model) in other_models:
         game.init_ai_agent(model, name=name)
+
     game.main_loop()
+
 
 def start_ai_only_game(main_model, other_models):
     game = GameState()
+
     # initialize main_model as the agent that the game camera will follow
     (main_name, model) = main_model
     game.init_ai_agent(model, name=main_name, camera_follow=True)
@@ -566,4 +575,5 @@ def start_ai_only_game(main_model, other_models):
     # initialize all other agents
     for (name, model) in other_models:
         game.init_ai_agent(model, name=name)
+
     game.main_loop()

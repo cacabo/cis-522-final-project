@@ -43,7 +43,7 @@ def gen_non_overlap_position(agents, radius):
                     break
             if overlaps:
                 break
-        
+
         if not overlaps:
             return cand
 
@@ -101,6 +101,10 @@ def get_euclidean_dist(p1, p2):
         number
     """
     return np.linalg.norm(np.array(p1) - np.array(p2))
+
+
+def get_object_dist(a, b):
+    return get_euclidean_dist(a.get_pos(), b.get_pos())
 
 
 def is_point_in_circle(point, circle, radius):
@@ -252,6 +256,7 @@ def is_action_feasible(action, pos, radius):
         return x_pos > radius or y_pos < conf.BOARD_HEIGHT - radius
     else:
         raise ValueError('invalid action given to is_action_feasible()')
+
 
 def move_in_bounds(obj):
     """move the given object such that it is entirely in bounds"""

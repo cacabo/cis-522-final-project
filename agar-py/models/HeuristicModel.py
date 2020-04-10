@@ -8,9 +8,9 @@ class HeuristicModel(ModelInterface):
         super().__init__()
 
     def get_action(self, state):
-        (agents, foods, viruses, time) = state
+        (agents, foods, viruses, masses, time) = state
         my_agent = agents[self.id]
-        
+
         # TODO: technically only considers the agent as one single cell. Could feasibly reach "unreachable" foods if its multiple cells
         nearest_food_action = self.get_nearest_food_action(my_agent, foods)
 

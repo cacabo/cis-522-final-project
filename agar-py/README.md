@@ -24,9 +24,9 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 
 ### Up next
 
-- [X] Fix bug with movement of heuristic agent at edge of map (Sam)
-- [X] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
-- [X] When you die you keep getting negative reward -> this should only happen once (Mak)
+- [x] Fix bug with movement of heuristic agent at edge of map (Sam)
+- [x] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
+- [x] When you die you keep getting negative reward -> this should only happen once (Mak)
 - [ ] Update rewards function to be delta size (Mak)
   - you should be penalized when one of your cells is eaten
 - [ ] Training loop for basic RL agent (Mak + Cam)
@@ -36,7 +36,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - [ ] Model
   - [ ] Getting screenshots in the train loop (not just GUI)
     - [ ] Figure out a good frequency for this
-- [X] Add GUI functionality to the training loop (Sam)
+- [x] Add GUI functionality to the training loop (Sam)
 - [ ] [Setup infra on AWS EC2 (Salib)](https://piazza.com/class/k58sba3uizm5md?cid=600)
 
 ### Lower priority
