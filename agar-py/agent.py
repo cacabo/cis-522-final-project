@@ -19,8 +19,8 @@ class AgentCell():
         @param mass
         @param mode
         """
-        self.x_pos = int(x)  # NOTE pygame expects ints
-        self.y_pos = int(y)
+        self.x_pos = x
+        self.y_pos = y
 
         self.mass = mass
         self.mode = mode
@@ -42,7 +42,7 @@ class AgentCell():
         if mass is None or mass <= 0:
             raise Exception('Mass must be positive')
 
-        self.mass = int(mass)
+        self.mass = mass
         self.radius = utils.massToRadius(mass)
 
     def move_left(self, vel=None):
@@ -84,6 +84,9 @@ class AgentCell():
             self.shooting_acceleration = None
 
     def move_normal(self, angle, vel):
+        if angle is None:
+            return
+
         vel = vel if vel is not None else self.get_velocity()
         radians = angle / 180 * math.pi
         dx = math.cos(radians) * vel
@@ -191,53 +194,30 @@ class Agent():
 
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
-        # dest_radius = 800
-        # sqrt_dest_radius = math.sqrt(dest_radius)
-
-        # if self.orientation == conf.UP:
-        #     dest_x = avg_x
-        #     dest_y = avg_y + dest_radius
-        # elif self.orientation == conf.UP_RIGHT:
-        #     dest_x = avg_x + sqrt_dest_radius
-        #     dest_y = avg_y + sqrt_dest_radius
-        # elif self.orientation == conf.RIGHT:
-        #     dest_x = avg_x + dest_radius
-        #     dest_y = avg_y
-        # elif self.orientation == conf.DOWN_RIGHT:
-        #     dest_x = avg_x + sqrt_dest_radius
-        #     dest_y = avg_y - sqrt_dest_radius
-        # elif self.orientation == conf.DOWN:
-        #     dest_x = avg_x
-        #     dest_y = avg_y - dest_radius
-        # elif self.orientation == conf.DOWN_LEFT:
-        #     dest_x = avg_x - sqrt_dest_radius
-        #     dest_y = avg_y - sqrt_dest_radius
-        # elif self.orientation == conf.LEFT:
-        #     dest_x = avg_x - dest_radius
-        #     dest_y = avg_y
-        # elif self.orientation == conf.UP_LEFT:
-        #     dest_x = avg_x - sqrt_dest_radius
-        #     dest_y = avg_y + sqrt_dest_radius
 
         for cell in self.cells:
-            (x, y) = cell.get_pos()
-
-            # Handle overlapping cells
-            # TODO
-
             # Handle converging towards the middle
-            # dx = x - avg_x
-            # dy = avg_y - y
-
             penalty = -2  # Move this many pixels towards the center
-            angle_to_avg = utils.getAngleBetweenPoints((avg_x, avg_y), (x, y))
+            angle_to_avg = utils.getAngleBetweenPoints(
+                (avg_x, avg_y), cell.get_pos())
 
             if angle_to_avg is not None:
                 cell.move(angle_to_avg, penalty)
 
-            cell.move(self.angle, vel)
+            # Handle overlapping cells
+            for otherCell in self.cells:
+                if otherCell == cell:
+                    continue
+                overlap = utils.getObjectOverlap(cell, otherCell)
+                if overlap < 0:
+                    continue
+                dist_to_move = overlap / 2
+                angle = utils.getAngleBetweenObjects(cell, otherCell)
+                cell.move(angle, -1 * dist_to_move)
+                otherCell.move(angle, dist_to_move)
 
-            # TODO finish handle cells overlapping with each other
+            # Handle normal movement
+            cell.move(self.angle, vel)
 
     def handle_move_keys(self, keys, camera):
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
@@ -361,7 +341,7 @@ class Agent():
 
     def ai_move(self):
         # TODO: better velocity control
-        #vel = int(max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1))
+        # vel = max(conf.AGENT_STARTING_SPEED - (self.get_mass() * 0.05), 1)
         vel = 1
         if self.get_mass() > 0:
             vel = max(utils.massToVelocity(self.get_mass()), vel)
@@ -376,5 +356,5 @@ class Agent():
         self.ai_steps -= 1
 
     def act(self, action):
-        #TODO: parse actions
+        # TODO: parse actions
         return
