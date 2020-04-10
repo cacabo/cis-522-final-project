@@ -5,6 +5,7 @@ import utils
 import math
 import random
 from mass import Mass
+from actions import Action
 
 NORMAL_MODE = 'normal'
 SHOOTING_MODE = 'shooting'
@@ -83,7 +84,7 @@ class AgentCell():
         new_mass = self.mass / num_cells_to_split_into
         self.mass = new_mass
 
-        for i in range(1, num_cells_to_split_into):
+        for _ in range(1, num_cells_to_split_into):
             new_cell = AgentCell(self.agent, self.x_pos,
                                  self.y_pos, mass=new_mass)
             new_cells.append(new_cell)
@@ -180,6 +181,29 @@ class Agent():
 
         cell = AgentCell(self, x, y, radius=radius, mass=mass)
         self.cells = [cell]
+
+    def do_action(self, action):
+        if action == Action.MOVE_RIGHT:
+            self.angle = 0
+        elif action == Action.MOVE_UP_RIGHT:
+            self.angle = 45
+        elif action == Action.MOVE_UP:
+            self.angle = 90
+        elif action == Action.MOVE_UP_LEFT:
+            self.angle = 135
+        elif action == Action.MOVE_LEFT:
+            self.angle = 180
+        elif action == Action.MOVE_DOWN_LEFT:
+            self.angle = 225
+        elif action == Action.MOVE_DOWN:
+            self.angle = 270
+        elif action == Action.MOVE_DOWN_RIGHT:
+            self.angle = 315
+        else:
+            raise ValueError('Agent received bad action in do_action()')
+
+        self.move()
+        #camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def get_avg_x_pos(self):
         """

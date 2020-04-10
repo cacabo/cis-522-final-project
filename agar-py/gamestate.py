@@ -10,8 +10,6 @@ from camera import Camera
 # Constants and config
 # ------------------------------------------------------------------------------
 
-GUI_MODE = True
-
 pygame.init()
 text_font = pygame.font.SysFont(
     conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
@@ -21,20 +19,20 @@ text_font = pygame.font.SysFont(
 # ------------------------------------------------------------------------------
 
 
-class Game():
-    ACTION_SPACE = {
-        0: conf.UP,
-        1: conf.UP_RIGHT,
-        2: conf.RIGHT,
-        3: conf.DOWN_RIGHT,
-        4: conf.DOWN,
-        5: conf.DOWN_LEFT,
-        6: conf.LEFT,
-        7: conf.UP_RIGHT,
-        9: "SHOOT",
-        10: "SPLIT",
-    }
+# ACTION_SPACE = {
+#     0: conf.UP,
+#     1: conf.UP_RIGHT,
+#     2: conf.RIGHT,
+#     3: conf.DOWN_RIGHT,
+#     4: conf.DOWN,
+#     5: conf.DOWN_LEFT,
+#     6: conf.LEFT,
+#     7: conf.UP_RIGHT,
+#     9: "SHOOT",
+#     10: "SPLIT",
+# }
 
+class GameState():
     def __init__(self):
         self.camera = None
         self.agents = {}
@@ -42,7 +40,7 @@ class Game():
         self.viruses = []
         self.masses = []
         self.time = 0
-    
+
     def get_player_names(self):
         return list(self.agents.keys())
 
@@ -194,6 +192,137 @@ class Game():
 
         return None
 
+    def init_model_agent(self, model):
+        """
+        Initialize a game agent for the given learning model
+        @param model - the learning model to create an agent for
+        """
+        if model is None:
+            raise ValueError('asked to initialize agent for None model')
+
+        radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
+        pos = utils.randomPosition(radius)
+        # TODO: make model name better, maybe give ID to Agent() instead
+        model_agent = Agent(
+            self,
+            pos[0],
+            pos[1],
+            radius,
+            mass=conf.AGENT_STARTING_MASS,
+            color=conf.BLUE_COLOR,
+            name='Agent' + str(model.id),
+            manual_control=False
+        )
+        self.agents[model.id] = model_agent
+
+    def _filter_objects(self, agent, arr, handler):
+        """
+        Parameters:
+
+            agent   - current agent
+            arr     - list of objects the agent might interact with
+            handler - takes in `agent` and items from `arr` on by one, returns
+                      the object if it should be removed else returns None
+        """
+        obj_or_none = [handler(
+            agent, obj) for obj in arr]
+        not_removed_objs = [arr[idx] for (
+            idx, obj_or_none) in enumerate(obj_or_none) if obj_or_none is None]
+        return not_removed_objs
+
+    def tick_agent(self, agent):
+        # find all food items which are not currently being eaten by this agent, and
+        # update global foods list
+        food_collisions = [self.check_food_collision(
+            agent, food) for food in self.foods]
+        foods_remaining = []
+        for (idx, cellidx) in enumerate(food_collisions):
+            if cellidx is None:
+                foods_remaining.append(self.foods[idx])
+                continue
+            cell = agent.cells[cellidx]
+            cell.mass += conf.FOOD_MASS
+
+        self.foods = foods_remaining
+
+        # Iterate over all masses, remove those which were eaten
+        self.masses = self._filter_objects(
+            agent, self.masses, self.handle_mass)
+
+        # Iterate over all viruses, remove viruses which were eaten
+        self.viruses = self._filter_objects(
+            agent, self.viruses, self.handle_virus)
+
+        # get a list of all agents which have collided with the current one, and see
+        # if it eats any of them
+        for other in self.agents.values():
+            self.handle_eat_agent(agent, other)
+
+    def tick_game_state(self):
+        # make sure food/virus/player mass is balanced on the board
+        self.balance_mass()
+
+        # move all mass
+        for mass in self.masses:
+            if mass.is_moving():
+                mass.move()
+
+        # check results of all agent actions
+        # TODO: get reward experienced by each agent depending on what happens to them
+        for agent in self.agents.values():
+            self.tick_agent(agent)
+
+        # after ticking all the agents, remove the dead ones
+        dead_agents = [agent for agent in self.agents.values()
+                       if not agent.is_alive]
+        for dead_agent in dead_agents:
+            del self.agents[dead_agent.name]
+
+        self.time += 1
+
+        # TODO: return reward experienced by each agent depending on what happens to them
+        return None
+
+    # ------------------------------------------------------------------------------
+    # Methods for interfacing with learning models
+    # ------------------------------------------------------------------------------
+    # reset the game to its initial state, and initialize a game agent for each model
+    def reset(self, models):
+        self.__init__()
+        for model in models:
+            self.init_model_agent(model)
+
+    # get the current game state
+    def get_state(self):
+        return self.agents, self.foods, self.viruses, self.time
+
+    # update the game state based on actions taken by models
+    def update_game_state(self, models, actions):
+        # first, update the current game state by performing each model's selected
+        # action with its agent
+        for (model, action) in zip(models, actions):
+            agent = self.agents[model.id]
+            agent.do_action(action)
+
+        rewards = self.tick_game_state()
+
+        # TODO: go through rewards to see if anyone died and if so, add "done"
+        return [None for model in models], False
+
+    # ------------------------------------------------------------------------------
+    # Methods for playing the game in interactive mode
+    # ------------------------------------------------------------------------------
+    # TODO: rename. only used for interactive mode
+    def update_agent_state(self, agent):
+        if agent.manual_control:
+            # get key presses
+            keys = pygame.key.get_pressed()
+            agent.handle_move_keys(keys, self.camera)
+            agent.handle_other_keys(keys, self.camera)
+            agent.handle_merge()
+        else:
+            agent.ai_move()
+
     def init_manual_agent(self, name):
         radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
         pos = utils.randomPosition(radius)
@@ -236,65 +365,11 @@ class Game():
             )
             self.agents[ai_agent.name] = ai_agent
 
-    def update_agent_state(self, agent, action):
-        if GUI_MODE:
-            if agent.manual_control:
-                # get key presses
-                keys = pygame.key.get_pressed()
-                agent.handle_move_keys(keys, self.camera)
-                agent.handle_other_keys(keys, self.camera)
-                agent.handle_merge()
-            else:
-                agent.ai_move()
-        else:
-            # TODO: implement without key presses, should take in actions. Right now just moves randomly
-            agent.ai_move()
-            # agent.act(action)
-
-    def _filter_objects(self, agent, arr, handler):
+    def is_exit_command(self, event):
         """
-        Parameters:
-
-            agent   - current agent
-            arr     - list of objects the agent might interact with
-            handler - takes in `agent` and items from `arr` on by one, returns
-                      the object if it should be removed else returns None
+        check if the user is pressing an exit key
         """
-        obj_or_none = [handler(
-            agent, obj) for obj in arr]
-        not_removed_objs = [arr[idx] for (
-            idx, obj_or_none) in enumerate(obj_or_none) if obj_or_none is None]
-        return not_removed_objs
-
-    def tick_agent(self, agent, action):
-        self.update_agent_state(agent, action)
-
-        # find all food items which are not currently being eaten by this agent, and
-        # update global foods list
-        food_collisions = [self.check_food_collision(
-            agent, food) for food in self.foods]
-        foods_remaining = []
-        for (idx, cellidx) in enumerate(food_collisions):
-            if cellidx is None:
-                foods_remaining.append(self.foods[idx])
-                continue
-            cell = agent.cells[cellidx]
-            cell.mass += conf.FOOD_MASS
-
-        self.foods = foods_remaining
-
-        # Iterate over all masses, remove those which were eaten
-        self.masses = self._filter_objects(
-            agent, self.masses, self.handle_mass)
-
-        # Iterate over all viruses, remove viruses which were eaten
-        self.viruses = self._filter_objects(
-            agent, self.viruses, self.handle_virus)
-
-        # get a list of all agents which have collided with the current one, and see
-        # if it eats any of them
-        for other in self.agents.values():
-            self.handle_eat_agent(agent, other)
+        return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
     def draw_circle(self, board, obj, color=None, stroke=None):
         x, y = obj.get_pos()
@@ -305,9 +380,9 @@ class Game():
         else:
             pygame.draw.circle(board, color, pos, radius)
 
-    def draw_window(self, board):
+    def draw_window(self, board, window):
         # fill screen white, to clear old frames
-        WIN.fill(conf.WHITE_COLOR)
+        window.fill(conf.WHITE_COLOR)
         board.fill(conf.WHITE_COLOR)
 
         for mass in self.masses:
@@ -326,12 +401,10 @@ class Game():
 
         for virus in self.viruses:
             self.draw_circle(board, virus, color=conf.VIRUS_COLOR)
-            # pygame.draw.circle(board, conf.VIRUS_COLOR,
-            #    virus.get_pos(), virus.radius)
             self.draw_circle(
                 board, virus, color=conf.VIRUS_OUTLINE_COLOR, stroke=4)
 
-        WIN.blit(board, self.camera.get_pos())
+        window.blit(board, self.camera.get_pos())
 
         # draw leaderboard
         sorted_agents = list(
@@ -339,85 +412,37 @@ class Game():
         leaderboard_title = text_font.render("Leaderboard", 1, (0, 0, 0))
         start_y = 25
         x = conf.SCREEN_WIDTH - leaderboard_title.get_width() - 20
-        WIN.blit(leaderboard_title, (x, 5))
+        window.blit(leaderboard_title, (x, 5))
         top_n = min(len(self.agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
         for idx, agent in enumerate(sorted_agents[:top_n]):
             score = int(round(agent.get_mass()))
-            text = text_font.render(str(
-                idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
-            WIN.blit(text, (x, start_y + idx * 20))
-
-    def is_exit_command(self, event):
-        return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
-
-    def update_game_state(self, action):
-        # make sure food/virus/player mass is balanced on the board
-        self.balance_mass()
-
-        # move all mass
-        for mass in self.masses:
-            if mass.is_moving():
-                mass.move()
-
-        # perform updates for all agents
-        for agent in self.agents.values():
-            self.tick_agent(agent, action)
-
-        # after ticking all the agents, remove the dead ones
-        dead_agents = [agent for agent in self.agents.values()
-                       if not agent.is_alive]
-        for dead_agent in dead_agents:
-            del self.agents[dead_agent.name]
-
-        self.time = self.time + 1
-
-        # TODO: reward, next state, terminated
+            text = text_font.render(
+                str(idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
+            window.blit(text, (x, start_y + idx * 20))
 
     def main_loop(self):
-        if GUI_MODE:
-            board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
-            running = True
-            while running:
-                clock.tick(conf.CLOCK_TICK)
-                self.update_game_state(action=None)
+        window = pygame.display.set_mode(
+            (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+        pygame.display.set_caption('CIS 522: Final Project')
+        board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
+        clock = pygame.time.Clock()
+        running = True
+        while running:
+            clock.tick(conf.CLOCK_TICK)
+            for agent in self.agents.values():
+                self.update_agent_state(agent)
 
-                # if the GUI is enabled, take in user input and draw/update the game board
-                for event in pygame.event.get():
-                    # stop the game if user exits
-                    if self.is_exit_command(event):
-                        running = False
+            self.tick_game_state()
 
-                # redraw window then update the frame
-                self.draw_window(board)
-                pygame.display.update()
+            # take in user input and draw/update the game board
+            for event in pygame.event.get():
+                # stop the game if user exits
+                if self.is_exit_command(event):
+                    running = False
 
-            pygame.quit()
-            quit()
-        else:
-            GAME_ITERS = 5000
-            for _ in range(GAME_ITERS):
-                self.update_game_state(action=None)
-            pygame.quit()
-            quit()
+            # redraw window then update the frame
+            self.draw_window(board, window)
+            pygame.display.update()
 
-    def reset(self):
-        # TODO: reset game
-        self.__init__()
-        self.init_manual_agent('AgarAI')
-        self.init_ai_agents(conf.NUM_AI)
-        game.main_loop()  # TODO: remove
-        # return TODO: return inital state
-
-
-game = Game()
-
-# setup pygame window
-if GUI_MODE:
-    WIN = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
-    pygame.display.set_caption('CIS 522: Final Project')
-    clock = pygame.time.Clock()
-
-# main game loop
-game.init_manual_agent('AgarAI')
-game.init_ai_agents(conf.NUM_AI)
-game.main_loop()
+        pygame.quit()
+        quit()
