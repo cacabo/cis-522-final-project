@@ -44,8 +44,8 @@ BLUE_COLOR = (0, 0, 255)
 # ------------------------------------------------------------------------------
 
 AGENT_STARTING_MASS = 200
-SHOOT_MASS = 10
 MIN_MASS_TO_SHOOT = 50
+MASS_MASS = 20
 MIN_MASS_TO_SPLIT = 100
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 20

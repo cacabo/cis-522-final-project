@@ -3,6 +3,8 @@ import numpy as np
 import config as conf
 import utils
 import math
+import random
+from mass import Mass
 from actions import Action
 
 NORMAL_MODE = 'normal'
@@ -10,16 +12,20 @@ SHOOTING_MODE = 'shooting'
 
 
 class AgentCell():
-    def __init__(self, x, y, radius=None, mass=None, mode=NORMAL_MODE):
+    def __init__(self, agent, x, y, radius=None, mass=None, mode=NORMAL_MODE):
         """
         An AgentCell is a single cell of an Agent
 
-        @param x
-        @param y
-        @param radius
-        @param mass
-        @param mode
+        Parameters:
+
+            agent  - pointer to agent
+            x      - x position
+            y      - y position
+            radius - optional radius of the cell
+            mass   - mass of the cell
+            mode   - either NORMAL_MODE or SPLITTING_MODE
         """
+        self.agent = agent
         self.x_pos = x
         self.y_pos = y
 
@@ -40,27 +46,51 @@ class AgentCell():
             return 1
 
     def set_mass(self, mass):
+        """
+        Setter method for the mass
+
+        Also updates AgentCell radius
+        """
         if mass is None or mass <= 0:
             raise Exception('Mass must be positive')
 
         self.mass = mass
         self.radius = utils.massToRadius(mass)
 
-    def move_left(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.x_pos = max(self.x_pos - vel, self.radius)
+    def split(self):
+        """
+        Split this cell and return the newly created cell
+        """
+        self.set_mass(self.mass / 2)
+        new_cell = AgentCell(self.agent, self.x_pos, self.y_pos,
+                             self.radius, self.mass)
+        return new_cell
 
-    def move_right(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.x_pos = min(self.x_pos + vel, conf.BOARD_WIDTH - self.radius)
+    def eat_virus(self, virus):
+        if virus is None:
+            raise Exception('Cannot eat virus which is None')
 
-    def move_up(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.y_pos = max(self.y_pos - vel, self.radius)
+        self.mass += virus.mass
 
-    def move_down(self, vel=None):
-        vel = vel if vel is not None else self.get_velocity()
-        self.y_pos = min(self.y_pos + vel, conf.BOARD_HEIGHT - self.radius)
+        # TODO
+        max_cells_based_on_count = conf.AGENT_CELL_LIMIT - \
+            len(self.agent.cells) + 1
+        max_cells_based_on_size = int(self.mass / (conf.MIN_MASS_TO_SPLIT / 2))
+        num_cells_to_split_into = min(
+            max_cells_based_on_count, max_cells_based_on_size)
+
+        new_cells = []
+
+        new_mass = self.mass / num_cells_to_split_into
+        self.mass = new_mass
+
+        for _ in range(1, num_cells_to_split_into):
+            new_cell = AgentCell(self.agent, self.x_pos,
+                                 self.y_pos, mass=new_mass)
+            new_cells.append(new_cell)
+
+        self.agent.cells = self.agent.cells + new_cells
+        self.agent.last_split = self.agent.game.get_time()
 
     def shoot(self, angle):
         self.mode = SHOOTING_MODE
@@ -72,10 +102,13 @@ class AgentCell():
         """
         Move in response to being shot
         """
-        self.move_normal(self.shooting_angle, self.shooting_velocity)
+        utils.moveObject(self, self.shooting_angle, self.shooting_velocity)
         self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
 
         if self.shooting_velocity <= 0:
+            # We are done being controlled by acceleration and can be controlled
+            # by agent decisions
+
             # Change the mode
             self.mode = NORMAL_MODE
 
@@ -83,23 +116,6 @@ class AgentCell():
             self.shooting_acceleration = None
             self.shooting_velocity = None
             self.shooting_acceleration = None
-
-    def move_normal(self, angle, vel):
-        if angle is None:
-            return
-
-        vel = vel if vel is not None else self.get_velocity()
-        radians = angle / 180 * math.pi
-        dx = math.cos(radians) * vel
-        dy = math.sin(radians) * vel
-        if dx > 0:
-            self.move_right(dx)
-        elif dx < 0:
-            self.move_left(dx * -1)
-        if dy > 0:
-            self.move_up(dy)
-        elif dy < 0:
-            self.move_down(dy * -1)
 
     def move(self, angle, vel):
         """
@@ -113,7 +129,8 @@ class AgentCell():
         if self.mode == SHOOTING_MODE:
             self.move_shoot()
         else:
-            self.move_normal(angle, vel)
+            vel = vel if vel is not None else self.get_velocity()
+            utils.moveObject(self, angle, vel)
 
     def shift(self, dx=None, dy=None):
         """
@@ -152,9 +169,6 @@ class Agent():
         """
         self.game = game
 
-        cell = AgentCell(x, y, radius=radius, mass=mass)
-        self.cells = [cell]
-
         self.color = color
         self.name = name
         self.angle = None  # For deciding direction to move in
@@ -164,6 +178,9 @@ class Agent():
         self.ai_dir = None
         self.ai_steps = 0
         self.last_split = self.game.get_time()
+
+        cell = AgentCell(self, x, y, radius=radius, mass=mass)
+        self.cells = [cell]
 
     def do_action(self, action):
         if action == Action.MOVE_RIGHT:
@@ -184,7 +201,7 @@ class Agent():
             self.angle = 315
         else:
             raise ValueError('Agent received bad action in do_action()')
-        
+
         self.move()
         #camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
@@ -219,7 +236,7 @@ class Agent():
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
 
-        for cell in self.cells:
+        for (idx, cell) in enumerate(self.cells):
             # Handle converging towards the middle
             penalty = -2  # Move this many pixels towards the center
             angle_to_avg = utils.getAngleBetweenPoints(
@@ -229,14 +246,15 @@ class Agent():
                 cell.move(angle_to_avg, penalty)
 
             # Handle overlapping cells
-            for otherCell in self.cells:
-                if otherCell == cell:
-                    continue
+            for otherIdx in range(idx + 1, len(self.cells)):
+                otherCell = self.cells[otherIdx]
                 overlap = utils.getObjectOverlap(cell, otherCell)
                 if overlap < 0:
                     continue
                 dist_to_move = overlap / 2
                 angle = utils.getAngleBetweenObjects(cell, otherCell)
+                if angle is None:
+                    angle = random.randrange(360)
                 cell.move(angle, -1 * dist_to_move)
                 otherCell.move(angle, dist_to_move)
 
@@ -285,17 +303,26 @@ class Agent():
         camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
-        raise Exception('Not implemented')
-        # TODO: this crashes, needs to be handled for each specific split cell
-        # if self.mass < conf.MIN_MASS_TO_SHOOT:
-        #     return
+        # You can only shoot if you are a single cell
+        if len(self.cells) > 1:
+            return
 
-        # self.mass = self.mass - conf.SHOOT_MASS
+        if self.get_mass() < conf.MIN_MASS_TO_SHOOT:
+            return
 
-        # TODO shoot
-        # return
+        # Must be moving in a direction in order to shoot
+        if self.angle is None:
+            return
+
+        cell = self.cells[0]
+        cell.mass = cell.mass - conf.MASS_MASS
+
+        (mass_x, mass_y) = cell.get_pos()
+        mass = Mass(mass_x, mass_y, self.color, self.angle, cell.radius)
+        self.game.add_mass(mass)
 
     def handle_merge(self):
+        # TODO merge with actual sibling cell if possible, not just arbitrary index?
         # TODO normally this should only happen if the user moves cells near each other
         if len(self.cells) < 2:
             return
@@ -315,7 +342,7 @@ class Agent():
             avg_y_pos = (cell.y_pos + other_cell.y_pos) / 2
             merged_mass = cell.mass + other_cell.mass
             merged_cell = AgentCell(
-                avg_x_pos, avg_y_pos, radius=None, mass=merged_mass)
+                self, avg_x_pos, avg_y_pos, radius=None, mass=merged_mass)
             merged_cells.append(merged_cell)
 
         if len(self.cells) % 2 == 1:
@@ -341,13 +368,9 @@ class Agent():
             if cell.mass < conf.MIN_MASS_TO_SPLIT:
                 return
 
-        for cell in self.cells:
-            cell.set_mass(cell.mass / 2)
-
         new_cells = []
         for cell in self.cells:
-            new_cell = AgentCell(cell.x_pos, cell.y_pos,
-                                 cell.radius, cell.mass)
+            new_cell = cell.split()
             new_cell.shoot(self.angle)
             new_cells.append(new_cell)
 

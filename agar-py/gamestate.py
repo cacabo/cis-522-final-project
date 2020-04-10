@@ -9,6 +9,7 @@ from camera import Camera
 # ------------------------------------------------------------------------------
 # Constants and config
 # ------------------------------------------------------------------------------
+
 pygame.init()
 text_font = pygame.font.SysFont(
     conf.AGENT_NAME_FONT, conf.AGENT_NAME_FONT_SIZE)
@@ -22,10 +23,17 @@ class GameState():
         self.agents = {}
         self.foods = []
         self.viruses = []
+        self.masses = []
         self.time = 0
+
+    def get_player_names(self):
+        return list(self.agents.keys())
 
     def get_time(self):
         return self.time
+
+    def add_mass(self, mass):
+        self.masses.append(mass)
 
     def add_food(self, n):
         """
@@ -125,23 +133,17 @@ class GameState():
             return
 
         not_consumed = []
-        consumed = []
+        # consumed = []
 
         for agent_cell in agent.cells:
             for other_cell in other.cells:
                 if self.check_cell_collision(agent_cell, other_cell):
-                    print('[CELL] %s ate one of %s\'s cells' %
+                    print(self.time + ' [CELL] %s ate one of %s\'s cells' %
                           (agent.name, other.name))
-                    consumed.append((agent_cell, other_cell))
+                    # consumed.append((agent_cell, other_cell))
+                    agent_cell.set_mass(agent_cell.mass + other_cell.mass)
                 else:
                     not_consumed.append(other_cell)
-
-        if len(consumed) == 0:
-            return
-
-        for (agent_cell, consumed_cell) in consumed:
-            agent_cell.mass += consumed_cell.mass
-            agent_cell.radius = utils.massToRadius(agent_cell.mass)
 
         other.cells = not_consumed
 
@@ -149,6 +151,14 @@ class GameState():
             print('[GAME] ' + str(other.name) +
                   ' died! Was eaten by ' + str(agent.name))
             other.is_alive = False
+
+    def handle_mass(self, agent, mass):
+        for cell in agent.cells:
+            if not self.check_cell_collision(cell, mass):
+                continue
+            print('[MASS] %s ate mass %s' % (agent.name, mass.id))
+            cell.mass += mass.mass
+            return mass
 
     def handle_virus(self, agent, virus):
         """
@@ -159,11 +169,14 @@ class GameState():
             if not self.check_virus_collision(cell, virus):
                 continue
             print('[VIRUS] %s ate virus %s' % (agent.name, virus.id))
-            cell.mass += virus.mass
+            cell.eat_virus(virus)
+
+            # Return early without considering other cells
+            # That is, the virus can only be eaten once
             return virus
 
         return None
-    
+
     def init_model_agent(self, model):
         """
         Initialize a game agent for the given learning model
@@ -187,6 +200,21 @@ class GameState():
         )
         self.agents[model.id] = model_agent
 
+    def _filter_objects(self, agent, arr, handler):
+        """
+        Parameters:
+
+            agent   - current agent
+            arr     - list of objects the agent might interact with
+            handler - takes in `agent` and items from `arr` on by one, returns
+                      the object if it should be removed else returns None
+        """
+        obj_or_none = [handler(
+            agent, obj) for obj in arr]
+        not_removed_objs = [arr[idx] for (
+            idx, obj_or_none) in enumerate(obj_or_none) if obj_or_none is None]
+        return not_removed_objs
+
     def tick_agent(self, agent):
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
@@ -202,12 +230,13 @@ class GameState():
 
         self.foods = foods_remaining
 
+        # Iterate over all masses, remove those which were eaten
+        self.masses = self._filter_objects(
+            agent, self.masses, self.handle_mass)
+
         # Iterate over all viruses, remove viruses which were eaten
-        removed_viruses_or_none = [self.handle_virus(
-            agent, virus) for virus in self.viruses]
-        not_removed_viruses = [self.viruses[idx] for (
-            idx, virus_or_none) in enumerate(removed_viruses_or_none) if virus_or_none is None]
-        self.viruses = not_removed_viruses
+        self.viruses = self._filter_objects(
+            agent, self.viruses, self.handle_virus)
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
@@ -217,6 +246,11 @@ class GameState():
     def tick_game_state(self):
         # make sure food/virus/player mass is balanced on the board
         self.balance_mass()
+
+        # move all mass
+        for mass in self.masses:
+            if mass.is_moving():
+                mass.move()
 
         # check results of all agent actions
         # TODO: get reward experienced by each agent depending on what happens to them
@@ -316,8 +350,10 @@ class GameState():
             )
             self.agents[ai_agent.name] = ai_agent
 
-    # check if the user is pressing an exit key
     def is_exit_command(self, event):
+        """
+        check if the user is pressing an exit key
+        """
         return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
     def draw_circle(self, board, obj, color=None, stroke=None):
@@ -334,6 +370,10 @@ class GameState():
         window.fill(conf.WHITE_COLOR)
         board.fill(conf.WHITE_COLOR)
 
+        for mass in self.masses:
+            self.draw_circle(board, mass, color=mass.color)
+
+        # TODO don't redraw everything?
         for food in self.foods:
             self.draw_circle(board, food, color=food.color)
 
@@ -360,12 +400,14 @@ class GameState():
         window.blit(leaderboard_title, (x, 5))
         top_n = min(len(self.agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
         for idx, agent in enumerate(sorted_agents[:top_n]):
-            text = text_font.render(str(
-                idx + 1) + ". " + str(agent.name) + ' (' + str(agent.get_mass()) + ')', 1, (0, 0, 0))
+            score = int(round(agent.get_mass()))
+            text = text_font.render(
+                str(idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
             window.blit(text, (x, start_y + idx * 20))
-    
+
     def main_loop(self):
-        window = pygame.display.set_mode((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+        window = pygame.display.set_mode(
+            (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         pygame.display.set_caption('CIS 522: Final Project')
         board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
         clock = pygame.time.Clock()

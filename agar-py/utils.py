@@ -15,7 +15,10 @@ def massToVelocity(mass):
 
 def randomPosition(radius):
     """generate a random position within the field of play"""
-    return randomInRange(radius, conf.BOARD_WIDTH - radius), randomInRange(radius, conf.BOARD_HEIGHT - radius)
+    return (
+        randomInRange(radius, conf.BOARD_WIDTH - radius),
+        randomInRange(radius, conf.BOARD_HEIGHT - radius),
+    )
 
 
 def randomInRange(lo, hi):
@@ -106,3 +109,37 @@ def getAngleBetweenPoints(p1, p2):
 
 def getAngleBetweenObjects(a, b):
     return getAngleBetweenPoints(a.get_pos(), b.get_pos())
+
+
+def moveObjectLeft(obj, vel):
+    obj.x_pos = max(obj.x_pos - vel, obj.radius)
+
+
+def moveObjectRight(obj, vel):
+    obj.x_pos = min(obj.x_pos + vel, conf.BOARD_WIDTH - obj.radius)
+
+
+def moveObjectUp(obj, vel):
+    obj.y_pos = max(obj.y_pos - vel, obj.radius)
+
+
+def moveObjectDown(obj, vel):
+    obj.y_pos = min(obj.y_pos + vel, conf.BOARD_HEIGHT - obj.radius)
+
+
+def moveObject(obj, angle, vel):
+    if angle is None:
+        return
+
+    radians = angle / 180 * math.pi
+    dx = math.cos(radians) * vel
+    dy = math.sin(radians) * vel
+    if dx > 0:
+        moveObjectRight(obj, dx)
+    elif dx < 0:
+        moveObjectLeft(obj, dx * -1)
+
+    if dy > 0:
+        moveObjectUp(obj, dy)
+    elif dy < 0:
+        moveObjectDown(obj, dy * -1)
