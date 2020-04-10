@@ -14,3 +14,10 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [ ] Smarter datastructure for checking collisions
 - [ ] Eventually merge split cells back together
 - [ ] Have some intertia to bring cells together
+
+### RL Todo
+
+- [ ] Finish acceleration (Cam) 
+- [ ] Abstract out stupid AI with interface that could be used by RL agent (Mak)
+- [x] Make it such that an agent cannot split after a certain number of clock ticks not ms
+- [ ] Checks to see if AgentCells are overlapping

@@ -6,3 +6,6 @@ node_modules/
 
 # Python builds
 __pycache__/
+
+# IDE files
+.vscode/
