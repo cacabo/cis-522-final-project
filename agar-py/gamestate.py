@@ -206,6 +206,7 @@ class GameState():
         # TODO: make model name better, maybe give ID to Agent() instead
         model_agent = Agent(
             self,
+            model,
             pos[0],
             pos[1],
             radius,
@@ -299,26 +300,27 @@ class GameState():
                     rewards.append(0)
 
         # after ticking all the agents, remove the dead ones
-        dead_agent_names = [agent.name for agent in self.agents.values()
+        dead_agents = [key for key, agent in self.agents.items()
                        if not agent.is_alive]
-        for dead_agent_name in dead_agent_names:
-            del self.agents[dead_agent_name]
+        for dead_agent in dead_agents:
+            del self.agents[dead_agent]
 
         if models:
             dones = []
             for (idx, model) in enumerate(models):
-                if model.id in dead_agent_names:
-                    dones.append(True)
-                    rewards[idx] = conf.DEATH_REWARD
-                else: 
+                if model.id in self.agents:
                     dones.append(False)
                     rewards[idx] += conf.SURVIVAL_REWARD
+                else: 
+                    dones.append(True)
+                    rewards[idx] = conf.DEATH_REWARD
 
 
         self.time += 1
 
         # TODO: return reward experienced by each agent depending on what happens to them
-        return (rewards, dones)
+        if models:
+            return (rewards, dones)
 
     # ------------------------------------------------------------------------------
     # Methods for interfacing with learning models

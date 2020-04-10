@@ -31,10 +31,10 @@ env = GameState()
 # Define the DQNAgent
 # agent = VanillaAgent(env.ACTION_SPACE, None) #TODO: update observation space
 
+heuristic_model = HeuristicModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-heuristic_model = HeuristicModel()
-models = [heuristic_model]
+models = [heuristic_model, rand_model_1, rand_model_2]
 
 # for episode in range(EPISODES):
 #     # done = False # whether game is done or not (terminal state)
