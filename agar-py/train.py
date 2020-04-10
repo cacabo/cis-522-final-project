@@ -22,7 +22,7 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-EPISODES = 10  # the number of games we're playing
+EPISODES = 1  # the number of games we're playing
 MAX_STEPS = 1000
 
 # Define environment
@@ -33,7 +33,6 @@ env = GameState()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 models = [rand_model_1, rand_model_2]
-episode_rewards = [0 for _ in models]
 
 # for episode in range(EPISODES):
 #     # done = False # whether game is done or not (terminal state)
@@ -75,6 +74,7 @@ for episode in range(EPISODES):
     # done = False  # whether game is done or not (terminal state)
     # reset the environment to fresh starting state with game agents initialized for models
     env.reset(models)
+    episode_rewards = [0 for _ in models]
     # episode_reward = 0 # some notion of the reward in this episode
 
     state = env.get_state() # get the first state
@@ -103,3 +103,6 @@ for episode in range(EPISODES):
             break
 
         state = next_state  # update the state
+    print("------EPISODE %s rewards------" % episode)
+    for idx, model in enumerate(models):
+        print("Model %s: %s" % (model.id, episode_rewards[idx]))

@@ -125,9 +125,10 @@ class GameState():
         @return boolean
         """
         if agent == other or agent.name == other.name:
-            return
+            return 0
 
         # consumed = []
+        mass_consumed = 0
 
         for agent_cell in agent.cells:
             for other_cell in other.cells:
@@ -137,6 +138,7 @@ class GameState():
                     print('[CELL] %s ate one of %s\'s cells' %
                           (agent.name, other.name))
                     agent_cell.set_mass(agent_cell.mass + other_cell.mass)
+                    mass_consumed += other_cell.mass
                     other_cell.is_alive = False
 
         other.cells = [cell for cell in other.cells if cell.is_alive]
@@ -145,6 +147,7 @@ class GameState():
             print('[GAME] ' + str(other.name) +
                   ' died! Was eaten by ' + str(agent.name))
             other.is_alive = False
+        return mass_consumed
 
     def handle_food(self, agent, food):
         for cell in agent.cells:
@@ -217,12 +220,13 @@ class GameState():
             arr     - list of objects the agent might interact with
             handler - takes in `agent` and items from `arr` on by one, returns
                       the object if it should be removed else returns None
+                      April 10th: returns what remains, and an mask of None (for remaining objs)/objs
         """
         obj_or_none = [handler(
             agent, obj) for obj in arr]
         not_removed_objs = [arr[idx] for (
             idx, obj_or_none) in enumerate(obj_or_none) if obj_or_none is None]
-        return not_removed_objs
+        return (not_removed_objs, obj_or_none)
 
     def tick_agent(self, agent):
         """
@@ -240,25 +244,34 @@ class GameState():
 
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
-        self.foods = self._filter_objects(
+        remaining_food, food_eaten_or_none = self._filter_objects(
             agent, self.foods, self.handle_food)
+        self.foods = remaining_food
+        num_food_eaten = len(list(filter(lambda x: x != None, food_eaten_or_none)))
+        # print(food_eaten_or_none) this will give me none's and food obj
 
         # Iterate over all masses, remove those which were eaten
-        self.masses = self._filter_objects(
+        remaining_mass, mass_eaten_or_none = self._filter_objects(
             agent, self.masses, self.handle_mass)
+        self.masses = remaining_mass
+        num_mass_eaten = len(list(filter(lambda x: x != None, mass_eaten_or_none)))
 
         # Iterate over all viruses, remove viruses which were eaten
-        self.viruses = self._filter_objects(
+        remaining_virus, virus_eaten_or_none = self._filter_objects(
             agent, self.viruses, self.handle_virus)
+        self.viruses = remaining_virus
+        num_virus_eaten = len(list(filter(lambda x: x != None, virus_eaten_or_none)))
 
-        print('agent length', len(agent.cells))
+        # print('agent length', len(agent.cells))
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
+        agent_mass_eaten = 0
         for other in self.agents.values():
-            self.handle_eat_agent(agent, other)
+            agent_mass_eaten += self.handle_eat_agent(agent, other)
+        return agent_mass_eaten + conf.FOOD_MASS * num_food_eaten + conf.VIRUS_MASS * num_virus_eaten + conf.MASS_MASS * num_mass_eaten
 
-    def tick_game_state(self):
+    def tick_game_state(self, models):
         # make sure food/virus/player mass is balanced on the board
         self.balance_mass()
 
@@ -269,19 +282,39 @@ class GameState():
 
         # check results of all agent actions
         # TODO: get reward experienced by each agent depending on what happens to them
-        for agent in self.agents.values():
-            self.tick_agent(agent)
+        if models == None:
+            for agent in self.agents.values():
+                self.tick_agent(agent)
+        else: 
+            rewards = []
+            for model in models:
+                if model.id in self.agents:
+                    agent = self.agents[model.id]
+                    rewards.append(self.tick_agent(agent))
+                else:
+                    rewards.append(0)
 
         # after ticking all the agents, remove the dead ones
-        dead_agents = [agent for agent in self.agents.values()
+        dead_agent_names = [agent.name for agent in self.agents.values()
                        if not agent.is_alive]
-        for dead_agent in dead_agents:
-            del self.agents[dead_agent.name]
+        for dead_agent_name in dead_agent_names:
+            del self.agents[dead_agent_name]
+
+        if models:
+            dones = []
+            for (idx, model) in enumerate(models):
+                if model.id in dead_agent_names:
+                    dones.append(True)
+                    rewards[idx] = conf.DEATH_REWARD
+                else: 
+                    dones.append(False)
+                    rewards[idx] += conf.SURVIVAL_REWARD
+
 
         self.time += 1
 
         # TODO: return reward experienced by each agent depending on what happens to them
-        return None
+        return (rewards, dones)
 
     # ------------------------------------------------------------------------------
     # Methods for interfacing with learning models
@@ -305,10 +338,12 @@ class GameState():
                 agent = self.agents[model.id]
                 agent.do_action(action)
 
-        rewards = self.tick_game_state() #TODO: abstract away computation of rewards?
+        rewards, dones = self.tick_game_state(models) #TODO: abstract away computation of rewards?
+
+        return rewards, dones
 
         # TODO: go through rewards to see if anyone died and if so, add "done"
-        return [0 for model in models], [False for model in models]
+        # return [0 for model in models], [False for model in models]
 
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
@@ -441,7 +476,7 @@ class GameState():
 
             print('[DEBUG] done with update agent state')
 
-            self.tick_game_state()
+            self.tick_game_state(None)
 
             print('[DEBUG] done with tick game state')
 
