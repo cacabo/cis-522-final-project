@@ -158,7 +158,7 @@ class GameState():
                 continue
             print('[%s] [FOOD] %s ate food item %s' %
                   (self.get_time(), agent.name, food.id))
-            cell.mass += food.mass
+            cell.eat_food(food)
             return food
 
     def handle_mass(self, agent, mass):
@@ -167,7 +167,7 @@ class GameState():
                 continue
             print('[%s] [MASS] %s ate mass %s' %
                   (self.get_time(), agent.name, mass.id))
-            cell.mass += mass.mass
+            cell.eat_mass(mass)
             return mass
 
     def handle_virus(self, agent, virus):

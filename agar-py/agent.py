@@ -46,6 +46,9 @@ class AgentCell():
             # TODO what is this case for?
             return 1
 
+    def add_mass(self, mass_to_add):
+        self.set_mass(self.mass + mass_to_add)
+
     def set_mass(self, mass):
         """
         Setter method for the mass
@@ -66,6 +69,16 @@ class AgentCell():
         new_cell = AgentCell(self.agent, self.x_pos, self.y_pos,
                              self.radius, self.mass)
         return new_cell
+
+    def eat_food(self, food):
+        if food is None:
+            raise ValueError('Cannot eat food which is None')
+        self.add_mass(food.mass)
+    
+    def eat_mass(self, mass):
+        if mass is None:
+            raise ValueError('Cannot eat mass which is None')
+        self.add_mass(mass.mass)
 
     def eat_virus(self, virus):
         """
@@ -92,9 +105,9 @@ class AgentCell():
             list of newly created cells
         """
         if virus is None:
-            raise Exception('Cannot eat virus which is None')
-
-        self.mass += virus.mass
+            raise ValueError('Cannot eat virus which is None')
+        
+        self.add_mass(virus.mass)
         virus.is_alive = False
 
         # if the agent already has the max number of cells, a split can't happen
