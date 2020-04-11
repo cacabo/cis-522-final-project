@@ -30,6 +30,28 @@ def massToVelocity(mass):
     return int(2.2 * np.power(mass / 1000, -0.439))
 
 
+def nonOverlapPosition(agents, radius):
+    # generate 10 candidate positions, and find the first one that isn't overlapping
+    # with any agents
+    candidates = [randomPosition(radius) for i in range(10)]
+    for cand in candidates:
+        overlaps = False
+        for agent in agents:
+            for cell in agent.cells:
+                if isPointInCircle(cand, cell.get_pos(), cell.radius):
+                    overlaps = True
+                    break
+            if overlaps:
+                break
+        
+        if not overlaps:
+            return cand
+
+    # if none of them work, give up and return a random position
+    print('[DEBUG] couldn\'t find non-overlapping position for item :(')
+    return randomPosition(radius)
+
+
 def randomPosition(radius):
     """
     Generate a random position within the field of play. NOTE the `radius` is

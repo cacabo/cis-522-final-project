@@ -97,6 +97,10 @@ class AgentCell():
         self.mass += virus.mass
         virus.is_alive = False
 
+        # if the agent already has the max number of cells, a split can't happen
+        if len(self.agent.cells) == conf.AGENT_CELL_LIMIT:
+            return []
+
         max_cells_based_on_count = conf.AGENT_CELL_LIMIT - \
             len(self.agent.cells) + 1
         max_cells_based_on_size = int(self.mass / conf.MIN_CELL_SIZE)

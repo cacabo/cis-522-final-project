@@ -20,6 +20,8 @@ text_font = pygame.font.SysFont(
 
 
 class GameState():
+    ID_counter = 0
+
     def __init__(self):
         self.camera = None
         self.agents = {}
@@ -53,8 +55,7 @@ class GameState():
 
         radius = utils.massToRadius(conf.FOOD_MASS)
         for _ in range(n):
-            # TODO: could include uniform distribution here
-            pos = utils.randomPosition(radius)
+            pos = utils.nonOverlapPosition(self.agents.values(), radius)
             self.foods.append(Food(pos[0], pos[1], radius, (255, 0, 0)))
 
     def add_virus(self, n):
@@ -70,8 +71,7 @@ class GameState():
 
         radius = utils.massToRadius(conf.VIRUS_MASS)
         for _ in range(n):
-            # TODO: could include uniform distribution here
-            pos = utils.randomPosition(radius)
+            pos = utils.nonOverlapPosition(self.agents.values(), radius)
             self.viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_MASS))
 
     def balance_mass(self):
@@ -176,18 +176,20 @@ class GameState():
         @return virus if virus should be deleted
         """
         new_cells = []
+        ate_virus = False
         for cell in agent.cells:
             if not virus.is_alive or not self.check_virus_collision(cell, virus):
                 continue
             print('[%s] [VIRUS] %s ate virus %s' %
                   (self.get_time(), agent.name, virus.id))
             new_cells = cell.eat_virus(virus)
+            ate_virus = True
             break
 
         # Return early without considering other cells
         # That is, the virus can only be eaten once
         # return virus
-        if len(new_cells) > 0:
+        if ate_virus:
             agent.cells = agent.cells + new_cells
             return virus
 
@@ -253,7 +255,6 @@ class GameState():
             agent, self.foods, self.handle_food)
         self.foods = remaining_food
         num_food_eaten = len(list(filter(lambda x: x != None, food_eaten_or_none)))
-        # print(food_eaten_or_none) this will give me none's and food obj
 
         # Iterate over all masses, remove those which were eaten
         remaining_mass, mass_eaten_or_none = self._filter_objects(
@@ -266,8 +267,6 @@ class GameState():
             agent, self.viruses, self.handle_virus)
         self.viruses = remaining_virus
         num_virus_eaten = len(list(filter(lambda x: x != None, virus_eaten_or_none)))
-
-        # print('agent length', len(agent.cells))
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
@@ -390,7 +389,7 @@ class GameState():
                              (conf.SCREEN_HEIGHT / 2 - player.get_avg_y_pos()),
                              player.get_avg_radius())
 
-    def init_ai_agents(self, num_agents, model):
+    def init_ai_agents(self, num_agents, model, name=None):
         """
         Create agents which have self-contained strategies
 
@@ -400,6 +399,10 @@ class GameState():
             raise ValueError('num_agents must be positive')
         if model is None:
             raise ValueError('invalid model given')
+
+        if name == None:
+            name = 'Agent' + str(GameState.ID_counter)
+            GameState.ID_counter += 1
 
         for i in range(num_agents):
             radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
@@ -412,7 +415,7 @@ class GameState():
                 radius,
                 mass=conf.AGENT_STARTING_MASS,
                 color=conf.BLUE_COLOR,
-                name='Agent' + str(i),
+                name=name,
                 manual_control=False,
             )
             self.agents[model.id] = ai_agent
