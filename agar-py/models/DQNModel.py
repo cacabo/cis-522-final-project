@@ -36,13 +36,15 @@ class DQN(nn.Module):
         qvals = self.fc3(x)
         return qvals
 
+
 class DQNModel(ModelInterface):
     def __init__(self):
         # init replay buffer
         self.replay_buffer = deque(maxlen=BUFFER_LENGTH)
 
         # init model
-        self.model = DQN(observation_space.shape, len(Action))  # TODO: fix w/ observation space
+        self.model = DQN(observation_space.shape, len(
+            Action))  # TODO: fix w/ observation space
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.loss = torch.nn.SmoothL1Loss()
         self.device = "cpu"
@@ -59,22 +61,25 @@ class DQNModel(ModelInterface):
             q_values = self.model.predict(state)
             action = np.argmax(q_values)  # TODO: placeholder
         else:
-            action = Action(np.random.randint(len(Action))) # random action
+            action = Action(np.random.randint(len(Action)))  # random action
         return action
 
     def remember(self, state, action, next_state, reward, done):
         if self.done:
             return
         else:
-            self.replay_buffer.append((state, action, next_state, reward, done))
+            self.replay_buffer.append(
+                (state, action, next_state, reward, done))
             self.done = done
 
     def optimize(self):  # or experience replay
         if self.done:
             return
+
         # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < batch_size:
             return
+
         batch = random.sample(self.replay_buffer, batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
         # states, actions, rewards, next_states, dones = list(states), list(actions), list(rewards), list(next_states), list(dones)
@@ -82,6 +87,7 @@ class DQNModel(ModelInterface):
         actions = torch.Tensor(list(actions)).to(self.device)
         rewards = torch.Tensor(list(rewards)).to(self.device)
         next_states = torch.Tensor(list(next_states)).to(self.device)
+
         # what about these/considering terminating states
         dones = torch.Tensor(list(dones)).to(self.device)
 
