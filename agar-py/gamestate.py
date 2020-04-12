@@ -380,7 +380,6 @@ class GameState():
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
         else:
-            print('Is DQNModel instance?', isinstance(agent.model, DQNModel))
             if (isinstance(agent.model, DQNModel)):
                 agent.act(self.get_board_state())
             else:
