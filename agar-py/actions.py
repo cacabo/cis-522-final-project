@@ -1,5 +1,8 @@
 from enum import Enum
 
+# TODO add split and shoot
+
+
 class Action(Enum):
     MOVE_RIGHT = 0
     MOVE_UP_RIGHT = 1
