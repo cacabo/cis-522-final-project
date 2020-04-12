@@ -257,19 +257,22 @@ class GameState():
         remaining_food, food_eaten_or_none = self._filter_objects(
             agent, self.foods, self.handle_food)
         self.foods = remaining_food
-        num_food_eaten = len(list(filter(lambda x: x != None, food_eaten_or_none)))
+        num_food_eaten = len(
+            list(filter(lambda x: x != None, food_eaten_or_none)))
 
         # Iterate over all masses, remove those which were eaten
         remaining_mass, mass_eaten_or_none = self._filter_objects(
             agent, self.masses, self.handle_mass)
         self.masses = remaining_mass
-        num_mass_eaten = len(list(filter(lambda x: x != None, mass_eaten_or_none)))
+        num_mass_eaten = len(
+            list(filter(lambda x: x != None, mass_eaten_or_none)))
 
         # Iterate over all viruses, remove viruses which were eaten
         remaining_virus, virus_eaten_or_none = self._filter_objects(
             agent, self.viruses, self.handle_virus)
         self.viruses = remaining_virus
-        num_virus_eaten = len(list(filter(lambda x: x != None, virus_eaten_or_none)))
+        num_virus_eaten = len(
+            list(filter(lambda x: x != None, virus_eaten_or_none)))
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
@@ -292,7 +295,7 @@ class GameState():
         if models == None:
             for agent in self.agents.values():
                 self.tick_agent(agent)
-        else: 
+        else:
             rewards = []
             for model in models:
                 if model.id in self.agents:
@@ -318,10 +321,9 @@ class GameState():
                 if model.id in self.agents:
                     dones.append(False)
                     rewards[idx] += conf.SURVIVAL_REWARD
-                else: 
+                else:
                     dones.append(True)
                     rewards[idx] = conf.DEATH_REWARD
-
 
         self.time += 1
 
@@ -332,23 +334,25 @@ class GameState():
     # ------------------------------------------------------------------------------
     # Methods for interfacing with learning models
     # ------------------------------------------------------------------------------
+
     # reset the game to its initial state, and initialize a game agent for each model
     def reset(self, models):
         self.__init__()
         for model in models:
             self.init_model_agent(model)
 
-    # get the current game state
     def get_state(self):
+        """get the current game state"""
         return self.agents, self.foods, self.viruses, self.time
 
-    # get game board image
     def get_board_state(self):
+        """get game board image"""
         state = pygame.surfarray.array3d(self.window)
         return state
 
-    # update the game state based on actions taken by models
     def update_game_state(self, models, actions):
+        """update the game state based on actions taken by models"""
+
         # first, update the current game state by performing each model's selected
         # action with its agent
         for (model, action) in zip(models, actions):
@@ -356,7 +360,8 @@ class GameState():
                 agent = self.agents[model.id]
                 agent.do_action(action)
 
-        rewards, dones = self.tick_game_state(models) #TODO: abstract away computation of rewards?
+        # TODO: abstract away computation of rewards?
+        rewards, dones = self.tick_game_state(models)
 
         return rewards, dones
 
@@ -366,15 +371,16 @@ class GameState():
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
     # ------------------------------------------------------------------------------
-    # only used for interactive mode
+
     def update_interactive_state(self, agent):
+        """NOTE this is only used for interactive mode"""
         if agent.manual_control:
             # get key presses
             keys = pygame.key.get_pressed()
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
         else:
-            print(isinstance(agent.model, DQNModel))
+            print('Is DQNModel instance?', isinstance(agent.model, DQNModel))
             if (isinstance(agent.model, DQNModel)):
                 agent.act(self.get_board_state())
             else:
@@ -434,12 +440,14 @@ class GameState():
             self.agents[model.id] = ai_agent
 
     def is_exit_command(self, event):
-        """
-        check if the user is pressing an exit key
-        """
+        """Check if the user is pressing an exit key"""
         return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
 
     def draw_circle(self, board, obj, color=None, stroke=None):
+        """Draw a circle on the pygame GUI"""
+        if color is None:
+            raise Exception('Color cannot be none')
+
         x, y = obj.get_pos()
         pos = (int(round(x)), int(round(y)))
         radius = int(round(obj.radius))
