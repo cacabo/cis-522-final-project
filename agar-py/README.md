@@ -25,7 +25,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 ### Up next
 
 - [ ] Fix bug with movement of heuristic agent at edge of map (Sam)
-- [ ] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
+- [X] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
 - [ ] When you die you keep getting negative reward -> this should only happen once (Mak)
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [ ] Plug in the state encoding

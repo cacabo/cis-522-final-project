@@ -60,6 +60,7 @@ class AgentCell():
 
         self.mass = mass
         self.radius = utils.massToRadius(mass)
+        utils.moveInBounds(self)
 
     def split(self):
         """

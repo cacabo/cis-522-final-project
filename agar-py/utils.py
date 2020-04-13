@@ -227,6 +227,19 @@ def getActionClosestToAngle(angle):
 def getRandomAction():
     return Action(np.random.randint(8))
 
+
+def moveInBounds(obj):
+    """move the given object such that it is entirely in bounds"""
+    if obj.x_pos < obj.radius:
+        obj.x_pos = obj.radius
+    if obj.x_pos > conf.BOARD_WIDTH - obj.radius:
+        obj.x_pos = conf.BOARD_WIDTH - obj.radius
+    if obj.y_pos < obj.radius:
+        obj.y_pos = obj.radius
+    if obj.y_pos > conf.BOARD_HEIGHT - obj.radius:
+        obj.y_pos = conf.BOARD_HEIGHT - obj.radius
+
+
 def moveObjectLeft(obj, vel):
     obj.x_pos = max(obj.x_pos - vel, obj.radius)
 
