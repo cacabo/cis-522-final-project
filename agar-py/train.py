@@ -1,9 +1,12 @@
-from gamestate import GameState
+from gamestate import GameState, start_ai_only_game
 from models.RandomModel import RandomModel
 from models.HeuristicModel import HeuristicModel
 from operator import add
-# from models.DQNModel import DQNModel
+from models.DQNModel import DQNModel
 
+#-------------------------------
+# Other Helpers
+#-------------------------------
 
 def select_model_actions(models, state):
     # TODO: for each model in models, give it the current state to compute the action it will take
@@ -101,3 +104,7 @@ for episode in range(EPISODES):
     print("------EPISODE %s rewards------" % episode)
     for idx, model in enumerate(models):
         print("Model %s: %s" % (model.id, episode_rewards[idx]))
+
+main_model = ('Heuristic', heuristic_model)
+other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
+start_ai_only_game(main_model, other_models)

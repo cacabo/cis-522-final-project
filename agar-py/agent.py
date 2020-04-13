@@ -195,7 +195,7 @@ class AgentCell():
 class Agent():
     angles = [0, 45, 90, 135, 180, 225, 270, 315]
 
-    def __init__(self, game, model, x, y, radius, mass=None, color=None, name=None, manual_control=False):
+    def __init__(self, game, model, x, y, radius, mass=None, color=None, name=None, manual_control=False, camera_follow=False):
         """
         An `Agent` is a player in the `Game`. An `Agent` can have many
         `AgentCells` (just one to start out with).
@@ -219,6 +219,7 @@ class Agent():
 
         self.is_alive = True
         self.manual_control = manual_control
+        self.camera_follow = camera_follow      # True if the game camera is following this agent
 
         self.update_last_split()
 
@@ -314,6 +315,11 @@ class Agent():
 
             # Handle normal movement
             cell.move(self.angle, vel)
+        
+        # if the game camera is following this agent, pan it
+        if self.camera_follow:
+            self.game.camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
+
 
     def handle_move_keys(self, keys, camera):
         is_left = keys[pygame.K_LEFT] or keys[pygame.K_a]
@@ -351,7 +357,6 @@ class Agent():
             self.do_action(Action.MOVE_RIGHT)
 
         self.move()
-        camera.pan(self.get_avg_x_pos(), self.get_avg_y_pos())
 
     def handle_shoot(self):
         # You can only shoot if you are a single cell

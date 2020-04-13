@@ -26,7 +26,7 @@ class HeuristicModel(ModelInterface):
 
     def get_nearest_food_action(self, my_agent, foods):
         my_pos = my_agent.get_avg_pos()
-        my_rad = utils.mass_to_radius(my_agent.get_mass())
+        my_rad = my_agent.get_avg_radius()
 
         # find the nearest food object reachable by the shortest path direction
         nearest_food = None

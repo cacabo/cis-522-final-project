@@ -387,6 +387,13 @@ class GameState():
 
         agent.handle_merge()
 
+    def set_camera(self, agent):
+        if self.camera is not None:
+            raise ValueError('Camera was set multiple times. Please ensure only one agent is being followed by camera.')
+        self.camera = Camera((conf.SCREEN_WIDTH / 2 - agent.get_avg_x_pos()),
+                             (conf.SCREEN_HEIGHT / 2 - agent.get_avg_y_pos()),
+                             agent.get_avg_radius())
+
     def init_manual_agent(self, name):
         radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
         pos = utils.gen_random_position(radius)
@@ -400,20 +407,20 @@ class GameState():
             color=conf.GREEN_COLOR,
             name=name,
             manual_control=True,
+            camera_follow=True,
         )
         self.agents[player.name] = player
-        self.camera = Camera((conf.SCREEN_WIDTH / 2 - player.get_avg_x_pos()),
-                             (conf.SCREEN_HEIGHT / 2 - player.get_avg_y_pos()),
-                             player.get_avg_radius())
+        self.set_camera(player)
 
-    def init_ai_agents(self, num_agents, model, name=None):
+    def init_ai_agent(self, model, name=None, camera_follow=False):
         """
         Create agents which have self-contained strategies
 
         @param num_agents - how many agents to create
+        @param model - the learning model which will decide actions
+        @param name - the display name for the agent
+        @param camera_follow - whether or not the GUI camera should follow this agent
         """
-        if num_agents is None or num_agents <= 0:
-            raise ValueError('num_agents must be positive')
         if model is None:
             raise ValueError('invalid model given')
 
@@ -421,22 +428,29 @@ class GameState():
             name = 'Agent' + str(GameState.ID_counter)
             GameState.ID_counter += 1
 
+        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+        pos = utils.gen_random_position(radius)
+        ai_agent = Agent(
+            self,
+            model,
+            pos[0],
+            pos[1],
+            radius,
+            mass=conf.AGENT_STARTING_MASS,
+            color=conf.BLUE_COLOR,
+            name=name,
+            manual_control=False,
+            camera_follow=camera_follow,
+        )
+        self.agents[model.id] = ai_agent
+        if camera_follow:
+            self.set_camera(ai_agent)
+
+    def init_multiple_ai_agents(self, num_agents, model, name=None):
+        if num_agents is None or num_agents <= 0:
+            raise ValueError('num_agents must be positive')
         for i in range(num_agents):
-            radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
-            pos = utils.gen_random_position(radius)
-            ai_agent = Agent(
-                self,
-                model,
-                pos[0],
-                pos[1],
-                radius,
-                mass=conf.AGENT_STARTING_MASS,
-                color=conf.BLUE_COLOR,
-                name=name,
-                manual_control=False,
-            )
-            print(model.id)
-            self.agents[model.id] = ai_agent
+            self.init_ai_agent(model)
 
     def is_exit_command(self, event):
         """Check if the user is pressing an exit key"""
@@ -496,6 +510,9 @@ class GameState():
             window.blit(text, (x, start_y + idx * 20))
 
     def main_loop(self):
+        if self.camera == None:
+            raise ValueError('Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
+
         if conf.FULL_SCREEN:
             self.window = pygame.display.set_mode(
                 (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
@@ -527,3 +544,28 @@ class GameState():
 
         pygame.quit()
         quit()
+
+
+#-------------------------------
+# Functions for displaying trained models mid-training
+#-------------------------------
+def start_game(other_models):
+    game = GameState()
+    # initialize player agent
+    game.init_manual_agent('AgarAI')
+
+    # initialize all other agents
+    for (name, model) in other_models:
+        game.init_ai_agent(model, name=name)
+    game.main_loop()
+
+def start_ai_only_game(main_model, other_models):
+    game = GameState()
+    # initialize main_model as the agent that the game camera will follow
+    (main_name, model) = main_model
+    game.init_ai_agent(model, name=main_name, camera_follow=True)
+
+    # initialize all other agents
+    for (name, model) in other_models:
+        game.init_ai_agent(model, name=name)
+    game.main_loop()

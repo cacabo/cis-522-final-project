@@ -34,7 +34,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - [ ] Model
   - [ ] Getting screenshots in the train loop (not just GUI)
     - [ ] Figure out a good frequency for this
-- [ ] Add GUI functionality to the training loop (Sam)
+- [X] Add GUI functionality to the training loop (Sam)
 - [ ] [Setup infra on AWS EC2 (Salib)](https://piazza.com/class/k58sba3uizm5md?cid=600)
 
 ### Lower priority
