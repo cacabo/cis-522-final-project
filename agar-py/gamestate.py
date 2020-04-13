@@ -308,17 +308,15 @@ class GameState():
         dead_agents = [key for key, agent in self.agents.items()
                        if not agent.is_alive]
         for dead_agent in dead_agents:
-            # TODO: handle this better. interactive player is keyed on name, rest are keyed on model ID
-            # if dead_agent.manual_control:
-            #     del self.agents[dead_agent.name]
-            # else:
-            #     del self.agents[dead_agent.model.id]
             del self.agents[dead_agent]
 
         if models:
             dones = []
             for (idx, model) in enumerate(models):
-                if model.id in self.agents:
+                if model.done:
+                    dones.append(True)
+                    rewards[idx] = 0
+                elif model.id in self.agents:
                     dones.append(False)
                     rewards[idx] += conf.SURVIVAL_REWARD
                 else:

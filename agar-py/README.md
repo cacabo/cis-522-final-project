@@ -26,7 +26,9 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 
 - [X] Fix bug with movement of heuristic agent at edge of map (Sam)
 - [X] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
-- [ ] When you die you keep getting negative reward -> this should only happen once (Mak)
+- [X] When you die you keep getting negative reward -> this should only happen once (Mak)
+- [ ] Update rewards function to be delta size (Mak)
+  - you should be penalized when one of your cells is eaten
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [ ] Plug in the state encoding
   - [ ] Play around with different state encodings and compare performance
@@ -42,3 +44,6 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [ ] Smarter datastructure for checking collisions
 - [ ] Move with mouse? Could move in directions other than the 8 we currently support
 - [ ] Shooting viruses
+- [ ] safe guards for when you're dead you don't have actions
+  - currently assumes game state properly keeps track which is ok i guess
+  - edge case is manualy start a game where agentmodel.done = True

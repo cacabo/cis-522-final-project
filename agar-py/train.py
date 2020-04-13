@@ -37,6 +37,7 @@ env = GameState()
 heuristic_model = HeuristicModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+
 models = [heuristic_model, rand_model_1, rand_model_2]
 
 # for episode in range(EPISODES):
@@ -97,8 +98,8 @@ for episode in range(EPISODES):
         optimize_models(models, rewards)
 
         # check for termination of our player #TODO
-        if dones[0]:
-            break
+        # if dones[0]:
+        #     break
 
         state = next_state  # update the state
     print("------EPISODE %s rewards------" % episode)
@@ -107,4 +108,4 @@ for episode in range(EPISODES):
 
 main_model = ('Heuristic', heuristic_model)
 other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-start_ai_only_game(main_model, other_models)
+# start_ai_only_game(main_model, other_models)

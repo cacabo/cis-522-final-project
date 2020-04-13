@@ -29,4 +29,5 @@ class RandomModel(ModelInterface):
     
     # no remembering occurs for RandomModel
     def remember(self, state, action, next_state, reward, done):
+        self.done = done
         return
