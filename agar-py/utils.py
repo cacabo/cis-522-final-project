@@ -4,7 +4,7 @@ import config as conf
 from actions import Action
 
 
-def massToRadius(mass):
+def mass_to_radius(mass):
     """
     Determine radius from mass of blob
 
@@ -17,7 +17,7 @@ def massToRadius(mass):
     return int(4 + np.sqrt(mass) * 4)
 
 
-def massToVelocity(mass):
+def mass_to_velocity(mass):
     """
     Determine velocity from mass of blob
 
@@ -30,15 +30,15 @@ def massToVelocity(mass):
     return int(2.2 * np.power(mass / 1000, -0.439))
 
 
-def nonOverlapPosition(agents, radius):
+def gen_non_overlap_position(agents, radius):
     # generate 10 candidate positions, and find the first one that isn't overlapping
     # with any agents
-    candidates = [randomPosition(radius) for i in range(10)]
+    candidates = [gen_random_position(radius) for i in range(10)]
     for cand in candidates:
         overlaps = False
         for agent in agents:
             for cell in agent.cells:
-                if isPointInCircle(cand, cell.get_pos(), cell.radius):
+                if is_point_in_circle(cand, cell.get_pos(), cell.radius):
                     overlaps = True
                     break
             if overlaps:
@@ -49,10 +49,10 @@ def nonOverlapPosition(agents, radius):
 
     # if none of them work, give up and return a random position
     print('[DEBUG] couldn\'t find non-overlapping position for item :(')
-    return randomPosition(radius)
+    return gen_random_position(radius)
 
 
-def randomPosition(radius):
+def gen_random_position(radius):
     """
     Generate a random position within the field of play. NOTE the `radius` is
     used to position within bounds of the board.
@@ -66,12 +66,12 @@ def randomPosition(radius):
         tuple (x y)
     """
     return (
-        randomInRange(radius, conf.BOARD_WIDTH - radius),
-        randomInRange(radius, conf.BOARD_HEIGHT - radius),
+        gen_rand_int_in_range(radius, conf.BOARD_WIDTH - radius),
+        gen_rand_int_in_range(radius, conf.BOARD_HEIGHT - radius)
     )
 
 
-def randomInRange(lo, hi):
+def gen_rand_int_in_range(lo, hi):
     """
     Generate random int in the range lo to hi
 
@@ -87,7 +87,7 @@ def randomInRange(lo, hi):
     return int(np.floor(np.random.random() * (hi - lo)) + lo)
 
 
-def getEuclideanDistance(p1, p2):
+def get_euclidean_dist(p1, p2):
     """
     Calculate euclidean distance between two points
 
@@ -103,7 +103,7 @@ def getEuclideanDistance(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
 
 
-def isPointInCircle(point, circle, radius):
+def is_point_in_circle(point, circle, radius):
     """
     Return if the provided point is within the circle
 
@@ -117,10 +117,10 @@ def isPointInCircle(point, circle, radius):
 
         boolean
     """
-    return radius >= getEuclideanDistance(point, circle)
+    return radius >= get_euclidean_dist(point, circle)
 
 
-def getCircleOverlap(c1, r1, c2, r2):
+def get_circle_overlap(c1, r1, c2, r2):
     """
     Measure overlap between two circles
 
@@ -143,11 +143,11 @@ def getCircleOverlap(c1, r1, c2, r2):
     return sum_radii - dist_btwn_centers
 
 
-def getObjectOverlap(a, b):
-    return getCircleOverlap(a.get_pos(), a.radius, b.get_pos(), b.radius)
+def get_object_overlap(a, b):
+    return get_circle_overlap(a.get_pos(), a.radius, b.get_pos(), b.radius)
 
 
-def areCirclesColliding(c1, r1, c2, r2):
+def are_circles_colliding(c1, r1, c2, r2):
     """
     Parameters
 
@@ -158,11 +158,11 @@ def areCirclesColliding(c1, r1, c2, r2):
 
     Returns boolean if the circles overlap
     """
-    overlap = getCircleOverlap(c1, r1, c2, r2)
+    overlap = get_circle_overlap(c1, r1, c2, r2)
     return overlap > 0
 
 
-def getAngleBetweenPoints(p1, p2):
+def get_angle_between_points(p1, p2):
     """
     Parameters
 
@@ -198,11 +198,11 @@ def getAngleBetweenPoints(p1, p2):
         return None
 
 
-def getAngleBetweenObjects(a, b):
-    return getAngleBetweenPoints(a.get_pos(), b.get_pos())
+def get_angle_between_objects(a, b):
+    return get_angle_between_points(a.get_pos(), b.get_pos())
 
 
-def getActionClosestToAngle(angle):
+def get_action_closest_to_angle(angle):
     half_angle = 45 / 2
     if angle <= (45 - half_angle):
         return Action.MOVE_RIGHT
@@ -224,11 +224,36 @@ def getActionClosestToAngle(angle):
         return Action.MOVE_RIGHT
 
 
-def getRandomAction():
+def get_random_action():
     return Action(np.random.randint(8))
 
 
-def moveInBounds(obj):
+def is_action_feasible(action, pos, radius):
+    """
+    Check if the given action will actually move the object with given position
+    and radius
+    """
+    (x_pos, y_pos) = pos
+    if action == Action.MOVE_RIGHT:
+        return x_pos < conf.BOARD_WIDTH - radius
+    elif action == Action.MOVE_LEFT:
+        return x_pos > radius
+    elif action == Action.MOVE_DOWN:
+        return y_pos < conf.BOARD_HEIGHT - radius
+    elif action == Action.MOVE_UP:
+        return y_pos > radius
+    elif action == Action.MOVE_UP_RIGHT:
+        return x_pos < conf.BOARD_WIDTH - radius or y_pos > radius
+    elif action == Action.MOVE_UP_LEFT:
+        return x_pos > radius or y_pos > radius
+    elif action == Action.MOVE_DOWN_RIGHT:
+        return x_pos < conf.BOARD_WIDTH - radius or y_pos < conf.BOARD_HEIGHT - radius
+    elif action == Action.MOVE_DOWN_LEFT:
+        return x_pos > radius or y_pos < conf.BOARD_HEIGHT - radius
+    else:
+        raise ValueError('invalid action given to is_action_feasible()')
+
+def move_in_bounds(obj):
     """move the given object such that it is entirely in bounds"""
     if obj.x_pos < obj.radius:
         obj.x_pos = obj.radius
@@ -240,23 +265,23 @@ def moveInBounds(obj):
         obj.y_pos = conf.BOARD_HEIGHT - obj.radius
 
 
-def moveObjectLeft(obj, vel):
+def move_object_left(obj, vel):
     obj.x_pos = max(obj.x_pos - vel, obj.radius)
 
 
-def moveObjectRight(obj, vel):
+def move_object_right(obj, vel):
     obj.x_pos = min(obj.x_pos + vel, conf.BOARD_WIDTH - obj.radius)
 
 
-def moveObjectUp(obj, vel):
+def move_object_up(obj, vel):
     obj.y_pos = max(obj.y_pos - vel, obj.radius)
 
 
-def moveObjectDown(obj, vel):
+def move_object_down(obj, vel):
     obj.y_pos = min(obj.y_pos + vel, conf.BOARD_HEIGHT - obj.radius)
 
 
-def moveObject(obj, angle, vel):
+def move_object(obj, angle, vel):
     if angle is None:
         return
 
@@ -264,11 +289,11 @@ def moveObject(obj, angle, vel):
     dx = math.cos(radians) * vel
     dy = math.sin(radians) * vel
     if dx > 0:
-        moveObjectRight(obj, dx)
+        move_object_right(obj, dx)
     elif dx < 0:
-        moveObjectLeft(obj, dx * -1)
+        move_object_left(obj, dx * -1)
 
     if dy > 0:
-        moveObjectUp(obj, dy)
+        move_object_up(obj, dy)
     elif dy < 0:
-        moveObjectDown(obj, dy * -1)
+        move_object_down(obj, dy * -1)

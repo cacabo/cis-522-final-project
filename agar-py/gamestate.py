@@ -56,9 +56,9 @@ class GameState():
         if n is None or n <= 0:
             raise Exception('n must be positive')
 
-        radius = utils.massToRadius(conf.FOOD_MASS)
+        radius = utils.mass_to_radius(conf.FOOD_MASS)
         for _ in range(n):
-            pos = utils.nonOverlapPosition(self.agents.values(), radius)
+            pos = utils.gen_non_overlap_position(self.agents.values(), radius)
             self.foods.append(Food(pos[0], pos[1], radius, (255, 0, 0)))
 
     def add_virus(self, n):
@@ -72,9 +72,9 @@ class GameState():
         if n is None or n <= 0:
             raise Exception('n must be positive')
 
-        radius = utils.massToRadius(conf.VIRUS_MASS)
+        radius = utils.mass_to_radius(conf.VIRUS_MASS)
         for _ in range(n):
-            pos = utils.nonOverlapPosition(self.agents.values(), radius)
+            pos = utils.gen_non_overlap_position(self.agents.values(), radius)
             self.viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_MASS))
 
     def balance_mass(self):
@@ -105,7 +105,7 @@ class GameState():
 
         @returns boolean
         """
-        return utils.isPointInCircle(b.get_pos(), a.get_pos(), a.radius)
+        return utils.is_point_in_circle(b.get_pos(), a.get_pos(), a.radius)
 
     def check_cell_collision(self, agent_cell, other_cell):
         if agent_cell.mass < other_cell.mass * conf.CELL_CONSUME_MASS_FACTOR:
@@ -206,8 +206,8 @@ class GameState():
         if model is None:
             raise ValueError('asked to initialize agent for None model')
 
-        radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
-        pos = utils.randomPosition(radius)
+        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+        pos = utils.gen_random_position(radius)
         # TODO: make model name better, maybe give ID to Agent() instead
         model_agent = Agent(
             self,
@@ -388,8 +388,8 @@ class GameState():
         agent.handle_merge()
 
     def init_manual_agent(self, name):
-        radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
-        pos = utils.randomPosition(radius)
+        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+        pos = utils.gen_random_position(radius)
         player = Agent(
             self,
             None,
@@ -422,8 +422,8 @@ class GameState():
             GameState.ID_counter += 1
 
         for i in range(num_agents):
-            radius = utils.massToRadius(conf.AGENT_STARTING_MASS)
-            pos = utils.randomPosition(radius)
+            radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+            pos = utils.gen_random_position(radius)
             ai_agent = Agent(
                 self,
                 model,

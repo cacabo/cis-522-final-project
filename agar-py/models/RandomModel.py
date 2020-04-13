@@ -18,7 +18,7 @@ class RandomModel(ModelInterface):
         if self.steps_remaining <= 0:
             self.steps_remaining = np.random.randint(
                 self.min_steps, self.max_steps)
-            self.curr_action = utils.getRandomAction()
+            self.curr_action = utils.get_random_action()
 
         self.steps_remaining -= 1
         return self.curr_action

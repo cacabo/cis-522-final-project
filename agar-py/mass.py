@@ -9,7 +9,7 @@ class Mass():
         self.x_pos = x
         self.y_pos = y
         self.mass = conf.MASS_MASS
-        self.radius = utils.massToRadius(self.mass)
+        self.radius = utils.mass_to_radius(self.mass)
         self.color = color
         self.angle = angle
 
@@ -21,13 +21,13 @@ class Mass():
         self.acceleration = self.radius / 4
 
         # Move out from the parent's radius
-        utils.moveObject(self, self.angle, parentCellRadius + self.radius)
+        utils.move_object(self, self.angle, parentCellRadius + self.radius)
 
     def move(self):
         if not self.velocity:
             return
 
-        utils.moveObject(self, self.angle, self.velocity)
+        utils.move_object(self, self.angle, self.velocity)
         self.velocity = self.velocity - self.acceleration
 
         if self.velocity <= 0:

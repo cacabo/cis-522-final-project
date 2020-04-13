@@ -36,12 +36,12 @@ class AgentCell():
         if radius is not None:
             self.radius = radius
         else:
-            self.radius = utils.massToRadius(mass)
+            self.radius = utils.mass_to_radius(mass)
 
     def get_velocity(self):
         # return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
         if self.mass > 0:
-            return max(utils.massToVelocity(self.mass), 1)
+            return max(utils.mass_to_velocity(self.mass), 1)
         else:
             # TODO what is this case for?
             return 1
@@ -59,8 +59,8 @@ class AgentCell():
             raise Exception('Mass must be positive')
 
         self.mass = mass
-        self.radius = utils.massToRadius(mass)
-        utils.moveInBounds(self)
+        self.radius = utils.mass_to_radius(mass)
+        utils.move_in_bounds(self)
 
     def split(self):
         """
@@ -144,7 +144,7 @@ class AgentCell():
         """
         Move in response to being shot
         """
-        utils.moveObject(self, self.shooting_angle, self.shooting_velocity)
+        utils.move_object(self, self.shooting_angle, self.shooting_velocity)
         self.shooting_velocity = self.shooting_velocity - self.shooting_acceleration
 
         if self.shooting_velocity <= 0:
@@ -172,7 +172,7 @@ class AgentCell():
             self.move_shoot()
         else:
             vel = vel if vel is not None else self.get_velocity()
-            utils.moveObject(self, angle, vel)
+            utils.move_object(self, angle, vel)
 
     def shift(self, dx=None, dy=None):
         """
@@ -290,7 +290,7 @@ class Agent():
         for cell in self.cells:
             # Handle converging towards the middle
             penalty = -2  # Move this many pixels towards the center
-            angle_to_avg = utils.getAngleBetweenPoints(
+            angle_to_avg = utils.get_angle_between_points(
                 (avg_x, avg_y), cell.get_pos())
 
             if angle_to_avg is not None:
@@ -300,11 +300,11 @@ class Agent():
             # Handle overlapping cells
             for otherIdx in range(idx + 1, len(self.cells)):
                 otherCell = self.cells[otherIdx]
-                overlap = utils.getObjectOverlap(cell, otherCell)
+                overlap = utils.get_object_overlap(cell, otherCell)
                 if overlap < 0:
                     continue
                 dist_to_move = overlap / 2
-                angle = utils.getAngleBetweenObjects(cell, otherCell)
+                angle = utils.get_angle_between_objects(cell, otherCell)
                 if angle is None:
                     # If they totally overlap with each other
                     angle = random.randrange(360)

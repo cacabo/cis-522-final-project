@@ -9,9 +9,10 @@ class HeuristicModel(ModelInterface):
 
     def get_action(self, state):
         (agents, foods, viruses, time) = state
-        my_pos = agents[self.id].get_avg_pos()
-
-        nearest_food_action = self.get_nearest_food_action(my_pos, foods)
+        my_agent = agents[self.id]
+        
+        # TODO: technically only considers the agent as one single cell. Could feasibly reach "unreachable" foods if its multiple cells
+        nearest_food_action = self.get_nearest_food_action(my_agent, foods)
 
         return nearest_food_action
 
@@ -23,27 +24,32 @@ class HeuristicModel(ModelInterface):
     def remember(self, state, action, next_state, reward, done):
         return
 
-    def get_nearest_food_action(self, my_pos, foods):
-        # find the nearest food object
+    def get_nearest_food_action(self, my_agent, foods):
+        my_pos = my_agent.get_avg_pos()
+        my_rad = utils.mass_to_radius(my_agent.get_mass())
+
+        # find the nearest food object reachable by the shortest path direction
         nearest_food = None
         nearest_food_dist = np.inf
         for food in foods:
             food_pos = food.get_pos()
-            # print(my_pos)
-            # print(food_pos)
-            curr_dist = utils.getEuclideanDistance(my_pos, food_pos)
-            # print(curr_dist)
-            if curr_dist < nearest_food_dist:
-                # print('new food!')
-                nearest_food = food
-                nearest_food_dist = curr_dist
+            if self.is_food_reachable(my_pos, my_rad, food_pos):
+                curr_dist = utils.get_euclidean_dist(my_pos, food_pos)
+                if curr_dist < nearest_food_dist:
+                    nearest_food = food
+                    nearest_food_dist = curr_dist
 
         # if there is no nearest food, choose a random action
-        # TODO: do something better?
         if nearest_food == None:
-            return utils.getRandomAction()
+            return utils.get_random_action()
         # otherwise, get the direction that goes most directly to the nearest food object
         else:
-            angle_to_food = utils.getAngleBetweenPoints(
+            angle_to_food = utils.get_angle_between_points(
                 my_pos, nearest_food.get_pos())
-            return utils.getActionClosestToAngle(angle_to_food)
+            return utils.get_action_closest_to_angle(angle_to_food)
+
+    # helper function to determine if an agent can physically reach the given food
+    def is_food_reachable(self, my_pos, my_rad, food_pos):
+        angle_to_food = utils.get_angle_between_points(my_pos, food_pos)
+        action_to_angle = utils.get_action_closest_to_angle(angle_to_food)
+        return utils.is_action_feasible(action_to_angle, my_pos, my_rad)
