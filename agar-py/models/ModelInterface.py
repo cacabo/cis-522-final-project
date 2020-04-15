@@ -10,7 +10,7 @@ class ModelInterface:
         """Given the current game state, determine what action the model will output"""
         raise NotImplementedError('Model get_action() is not implemented')
 
-    def optimize(self, reward):
+    def optimize(self):
         """Given reward received, optimize the model"""
         raise NotImplementedError('Model optimize() is not implemented')
 

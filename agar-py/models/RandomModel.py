@@ -24,7 +24,7 @@ class RandomModel(ModelInterface):
         return self.curr_action
 
     # no optimization occurs for RandomModel
-    def optimize(self, reward):
+    def optimize(self):
         return
     
     # no remembering occurs for RandomModel

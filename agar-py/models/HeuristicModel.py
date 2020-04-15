@@ -17,7 +17,7 @@ class HeuristicModel(ModelInterface):
         return nearest_food_action
 
     # no optimization occurs for HeuristicModel
-    def optimize(self, reward):
+    def optimize(self):
         return
 
     # no remembering occurs for HeuristicModel
