@@ -25,12 +25,11 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
 - [x] When you die you keep getting negative reward -> this should only happen once (Mak)
 - [x] Create IAM users for each group member on ccabo@seas AWS account
+- [x] Fix food bug (all the boys 😤)
 
 ### Up next
 
 - [x] Add GUI functionality to the training loop (Sam)
-- [ ] Update reward function to just be change in size (mak)
-- [ ] Fix food bug (all the boys 😤)
 - [ ] Mass decay (cam)
 - [ ] Look into ngrok for logging from AWS (cam)
 - [ ] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
@@ -38,6 +37,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - you should be penalized when one of your cells is eaten
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [ ] Plug in the state encoding
+  - [ ] Analyze runtime bottleneck
   - [ ] Play around with different state encodings and compare performance
 - [ ] Convolutional jawn (Sam + Salib)
   - [ ] Model
