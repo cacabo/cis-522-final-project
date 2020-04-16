@@ -33,8 +33,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [ ] Mass decay (cam)
 - [ ] Look into ngrok for logging from AWS (cam)
 - [ ] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
-- [ ] Update rewards function to be delta size (Mak)
-  - you should be penalized when one of your cells is eaten
+- [x] Update rewards function to be delta size (Mak)
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [ ] Plug in the state encoding
   - [ ] Analyze runtime bottleneck

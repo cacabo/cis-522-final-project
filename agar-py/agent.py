@@ -236,6 +236,7 @@ class Agent():
 
         cell = AgentCell(self, x, y, radius=radius, mass=mass)
         self.cells = [cell]
+        self.cells_lost = []
 
     def update_last_split(self):
         self.last_split = self.game.get_time()

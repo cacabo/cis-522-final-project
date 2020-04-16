@@ -147,6 +147,7 @@ class GameState():
                     mass_consumed += other_cell.mass
                     other_cell.is_alive = False
 
+        other.cells_lost.extend([cell for cell in other.cells if not cell.is_alive])
         other.cells = [cell for cell in other.cells if cell.is_alive]
 
         if len(other.cells) == 0:
@@ -320,6 +321,10 @@ class GameState():
                 elif model.id in self.agents:
                     dones.append(False)
                     rewards[idx] += conf.SURVIVAL_REWARD
+
+                    agent = self.agents[model.id]
+                    rewards[idx] -= sum([cell.mass for cell in agent.cells_lost])
+                    agent.cells_lost = []
                 else:
                     dones.append(True)
                     rewards[idx] = conf.DEATH_REWARD

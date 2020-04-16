@@ -13,8 +13,6 @@ import utils
 EPSILON = 0.95
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.001
-EPSILON = 0  # TODO: remove
-MIN_EPSILON = 0
 
 GAMMA = 0.99
 

@@ -34,12 +34,12 @@ MAX_STEPS = 1000
 # Define environment
 env = GameState()
 
-deep_rl_model = DeepRLModel()
-# heuristic_model = HeuristicModel()
+# deep_rl_model = DeepRLModel()
+heuristic_model = HeuristicModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
-# rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-models = [deep_rl_model, rand_model_1]
+models = [heuristic_model, rand_model_1, rand_model_2]
 
 for episode in range(EPISODES):
     # done = False  # whether game is done or not (terminal state)
@@ -70,8 +70,8 @@ for episode in range(EPISODES):
         optimize_models(models)
 
         # check for termination of our player #TODO
-        # if dones[0]:
-        #     break
+        if dones[0]:
+            break
 
         state = next_state  # update the state
     print("------EPISODE %s rewards------" % episode)
