@@ -13,7 +13,7 @@ import utils
 EPSILON = 0.95
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.001
-EPSILON = 0 #TODO: remove
+EPSILON = 0  # TODO: remove
 MIN_EPSILON = 0
 
 GAMMA = 0.99
@@ -162,7 +162,8 @@ def encode_agent_state(model, state):
         time_state,
     ))
 
-## Model agent
+# Model agent
+
 
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -191,7 +192,7 @@ class DeepRLModel(ModelInterface):
 
         # init model
 
-        self.model = DQN(41, len(Action)) # TODO: fix w/ observation space
+        self.model = DQN(41, len(Action))  # TODO: fix w/ observation space
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.loss = torch.nn.SmoothL1Loss()
         self.device = "cpu"
@@ -236,7 +237,8 @@ class DeepRLModel(ModelInterface):
         states, actions, next_states, rewards, dones = zip(*batch)
 
         states = [encode_agent_state(self, state) for state in states]
-        next_states = [encode_agent_state(self, state) for state in next_states]
+        next_states = [encode_agent_state(self, state)
+                       for state in next_states]
         states = torch.Tensor(states).to(self.device)
         actions = torch.LongTensor(list(actions)).to(self.device)
         # print(rewards)
@@ -248,7 +250,8 @@ class DeepRLModel(ModelInterface):
         dones = torch.Tensor(list(dones)).to(self.device)
 
         # do Q computation TODO: understand the equations
-        currQ = self.model(states).gather(1, actions.unsqueeze(1))  # TODO: understand this
+        currQ = self.model(states).gather(
+            1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
         max_nextQ = torch.max(nextQ, 1)[0]
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
