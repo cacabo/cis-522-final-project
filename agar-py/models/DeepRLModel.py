@@ -97,7 +97,7 @@ def get_direction_scores(agent, objs):
     zero_to_first_angle = get_direction_score(
         agent, objs, obj_angles, obj_dists, avg_angles[-1], 360)
     last_angle_to_360 = get_direction_score(
-        agent, obj_angles, obj_dists, objs, 0, avg_angles[0])
+        agent, objs, obj_angles, obj_dists, 0, avg_angles[0])
     first_direction_state = zero_to_first_angle + last_angle_to_360
 
     direction_states = [first_direction_state]
