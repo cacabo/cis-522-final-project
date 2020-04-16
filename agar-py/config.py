@@ -37,6 +37,7 @@ VIRUS_CONSUME_MASS_FACTOR = 1.33  # how much larger one has to be to eat a virus
 WHITE_COLOR = ((255, 255, 255))
 VIRUS_COLOR = ((125, 250, 91))
 VIRUS_OUTLINE_COLOR = ((112, 226, 81))
+RED_COLOR = (255, 0, 0)
 GREEN_COLOR = (0, 255, 0)
 BLUE_COLOR = (0, 0, 255)
 
@@ -52,7 +53,8 @@ MIN_CELL_SIZE = 50
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 20
 AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent can have
-AGENT_TICKS_TO_MERGE_CELLS = 1000  # can merge cells this many ticks after splitting
+# can merge cells this many ticks after splitting
+AGENT_TICKS_TO_MERGE_CELLS = 1000
 
 # must wait a certain number of ticks after splitting before splitting again
 AGENT_TICKS_TO_SPLIT_AGAIN = 5

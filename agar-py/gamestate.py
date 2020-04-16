@@ -59,7 +59,7 @@ class GameState():
         radius = utils.mass_to_radius(conf.FOOD_MASS)
         for _ in range(n):
             pos = utils.gen_non_overlap_position(self.agents.values(), radius)
-            self.foods.append(Food(pos[0], pos[1], radius, (255, 0, 0)))
+            self.foods.append(Food(pos[0], pos[1], radius, conf.RED_COLOR))
 
     def add_virus(self, n):
         """
