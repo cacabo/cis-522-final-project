@@ -7,6 +7,7 @@ import numpy as np
 import utils
 import config as conf
 
+
 def select_model_actions(models, state):
     # TODO: for each model in models, give it the current state to compute the action it will take
     model_actions = []
@@ -34,12 +35,12 @@ MAX_STEPS = 1000
 # Define environment
 env = GameState()
 
-# deep_rl_model = DeepRLModel()
+deep_rl_model = DeepRLModel()
 heuristic_model = HeuristicModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-models = [heuristic_model, rand_model_1, rand_model_2]
+models = [deep_rl_model, heuristic_model, rand_model_1, rand_model_2]
 
 for episode in range(EPISODES):
     # done = False  # whether game is done or not (terminal state)
@@ -58,13 +59,10 @@ for episode in range(EPISODES):
         rewards, dones = env.update_game_state(models, actions)
         next_state = env.get_state()
 
-        # TODO here is how to get state:
-        # print('state', next_state)
-        # print(encode_agent_state(models[0], next_state))
-        # break
-
-        episode_rewards = list(map(add, episode_rewards, rewards))  # update rewards
-        update_models_memory(models, state, actions, next_state, rewards, dones)  # update replay memory
+        episode_rewards = list(
+            map(add, episode_rewards, rewards))  # update rewards
+        update_models_memory(models, state, actions, next_state,
+                             rewards, dones)  # update replay memory
 
         # optimize models
         optimize_models(models)
@@ -83,10 +81,7 @@ for episode in range(EPISODES):
 # start_ai_only_game(main_model, other_models)
 
 
-
-
-
-#########################################################################
+# ---------------------------------------------------------------------------- #
 
 # for episode in range(EPISODES):
 #     # done = False # whether game is done or not (terminal state)

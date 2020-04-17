@@ -18,6 +18,7 @@ GAMMA = 0.99
 
 BATCH_SIZE = 32
 REPLAY_BUFFER_LENGTH = 1000
+STATE_ENCODING_LENGTH = 41
 
 # -------------------------------
 # Other Helpers
@@ -111,6 +112,8 @@ def get_direction_scores(agent, objs):
 
 
 def encode_agent_state(model, state):
+    # return np.zeros((STATE_ENCODING_LENGTH,))
+
     (agents, foods, viruses, masses, time) = state
     agent = agents[model.id]
     agent_mass = agent.get_mass()
@@ -152,7 +155,7 @@ def encode_agent_state(model, state):
         agent.get_stdev_mass(),
     ]
 
-    return np.concatenate((
+    encoded_state = np.concatenate((
         food_state,
         this_agent_state,
         other_agent_state,
@@ -161,7 +164,7 @@ def encode_agent_state(model, state):
         time_state,
     ))
 
-# Model agent
+    return encoded_state
 
 
 class DQN(nn.Module):
@@ -191,7 +194,8 @@ class DeepRLModel(ModelInterface):
         self.replay_buffer = deque(maxlen=REPLAY_BUFFER_LENGTH)
 
         # init model
-        self.model = DQN(41, len(Action))  # TODO: fix w/ observation space
+        # TODO: fix w/ observation space
+        self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.loss = torch.nn.SmoothL1Loss()
 

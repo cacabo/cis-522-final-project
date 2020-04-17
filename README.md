@@ -31,9 +31,9 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 
 - [x] Add GUI functionality to the training loop (Sam)
 - [x] Mass decay (cam)
-- [ ] Look into ngrok for logging from AWS (cam)
-- [ ] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
+- [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)
+- [ ] Look into ngrok for logging from AWS (cam)
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [ ] Plug in the state encoding
   - [ ] Analyze runtime bottleneck
@@ -54,3 +54,17 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - currently assumes game state properly keeps track which is ok i guess
   - edge case is manualy start a game where agentmodel.done = True
 - [ ] Figure out what logs / graphs we will want on the writeup
+
+---
+
+No state encoding time to finish first episode (1000 ticks):
+
+- 19.5 seconds
+- 28.5 seconds
+- 31.5 seconds
+- 32.5 seconds
+- 32 seconds
+
+With state encoding time to finish first episode (1000 ticks):
+
+- 450 seconds
