@@ -30,7 +30,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 ### Up next
 
 - [x] Add GUI functionality to the training loop (Sam)
-- [ ] Mass decay (cam)
+- [x] Mass decay (cam)
 - [ ] Look into ngrok for logging from AWS (cam)
 - [ ] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)

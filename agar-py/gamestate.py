@@ -147,7 +147,8 @@ class GameState():
                     mass_consumed += other_cell.mass
                     other_cell.is_alive = False
 
-        other.cells_lost.extend([cell for cell in other.cells if not cell.is_alive])
+        other.cells_lost.extend(
+            [cell for cell in other.cells if not cell.is_alive])
         other.cells = [cell for cell in other.cells if cell.is_alive]
 
         if len(other.cells) == 0:
@@ -311,6 +312,10 @@ class GameState():
                        if not agent.is_alive]
         for dead_agent in dead_agents:
             del self.agents[dead_agent]
+
+        # mass decay all agents
+        for agent in self.agents.values():
+            agent.handle_mass_decay()
 
         if models:
             dones = []

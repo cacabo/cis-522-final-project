@@ -122,7 +122,7 @@ class AgentCell():
 
         max_cells_based_on_count = conf.AGENT_CELL_LIMIT - \
             len(self.agent.cells) + 1
-        max_cells_based_on_size = int(self.mass / conf.MIN_CELL_SIZE)
+        max_cells_based_on_size = int(self.mass / conf.MIN_CELL_MASS)
         num_cells_to_split_into = min(
             max_cells_based_on_count, max_cells_based_on_size)
 
@@ -200,6 +200,13 @@ class AgentCell():
     def get_pos(self):
         return (self.x_pos, self.y_pos)
 
+    def handle_mass_decay(self):
+        new_mass = self.mass * conf.MASS_DECAY_FACTOR
+        if new_mass < conf.MIN_CELL_MASS:
+            return
+
+        self.set_mass(new_mass)
+
 
 class Agent():
     def __init__(self, game, model, x, y, radius, mass=None, color=None, name=None, manual_control=False, camera_follow=False):
@@ -237,6 +244,10 @@ class Agent():
         cell = AgentCell(self, x, y, radius=radius, mass=mass)
         self.cells = [cell]
         self.cells_lost = []
+
+    def handle_mass_decay(self):
+        for cell in self.cells:
+            cell.handle_mass_decay()
 
     def update_last_split(self):
         self.last_split = self.game.get_time()
@@ -444,7 +455,7 @@ class Agent():
 
         for cell in self.cells:
             # Each cell needs to be at least a certain size in order to split
-            if (cell.mass / 2) < conf.MIN_CELL_SIZE:
+            if (cell.mass / 2) < conf.MIN_CELL_MASS:
                 return
 
         new_cells = []

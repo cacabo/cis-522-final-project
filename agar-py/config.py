@@ -37,6 +37,7 @@ VIRUS_CONSUME_MASS_FACTOR = 1.33  # how much larger one has to be to eat a virus
 WHITE_COLOR = ((255, 255, 255))
 VIRUS_COLOR = ((125, 250, 91))
 VIRUS_OUTLINE_COLOR = ((112, 226, 81))
+
 RED_COLOR = (255, 0, 0)
 GREEN_COLOR = (0, 255, 0)
 BLUE_COLOR = (0, 0, 255)
@@ -45,11 +46,12 @@ BLUE_COLOR = (0, 0, 255)
 # Agent state
 # ------------------------------------------------------------------------------
 
+MASS_DECAY_FACTOR = 0.9999
 ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
 AGENT_STARTING_MASS = 200
 MIN_MASS_TO_SHOOT = 50
-MASS_MASS = 20
-MIN_CELL_SIZE = 50
+MASS_MASS = 20  # The mass which cells can shoot out
+MIN_CELL_MASS = 50
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 20
 AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent can have
