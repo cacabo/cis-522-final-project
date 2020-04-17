@@ -10,14 +10,14 @@ import config as conf
 import utils
 
 # Exploration (this could be moved to the agent instead though)
-EPSILON = 0.95
+EPSILON = 0.95  # NOTE this is the starting value, which decays over time
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.001
 
 GAMMA = 0.99
 
-batch_size = 32
-BUFFER_LENGTH = 1000
+BATCH_SIZE = 32
+REPLAY_BUFFER_LENGTH = 1000
 
 # -------------------------------
 # Other Helpers
@@ -115,6 +115,7 @@ def encode_agent_state(model, state):
     agent = agents[model.id]
     agent_mass = agent.get_mass()
 
+    # TODO improvements to how we encode state
     # TODO what about ones that are larger but can't eat you?
     # TODO what if this agent is split up a bunch?? Many edge cases with bias to consider
     # TODO factor in size of a given agent in computing score
@@ -185,53 +186,59 @@ class DQN(nn.Module):
 class DeepRLModel(ModelInterface):
     def __init__(self):
         super().__init__()
+
         # init replay buffer
-        self.replay_buffer = deque(maxlen=BUFFER_LENGTH)
+        self.replay_buffer = deque(maxlen=REPLAY_BUFFER_LENGTH)
 
         # init model
-
         self.model = DQN(41, len(Action))  # TODO: fix w/ observation space
         self.optimizer = torch.optim.Adam(self.model.parameters())
         self.loss = torch.nn.SmoothL1Loss()
+
+        # run on a GPU if we have access to one in this env
         self.device = "cpu"
         if torch.cuda.is_available():
             self.device = "cuda"
 
         self.epsilon = EPSILON
         self.gamma = GAMMA
+        self.done = False
 
     def get_action(self, state):
         if self.done:
             return None
         if random.random() > self.epsilon:
-            # print(state)
+            # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
+
             # print(state)
             state = torch.Tensor(state)
             q_values = self.model(state)
             action = torch.argmax(q_values).item()  # TODO: placeholder
             action = Action(action)
         else:
+            # take a random action
             action = Action(np.random.randint(len(Action)))  # random action
         return action
 
     def remember(self, state, action, next_state, reward, done):
+        """Update the replay buffer with this example if we are not done yet"""
         if self.done:
             return
-        else:
-            self.replay_buffer.append(
-                (state, action.value, next_state, reward, done))
-            self.done = done
+
+        self.replay_buffer.append(
+            (state, action.value, next_state, reward, done))
+        self.done = done
 
     def optimize(self):  # or experience replay
         if self.done:
             return
 
         # TODO: could toggle batch_size to be diff from minibatch below
-        if len(self.replay_buffer) < batch_size:
+        if len(self.replay_buffer) < BATCH_SIZE:
             return
 
-        batch = random.sample(self.replay_buffer, batch_size)
+        batch = random.sample(self.replay_buffer, BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
         states = [encode_agent_state(self, state) for state in states]
@@ -247,7 +254,8 @@ class DeepRLModel(ModelInterface):
         # what about these/considering terminating states TODO: mask, properly update the eqns
         dones = torch.Tensor(list(dones)).to(self.device)
 
-        # do Q computation TODO: understand the equations
+        # do Q computation
+        # TODO: understand the equations
         currQ = self.model(states).gather(
             1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
@@ -260,6 +268,7 @@ class DeepRLModel(ModelInterface):
         loss.backward()
         self.optimizer.step()
 
-        # Decay epislon
-        self.epsilon *= EPSILON_DECAY
-        self.epsilon = max(MIN_EPSILON, self.epsilon)
+        # decay epislon
+        if self.epsilon != MIN_EPSILON:
+            self.epsilon *= EPSILON_DECAY
+            self.epsilon = max(MIN_EPSILON, self.epsilon)
