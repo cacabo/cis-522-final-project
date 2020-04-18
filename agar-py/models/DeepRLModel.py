@@ -11,13 +11,13 @@ import utils
 
 # Exploration (this could be moved to the agent instead though)
 EPSILON = 0.95  # NOTE this is the starting value, which decays over time
-EPSILON_DECAY = 0.995
+EPSILON_DECAY = 0.9995
 MIN_EPSILON = 0.001
 
 GAMMA = 0.99
 
-BATCH_SIZE = 32
-REPLAY_BUFFER_LENGTH = 1000
+BATCH_SIZE = 64
+REPLAY_BUFFER_LENGTH = 10000
 STATE_ENCODING_LENGTH = 41
 
 # -------------------------------
@@ -175,9 +175,9 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, 128)
-        self.fc2 = nn.Linear(128, 256)
-        self.fc3 = nn.Linear(256, output_dim)
+        self.fc1 = nn.Linear(self.input_dim, 256)
+        self.fc2 = nn.Linear(256, 512)
+        self.fc3 = nn.Linear(512, output_dim)
 
         self.relu = nn.ReLU()
 
@@ -213,8 +213,6 @@ class DeepRLModel(ModelInterface):
     def get_action(self, state):
         if self.eval:
             state = encode_agent_state(self, state)
-
-            # print(state)
             state = torch.Tensor(state)
             q_values = self.model(state)
             action = torch.argmax(q_values).item()
@@ -224,8 +222,6 @@ class DeepRLModel(ModelInterface):
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
-
-            # print(state)
             state = torch.Tensor(state)
             q_values = self.model(state)
             action = torch.argmax(q_values).item()

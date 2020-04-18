@@ -43,14 +43,51 @@ rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
 models = [deep_rl_model, rand_model_1, rand_model_2]
 
-for episode in range(EPISODES):
-    # done = False  # whether game is done or not (terminal state)
-    # reset the environment to fresh starting state with game agents initialized for models
-    env.reset(models)
+def train_models(env, models):
+    print("TRAIN mode")
+    for episode in range(EPISODES):
+        # done = False  # whether game is done or not (terminal state)
+        # reset the environment to fresh starting state with game agents initialized for models
+        episode_rewards = [0 for _ in models]
+        for model in models:
+            model.done = False
+            model.eval = False
+
+        env.reset(models)
+        state = env.get_state()  # get the first state
+
+        for step in range(MAX_STEPS):  # cap the num of game ticks
+            actions = select_model_actions(models, state)
+
+            # environment determines new state, reward, whether terminal, based on actions taken by all models
+            rewards, dones = env.update_game_state(models, actions)
+            next_state = env.get_state()
+
+            episode_rewards = list(
+                map(add, episode_rewards, rewards))  # update rewards
+            update_models_memory(models, state, actions, next_state,
+                                rewards, dones)  # update replay memory
+
+            # optimize models
+            optimize_models(models)
+
+            # check for termination of our player #TODO
+            if dones[0]:
+                break
+
+            state = next_state  # update the state
+        print("------EPISODE %s rewards------" % episode)
+        for idx, model in enumerate(models):
+            print("Model %s: %s" % (model.id, episode_rewards[idx]))
+
+def test_models(env, models):
+    print("TEST mode")
     episode_rewards = [0 for _ in models]
     for model in models:
         model.done = False
+        model.eval = True
 
+    env.reset(models)
     state = env.get_state()  # get the first state
 
     for step in range(MAX_STEPS):  # cap the num of game ticks
@@ -62,27 +99,24 @@ for episode in range(EPISODES):
 
         episode_rewards = list(
             map(add, episode_rewards, rewards))  # update rewards
-        update_models_memory(models, state, actions, next_state,
-                             rewards, dones)  # update replay memory
-
-        # optimize models
-        optimize_models(models)
 
         # check for termination of our player #TODO
         if dones[0]:
             break
 
         state = next_state  # update the state
-    print("------EPISODE %s rewards------" % episode)
+    print("------TEST rewards------")
     for idx, model in enumerate(models):
         print("Model %s: %s" % (model.id, episode_rewards[idx]))
 
-# fs.save_net_to_disk(deep_rl_model.model, "test_drl_1")
+train_models(env, models)
+test_models(env, models)
+fs.save_net_to_disk(deep_rl_model.model, "test_drl_2_10k")
 
-deep_rl_model.eval = True
-main_model = ('DeepRL', deep_rl_model)
-other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-start_ai_only_game(main_model, other_models)
+# deep_rl_model.eval = True
+# main_model = ('DeepRL', deep_rl_model)
+# other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
+# start_ai_only_game(main_model, other_models)
 
 
 # ---------------------------------------------------------------------------- #
