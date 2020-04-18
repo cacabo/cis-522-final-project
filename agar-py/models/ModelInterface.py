@@ -4,6 +4,7 @@ class ModelInterface:
     def __init__(self):
         self.id = ModelInterface.ID_counter
         self.done = False
+        self.eval = False
         ModelInterface.ID_counter += 1
 
     def get_action(self, state):

@@ -6,6 +6,7 @@ from operator import add
 import numpy as np
 import utils
 import config as conf
+import fsutils as fs
 
 
 def select_model_actions(models, state):
@@ -29,8 +30,8 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-EPISODES = 1  # the number of games we're playing
-MAX_STEPS = 1000
+EPISODES = 10  # the number of games we're playing
+MAX_STEPS = 2500
 
 # Define environment
 env = GameState()
@@ -47,10 +48,10 @@ for episode in range(EPISODES):
     # reset the environment to fresh starting state with game agents initialized for models
     env.reset(models)
     episode_rewards = [0 for _ in models]
-    # episode_reward = 0 # some notion of the reward in this episode
+    for model in models:
+        model.done = False
 
     state = env.get_state()  # get the first state
-    # print(state)
 
     for step in range(MAX_STEPS):  # cap the num of game ticks
         actions = select_model_actions(models, state)
@@ -76,9 +77,12 @@ for episode in range(EPISODES):
     for idx, model in enumerate(models):
         print("Model %s: %s" % (model.id, episode_rewards[idx]))
 
-# main_model = ('Heuristic', heuristic_model)
-# other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-# start_ai_only_game(main_model, other_models)
+# fs.save_net_to_disk(deep_rl_model.model, "test_drl_1")
+
+deep_rl_model.eval = True
+main_model = ('DeepRL', deep_rl_model)
+other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
+start_ai_only_game(main_model, other_models)
 
 
 # ---------------------------------------------------------------------------- #

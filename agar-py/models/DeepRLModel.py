@@ -115,6 +115,8 @@ def encode_agent_state(model, state):
     # return np.zeros((STATE_ENCODING_LENGTH,))
 
     (agents, foods, viruses, masses, time) = state
+    if model.id not in agents:
+        return np.zeros((STATE_ENCODING_LENGTH,))
     agent = agents[model.id]
     agent_mass = agent.get_mass()
 
@@ -209,6 +211,14 @@ class DeepRLModel(ModelInterface):
         self.done = False
 
     def get_action(self, state):
+        if self.eval:
+            state = encode_agent_state(self, state)
+
+            # print(state)
+            state = torch.Tensor(state)
+            q_values = self.model(state)
+            action = torch.argmax(q_values).item()
+            return Action(action)
         if self.done:
             return None
         if random.random() > self.epsilon:
@@ -218,7 +228,7 @@ class DeepRLModel(ModelInterface):
             # print(state)
             state = torch.Tensor(state)
             q_values = self.model(state)
-            action = torch.argmax(q_values).item()  # TODO: placeholder
+            action = torch.argmax(q_values).item()
             action = Action(action)
         else:
             # take a random action
