@@ -36,11 +36,11 @@ MAX_STEPS = 1000
 env = GameState()
 
 deep_rl_model = DeepRLModel()
-heuristic_model = HeuristicModel()
+# heuristic_model = HeuristicModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-models = [deep_rl_model, heuristic_model, rand_model_1, rand_model_2]
+models = [deep_rl_model, rand_model_1, rand_model_2]
 
 for episode in range(EPISODES):
     # done = False  # whether game is done or not (terminal state)

@@ -231,7 +231,7 @@ class DeepRLModel(ModelInterface):
             return
 
         self.replay_buffer.append(
-            (state, action.value, next_state, reward, done))
+            (encode_agent_state(self, state), action.value, encode_agent_state(self, next_state), reward, done))
         self.done = done
 
     def optimize(self):  # or experience replay
@@ -245,13 +245,12 @@ class DeepRLModel(ModelInterface):
         batch = random.sample(self.replay_buffer, BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
-        states = [encode_agent_state(self, state) for state in states]
-        next_states = [encode_agent_state(self, state)
-                       for state in next_states]
+        # states = [encode_agent_state(self, state) for state in states]
+        # next_states = [encode_agent_state(self, state)
+        #                for state in next_states]
         states = torch.Tensor(states).to(self.device)
         actions = torch.LongTensor(list(actions)).to(self.device)
-        # print(rewards)
-        # print(type(rewards))
+
         rewards = torch.Tensor(list(rewards)).to(self.device)
         next_states = torch.Tensor(next_states).to(self.device)
 
@@ -260,8 +259,7 @@ class DeepRLModel(ModelInterface):
 
         # do Q computation
         # TODO: understand the equations
-        currQ = self.model(states).gather(
-            1, actions.unsqueeze(1))  # TODO: understand this
+        currQ = self.model(states).gather(1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
         max_nextQ = torch.max(nextQ, 1)[0]
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ

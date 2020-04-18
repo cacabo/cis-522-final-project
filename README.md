@@ -26,20 +26,20 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] When you die you keep getting negative reward -> this should only happen once (Mak)
 - [x] Create IAM users for each group member on ccabo@seas AWS account
 - [x] Fix food bug (all the boys 😤)
-
-### Up next
-
 - [x] Add GUI functionality to the training loop (Sam)
 - [x] Mass decay (cam)
 - [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)
+
+### Up next
+
 - [ ] Privacy.com on AWS account? Billing alerts (Cam)
 - [ ] Optimize state encoding runtime (Cam)
   - [ ] Look into encoding state via pytorch -> distributed
-- [ ] Store encoded state in buffer; make sure this is not by reference (mak)
+- [x] Store encoded state in buffer; make sure this is not by reference (mak)
 - [ ] Look into ngrok for logging from AWS (Cam)
 - [ ] Training loop for basic RL agent (Mak + Cam)
-  - [ ] Plug in the state encoding
+  - [x] Plug in the state encoding
   - [ ] Analyze runtime bottleneck
   - [ ] Play around with different state encodings and compare performance
 - [ ] Convolutional jawn (Sam + Salib)
