@@ -255,6 +255,10 @@ class GameState():
             void
         """
 
+        # decay mass
+        mass_decay = agent.handle_mass_decay()
+        print("mass_decay is: ", mass_decay)
+
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
         remaining_food, food_eaten_or_none = self._filter_objects(
@@ -282,7 +286,7 @@ class GameState():
         agent_mass_eaten = 0
         for other in self.agents.values():
             agent_mass_eaten += self.handle_eat_agent(agent, other)
-        return agent_mass_eaten + conf.FOOD_MASS * num_food_eaten + conf.VIRUS_MASS * num_virus_eaten + conf.MASS_MASS * num_mass_eaten
+        return agent_mass_eaten + conf.FOOD_MASS * num_food_eaten + conf.VIRUS_MASS * num_virus_eaten + conf.MASS_MASS * num_mass_eaten + mass_decay
 
     def tick_game_state(self, models):
         # make sure food/virus/player mass is balanced on the board
@@ -313,9 +317,9 @@ class GameState():
         for dead_agent in dead_agents:
             del self.agents[dead_agent]
 
-        # mass decay all agents
-        for agent in self.agents.values():
-            agent.handle_mass_decay()
+        # # mass decay all agents TODO: move to tick agent
+        # for agent in self.agents.values():
+        #     agent.handle_mass_decay()
 
         if models:
             dones = []

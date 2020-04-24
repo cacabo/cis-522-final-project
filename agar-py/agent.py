@@ -201,11 +201,13 @@ class AgentCell():
         return (self.x_pos, self.y_pos)
 
     def handle_mass_decay(self):
+        old_mass = self.mass
         new_mass = self.mass * conf.MASS_DECAY_FACTOR
         if new_mass < conf.MIN_CELL_MASS:
-            return
+            return 0
 
         self.set_mass(new_mass)
+        return (new_mass - old_mass)
 
 
 class Agent():
@@ -246,8 +248,9 @@ class Agent():
         self.cells_lost = []
 
     def handle_mass_decay(self):
-        for cell in self.cells:
-            cell.handle_mass_decay()
+        return sum([cell.handle_mass_decay() for cell in self.cells])
+        # for cell in self.cells:
+        #     cell.handle_mass_decay()
 
     def update_last_split(self):
         self.last_split = self.game.get_time()

@@ -95,6 +95,9 @@ def test_models(env, models):
 
         # environment determines new state, reward, whether terminal, based on actions taken by all models
         rewards, dones = env.update_game_state(models, actions)
+
+        #TODO: update dones for other models, persist (otherwise negative rewards)
+
         next_state = env.get_state()
 
         episode_rewards = list(
@@ -111,7 +114,7 @@ def test_models(env, models):
 
 train_models(env, models)
 test_models(env, models)
-fs.save_net_to_disk(deep_rl_model.model, "test_drl_2_10k")
+fs.save_net_to_disk(deep_rl_model.model, "test_drl_3_100kbuff")
 
 # deep_rl_model.eval = True
 # main_model = ('DeepRL', deep_rl_model)
