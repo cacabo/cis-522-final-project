@@ -10,8 +10,8 @@ import config as conf
 import utils
 
 # Exploration (this could be moved to the agent instead though)
-EPSILON = 0.95  # NOTE this is the starting value, which decays over time
-EPSILON_DECAY = 0.9995
+EPSILON = 0.99  # NOTE this is the starting value, which decays over time
+EPSILON_DECAY = 0.9999
 MIN_EPSILON = 0.001
 
 GAMMA = 0.99
@@ -276,7 +276,7 @@ class DeepRLModel(ModelInterface):
         loss.backward()
         self.optimizer.step()
 
-        # decay epislon
+        # decay epsilon
         if self.epsilon != MIN_EPSILON:
             self.epsilon *= EPSILON_DECAY
             self.epsilon = max(MIN_EPSILON, self.epsilon)
