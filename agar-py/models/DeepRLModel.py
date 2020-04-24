@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import math
 from models.ModelInterface import ModelInterface
+from model_utils.ReplayBuffer import ReplayBuffer
 from actions import Action
 import config as conf
 import utils
@@ -241,7 +242,7 @@ class DeepRLModel(ModelInterface):
         super().__init__()
 
         # init replay buffer
-        self.replay_buffer = deque(maxlen=REPLAY_BUFFER_LENGTH)
+        self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_LENGTH)
 
         # init model
         # TODO: fix w/ observation space
@@ -284,7 +285,7 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return
 
-        self.replay_buffer.append(
+        self.replay_buffer.push(
             (encode_agent_state(self, state), action.value, encode_agent_state(self, next_state), reward, done))
         self.done = done
 
@@ -296,7 +297,7 @@ class DeepRLModel(ModelInterface):
         if len(self.replay_buffer) < BATCH_SIZE:
             return
 
-        batch = random.sample(self.replay_buffer, BATCH_SIZE)
+        batch = self.replay_buffer.sample(BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
         # states = [encode_agent_state(self, state) for state in states]
