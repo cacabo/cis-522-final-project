@@ -33,7 +33,7 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Mass decay (cam)
 - [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)
-- [ ] Privacy.com on AWS account? Billing alerts (Cam)
+- [x] Privacy.com on AWS account? Billing alerts (Cam)
 - [ ] Optimize state encoding runtime (Cam)
   - [ ] Look into encoding state via pytorch -> distributed
 - [ ] Store encoded state in buffer; make sure this is not by reference (mak)
