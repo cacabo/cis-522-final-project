@@ -130,7 +130,10 @@ class GameState():
 
         @return boolean
         """
-        if agent == other or agent.name == other.name:
+        if (agent == other
+                or agent.name == other.name
+                or not other.is_alive
+                or not agent.is_alive):
             return 0
 
         # consumed = []

@@ -4,6 +4,7 @@ import numpy as np
 import random
 import torch
 import torch.nn as nn
+import math
 from models.ModelInterface import ModelInterface
 from actions import Action
 import config as conf
@@ -21,7 +22,7 @@ REPLAY_BUFFER_LENGTH = 10000
 STATE_ENCODING_LENGTH = 41
 
 # -------------------------------
-# Other Helpers
+# Other helpers
 # -------------------------------
 
 
@@ -81,6 +82,10 @@ def get_direction_score(agent, objs, obj_angles, obj_dists, min_angle, max_angle
 
 def get_direction_scores(agent, objs):
     """
+    For each direction (from right around the circle to down-right), compute a
+    score quantifying how many and how close the proided objects are in each
+    direction.
+
     Parameters
 
         agent : Agent
@@ -90,24 +95,57 @@ def get_direction_scores(agent, objs):
 
         list of numbers of length the number of directions agent can move in
     """
-    obj_angles = [utils.get_angle_between_objects(agent, obj) for obj in objs]
+    # Anything further than max_dist will (likely, unless very large) be outside
+    # of the agent's field of view
+    # TODO we could account for radius in making this decision
+    # TODO this could also be based on actual screen dimensions, not just the
+    # longest radius
+    max_dist = math.sqrt(conf.BOARD_WIDTH ** 2 + conf.BOARD_HEIGHT ** 2)
+
+    # Get the distance to each object provided
     obj_dists = [utils.get_object_dist(agent, obj) for obj in objs]
 
+    # Filter objects to just be those that are within max_dist
+    filtered_obj_dists = []
+    filtered_idxs = []
+
+    for (idx, dist) in enumerate(obj_dists):
+        if dist > max_dist:
+            continue
+        filtered_obj_dists.append(dist)
+        filtered_idxs.append(idx)
+
+    filtered_objs = [objs[idx] for idx in filtered_idxs]
+
+    # Get the angle between each filtered object and the agent
+    filtered_obj_angles = [utils.get_angle_between_objects(
+        agent, obj) for obj in filtered_objs]
+
+    """
+    Calculate score for the conic section immediately in the positive x
+    direction of the agent (this is from -22.5 degrees to 22.5 degrees if
+    there are 8 allowed directions)
+
+    This calculation is unique from the others because it requires summing the
+    state across two edges based on how angles are stored
+    """
     zero_to_first_angle = get_direction_score(
-        agent, objs, obj_angles, obj_dists, avg_angles[-1], 360)
+        agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, avg_angles[-1], 360)
     last_angle_to_360 = get_direction_score(
-        agent, objs, obj_angles, obj_dists, 0, avg_angles[0])
+        agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, 0, avg_angles[0])
     first_direction_state = zero_to_first_angle + last_angle_to_360
 
+    # Compute score for each conic section
     direction_states = [first_direction_state]
 
     for i in range(1, len(avg_angles) - 1):
         min_angle = avg_angles[i]
         max_angle = avg_angles[i + 1]
         state = get_direction_score(
-            agent, objs, obj_angles, obj_dists, min_angle, max_angle)
+            agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, min_angle, max_angle)
         direction_states.append(state)
 
+    # Return list of scores (one for each direction)
     return direction_states
 
 
@@ -115,8 +153,11 @@ def encode_agent_state(model, state):
     # return np.zeros((STATE_ENCODING_LENGTH,))
 
     (agents, foods, viruses, masses, time) = state
+
+    # If the agent is dead
     if model.id not in agents:
         return np.zeros((STATE_ENCODING_LENGTH,))
+
     agent = agents[model.id]
     agent_mass = agent.get_mass()
 
@@ -125,13 +166,17 @@ def encode_agent_state(model, state):
     # TODO what if this agent is split up a bunch?? Many edge cases with bias to consider
     # TODO factor in size of a given agent in computing score
     # TODO if objects are close "angle" can be a lot wider depending on radius
+    # TODO include mass in other agent cell score calculations? especially if eating them...
 
+    # Compute a list of all cells in the game not belonging to this model's agent
     all_agent_cells = []
     for other_agent in agents.values():
         if other_agent == agent:
             continue
         all_agent_cells.extend(other_agent.cells)
 
+    # Partition all other cells into sets of those larger and smaller than
+    # the current agent in aggregate
     all_larger_agent_cells = []
     all_smaller_agent_cells = []
     for cell in all_agent_cells:
@@ -140,6 +185,7 @@ def encode_agent_state(model, state):
         else:
             all_smaller_agent_cells.append(cell)
 
+    # Compute scores for cells for each direction
     larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
     smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
 
@@ -149,6 +195,8 @@ def encode_agent_state(model, state):
     virus_state = get_direction_scores(agent, viruses)
     mass_state = get_direction_scores(agent, masses)
     time_state = [time]
+
+    # Encode important attributes about this agent
     this_agent_state = [
         agent_mass,
         len(agent.cells),
@@ -265,7 +313,8 @@ class DeepRLModel(ModelInterface):
 
         # do Q computation
         # TODO: understand the equations
-        currQ = self.model(states).gather(1, actions.unsqueeze(1))  # TODO: understand this
+        currQ = self.model(states).gather(
+            1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
         max_nextQ = torch.max(nextQ, 1)[0]
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
