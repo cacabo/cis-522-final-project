@@ -180,26 +180,7 @@ def get_angle_between_points(p1, p2):
     dx = x2 - x1
     dy = y1 - y2  # Since 0 is in the top left corner
 
-    if dx == 0 and dy != 0:
-        angle = 90 if dy > 0 else 270
-        return angle
-    elif dy == 0 and dx != 0:
-        angle = 0 if dx > 0 else 180
-        return angle
-    elif dx != 0:
-        radians = math.atan(abs(dy / dx))
-        if dx < 0 and dy > 0:
-            radians += math.pi / 2
-        elif dy < 0 and dx < 0:
-            radians += math.pi
-        elif dy < 0:
-            radians += 3 * math.pi / 2
-
-        # radians = radians if dx > 0 else radians + math.pi / 2
-        angle = radians / math.pi * 180
-        return angle
-    else:
-        return None
+    return math.atan2(dy, dx)
 
 
 def get_angle_between_objects(a, b):
