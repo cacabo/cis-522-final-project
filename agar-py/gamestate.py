@@ -257,7 +257,6 @@ class GameState():
 
         # decay mass
         mass_decay = agent.handle_mass_decay()
-        print("mass_decay is: ", mass_decay)
 
         # find all food items which are not currently being eaten by this agent, and
         # update global foods list
@@ -316,10 +315,6 @@ class GameState():
                        if not agent.is_alive]
         for dead_agent in dead_agents:
             del self.agents[dead_agent]
-
-        # # mass decay all agents TODO: move to tick agent
-        # for agent in self.agents.values():
-        #     agent.handle_mass_decay()
 
         if models:
             dones = []

@@ -114,7 +114,7 @@ def test_models(env, models):
 
 train_models(env, models)
 test_models(env, models)
-fs.save_net_to_disk(deep_rl_model.model, "test_drl_3_100kbuff")
+fs.save_net_to_disk(deep_rl_model.model, "test_drl_4")
 
 # deep_rl_model.eval = True
 # main_model = ('DeepRL', deep_rl_model)
