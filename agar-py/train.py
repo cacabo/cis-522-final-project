@@ -76,6 +76,11 @@ def train_models(env, models):
                 break
 
             state = next_state  # update the state
+
+            if step % 100 == 0:
+                for idx, model in enumerate(models):
+                    print("----STEP %s rewards----" % step)
+                    print("Model %s: %s" % (model.id, episode_rewards[idx]))
         print("------EPISODE %s rewards------" % episode)
         for idx, model in enumerate(models):
             print("Model %s: %s" % (model.id, episode_rewards[idx]))
@@ -114,7 +119,7 @@ def test_models(env, models):
 
 train_models(env, models)
 test_models(env, models)
-fs.save_net_to_disk(deep_rl_model.model, "test_drl_4")
+# fs.save_net_to_disk(deep_rl_model.model, "test_drl_4")
 
 # deep_rl_model.eval = True
 # main_model = ('DeepRL', deep_rl_model)
