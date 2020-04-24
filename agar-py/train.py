@@ -43,6 +43,7 @@ rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
 models = [deep_rl_model, rand_model_1, rand_model_2]
 
+
 def train_models(env, models):
     print("TRAIN mode")
     for episode in range(EPISODES):
@@ -66,7 +67,7 @@ def train_models(env, models):
             episode_rewards = list(
                 map(add, episode_rewards, rewards))  # update rewards
             update_models_memory(models, state, actions, next_state,
-                                rewards, dones)  # update replay memory
+                                 rewards, dones)  # update replay memory
 
             # optimize models
             optimize_models(models)
@@ -79,6 +80,7 @@ def train_models(env, models):
         print("------EPISODE %s rewards------" % episode)
         for idx, model in enumerate(models):
             print("Model %s: %s" % (model.id, episode_rewards[idx]))
+
 
 def test_models(env, models):
     print("TEST mode")
@@ -96,7 +98,7 @@ def test_models(env, models):
         # environment determines new state, reward, whether terminal, based on actions taken by all models
         rewards, dones = env.update_game_state(models, actions)
 
-        #TODO: update dones for other models, persist (otherwise negative rewards)
+        # TODO: update dones for other models, persist (otherwise negative rewards)
 
         next_state = env.get_state()
 
@@ -111,6 +113,7 @@ def test_models(env, models):
     print("------TEST rewards------")
     for idx, model in enumerate(models):
         print("Model %s: %s" % (model.id, episode_rewards[idx]))
+
 
 train_models(env, models)
 test_models(env, models)
