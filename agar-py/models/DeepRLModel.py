@@ -19,7 +19,7 @@ MIN_EPSILON = 0.001
 GAMMA = 0.99
 
 BATCH_SIZE = 128
-REPLAY_BUFFER_LENGTH = 100000
+REPLAY_BUFFER_LENGTH = 15000
 STATE_ENCODING_LENGTH = 46
 
 # Anything further than max_dist will (likely, unless very large) be outside
