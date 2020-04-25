@@ -20,7 +20,7 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
     for (model, action, reward, done) in zip(models, actions, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
-def train_models(env, models, episodes=10, steps=2500):
+def train_models(env, models, episodes=10, steps=2500, print_every=200):
     print("TRAIN mode")
     for episode in range(episodes):
         # done = False  # whether game is done or not (terminal state)
@@ -54,7 +54,7 @@ def train_models(env, models, episodes=10, steps=2500):
 
             state = next_state  # update the state
 
-            if step % 100 == 0:
+            if step % print_every == 0:
                 print("----STEP %s rewards----" % step)
                 for idx, model in enumerate(models):
                     print("Model %s: %s" % (model.id, episode_rewards[idx]))
@@ -62,7 +62,7 @@ def train_models(env, models, episodes=10, steps=2500):
         for idx, model in enumerate(models):
             print("Model %s: %s" % (model.id, episode_rewards[idx]))
 
-def test_models(env, models, steps=2500):
+def test_models(env, models, steps=2500, print_every=200):
     print("TEST mode")
     episode_rewards = [0 for _ in models]
     for model in models:
@@ -90,6 +90,11 @@ def test_models(env, models, steps=2500):
             break
 
         state = next_state  # update the state
+        
+        if step % print_every == 0:
+            print("----STEP %s rewards----" % step)
+            for idx, model in enumerate(models):
+                print("Model %s: %s" % (model.id, episode_rewards[idx]))
     print("------TEST rewards------")
     for idx, model in enumerate(models):
         print("Model %s: %s" % (model.id, episode_rewards[idx]))
