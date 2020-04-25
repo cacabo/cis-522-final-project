@@ -9,7 +9,7 @@ class ReplayBuffer():
     # save a state transition memory
     def push(self, memory):
         if len(self.buffer) < self.capacity:
-            self.memory.append(None)
+            self.buffer.append(None)
         self.buffer[self.idx] = memory
         self.idx = (self.idx + 1) % self.capacity
 
