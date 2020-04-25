@@ -277,6 +277,7 @@ class DeepRLModel(ModelInterface):
         self.device = "cpu"
         if torch.cuda.is_available():
             self.device = "cuda"
+        self.model.to(self.device)
 
         self.epsilon = EPSILON
         self.gamma = GAMMA
