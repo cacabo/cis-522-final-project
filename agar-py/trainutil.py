@@ -1,7 +1,8 @@
-from operator import add
+from operator import add, and_
 import numpy as np
 import utils
 import config as conf
+from functools import reduce
 
 
 def select_model_actions(models, state):
@@ -50,6 +51,9 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200):
 
             # check for termination of our player #TODO
             if dones[0]:
+                break
+            # terminate if all other players are dead
+            if (len(dones) > 1) & reduce(and_, dones[1:]):
                 break
 
             state = next_state  # update the state
