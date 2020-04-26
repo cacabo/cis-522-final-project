@@ -164,8 +164,8 @@ class GameState():
         for cell in agent.cells:
             if not self.check_food_collision(cell, food):
                 continue
-            print('[%s] [FOOD] %s ate food item %s' %
-                  (self.get_time(), agent.name, food.id))
+            # print('[%s] [FOOD] %s ate food item %s' %
+            #       (self.get_time(), agent.name, food.id))
             cell.eat_food(food)
             return food
 
