@@ -294,7 +294,7 @@ class DeepRLModel(ModelInterface):
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
-            state = torch.Tensor(state)
+            state = torch.Tensor(state).to(self.device)
             q_values = self.model(state)
             action = torch.argmax(q_values).item()
             action = Action(action)
