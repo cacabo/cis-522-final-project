@@ -31,13 +31,15 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)
 - [x] Privacy.com on AWS account & billing alerts (Cam)
+- [x] Setup infra on AWS EC2 (Salib)
+- [x] Try running it locally and then via sagemaker in a notebook (Salib)
 
 ### Up next
 
+- [ ] Refactor train file to not run on import (Mak)
 - [ ] Optimize state encoding runtime (Cam)
   - [ ] Look into encoding state via pytorch -> distributed
 - [x] Store encoded state in buffer; make sure this is not by reference (mak)
-- [ ] Look into ngrok for logging from AWS (Cam)
 - [ ] Training loop for basic RL agent (Mak + Cam)
   - [x] Plug in the state encoding
   - [ ] Analyze runtime bottleneck
@@ -47,10 +49,6 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - [ ] Model
   - [ ] Getting screenshots in the train loop (not just GUI)
     - [ ] Figure out a good frequency for this
-- [ ] [Setup infra on AWS EC2 (Salib)](https://piazza.com/class/k58sba3uizm5md?cid=600)
-- [ ] Try running it locally and then via sagemaker in a notebook (Salib)
-  - [ ] Locally
-  - [ ] Sagemaker
 
 ### Lower priority
 
