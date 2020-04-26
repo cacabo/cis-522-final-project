@@ -8,7 +8,7 @@ deep_rl_model = DeepRLModel()
 rand_model_1 = RandomModel(min_steps=5, max_steps=10)
 rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-deep_rl_model.model = fs.load_net_from_disk(deep_rl_model.model, "test_drl_6")
+deep_rl_model.model = fs.load_net_from_disk(deep_rl_model.model, "test_drl_7")
 
 # models = [deep_rl_model, rand_model_1, rand_model_2]
 # env = GameState()
