@@ -54,7 +54,7 @@ def get_avg_angles():
 avg_angles = get_avg_angles()
 
 
-def get_direction_score(agent, objs, obj_angles, obj_dists, min_angle, max_angle):
+def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
     """
     Returns score for all objs that are between min_angle and max_angle relative
     to the agent. Gives a higher score to objects which are closer. Returns 0 if
@@ -63,9 +63,8 @@ def get_direction_score(agent, objs, obj_angles, obj_dists, min_angle, max_angle
     Parameters
 
         agent      : Agent
-        objs       : list of objects with get_pos() methods
-        obj_angles : list of angles between agent and each object
-        obj_dists  : list of distance between agent and each object
+        obj_angles : tensor of angles between agent and each object
+        obj_dists  : tensor of distance between agent and each object
         min_angle  : number
         max_angle  : number greater than min_angle
 
@@ -78,20 +77,15 @@ def get_direction_score(agent, objs, obj_angles, obj_dists, min_angle, max_angle
     elif min_angle >= max_angle:
         raise Exception('max_angle must be larger than min_angle')
 
-    filtered_objs = [
-        objs[idx] for (idx, angle) in enumerate(obj_angles) if (
-            angle >= min_angle and angle < max_angle
-        )
-    ]
+    filter_mask_tensor = (obj_angles < max_angle) & (obj_angles >= min_angle)
+    filtered_obj_dists = obj_dists[filter_mask_tensor]
 
-    if len(filtered_objs) == 0:
+    if filtered_obj_dists.shape[0] == 0:
         return 0
 
-    obj_dists = [utils.get_object_dist(
-        agent, obj) for obj in filtered_objs]
-    obj_dists_np = np.array(obj_dists)
-    obj_dists_inv_np = 1 / np.sqrt(obj_dists_np)
-    return np.sum(obj_dists_inv_np)
+    # TODO A/B test this encoding
+    obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
+    return torch.sum(obj_dists_inv).item()
 
 
 def get_direction_scores(agent, objs):
@@ -125,25 +119,16 @@ def get_direction_scores(agent, objs):
     sum_sq_tensor = torch.sum(diff_sq_tensor, 1)  # sum all x's and y's
     dists_tensor = torch.sqrt(sum_sq_tensor)
 
-    # Get the distance to each object provided
-    # obj_dists = [utils.get_object_dist(agent, obj) for obj in objs]
-    obj_dists = dists_tensor.numpy()
+    filter_mask_tensor = dists_tensor <= max_dist
+    fitlered_dists_tensor = dists_tensor[filter_mask_tensor]
+    filtered_diff_tensor = diff_tensor[filter_mask_tensor]
 
-    # Filter objects to just be those that are within max_dist
-    filtered_obj_dists = []
-    filtered_idxs = []
-
-    for (idx, dist) in enumerate(obj_dists):
-        if dist > max_dist:
-            continue
-        filtered_obj_dists.append(dist)
-        filtered_idxs.append(idx)
-
-    filtered_objs = [objs[idx] for idx in filtered_idxs]
-
-    # Get the angle between each filtered object and the agent
-    filtered_obj_angles = [utils.get_angle_between_objects(
-        agent, obj) for obj in filtered_objs]
+    # Invert y dimension since y increases as we go down
+    diff_invert_y_tensor = filtered_diff_tensor * torch.Tensor([1, -1])
+    dx = diff_invert_y_tensor[:, 0]
+    dy = diff_invert_y_tensor[:, 1]
+    radians_tensor = torch.atan2(dy, dx)
+    filtered_angles_tensor = radians_tensor * 180 / math.pi
 
     """
     Calculate score for the conic section immediately in the positive x
@@ -154,9 +139,17 @@ def get_direction_scores(agent, objs):
     state across two edges based on how angles are stored
     """
     zero_to_first_angle = get_direction_score(
-        agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, avg_angles[-1], 360)
+        agent,
+        filtered_angles_tensor,
+        fitlered_dists_tensor,
+        avg_angles[-1],
+        360)
     last_angle_to_360 = get_direction_score(
-        agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, 0, avg_angles[0])
+        agent,
+        filtered_angles_tensor,
+        fitlered_dists_tensor,
+        0,
+        avg_angles[0])
     first_direction_state = zero_to_first_angle + last_angle_to_360
 
     # Compute score for each conic section
@@ -166,7 +159,11 @@ def get_direction_scores(agent, objs):
         min_angle = avg_angles[i]
         max_angle = avg_angles[i + 1]
         state = get_direction_score(
-            agent, filtered_objs, filtered_obj_angles, filtered_obj_dists, min_angle, max_angle)
+            agent,
+            filtered_angles_tensor,
+            fitlered_dists_tensor,
+            min_angle,
+            max_angle)
         direction_states.append(state)
 
     # Return list of scores (one for each direction)
