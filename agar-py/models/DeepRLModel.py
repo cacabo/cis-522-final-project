@@ -6,13 +6,14 @@ import torch
 import torch.nn as nn
 import math
 from models.ModelInterface import ModelInterface
+from model_utils.ReplayBuffer import ReplayBuffer
 from actions import Action
 import config as conf
 import utils
 
 # Exploration (this could be moved to the agent instead though)
-EPSILON = 0.95  # NOTE this is the starting value, which decays over time
-EPSILON_DECAY = 0.9995
+EPSILON = 0.99  # NOTE this is the starting value, which decays over time
+EPSILON_DECAY = 0.9999
 MIN_EPSILON = 0.001
 
 GAMMA = 0.99
@@ -261,7 +262,7 @@ class DeepRLModel(ModelInterface):
         super().__init__()
 
         # init replay buffer
-        self.replay_buffer = deque(maxlen=REPLAY_BUFFER_LENGTH)
+        self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_LENGTH)
 
         # init model
         # TODO: fix w/ observation space
@@ -290,7 +291,7 @@ class DeepRLModel(ModelInterface):
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
-            state = torch.Tensor(state)
+            state = torch.Tensor(state).to(self.device)
             q_values = self.model(state)
             action = torch.argmax(q_values).item()
             action = Action(action)
@@ -304,7 +305,7 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return
 
-        self.replay_buffer.append(
+        self.replay_buffer.push(
             (encode_agent_state(self, state), action.value, encode_agent_state(self, next_state), reward, done))
         self.done = done
 
@@ -316,7 +317,7 @@ class DeepRLModel(ModelInterface):
         if len(self.replay_buffer) < BATCH_SIZE:
             return
 
-        batch = random.sample(self.replay_buffer, BATCH_SIZE)
+        batch = self.replay_buffer.sample(BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
         # states = [encode_agent_state(self, state) for state in states]
@@ -345,7 +346,7 @@ class DeepRLModel(ModelInterface):
         loss.backward()
         self.optimizer.step()
 
-        # decay epislon
+        # decay epsilon
         if self.epsilon != MIN_EPSILON:
             self.epsilon *= EPSILON_DECAY
             self.epsilon = max(MIN_EPSILON, self.epsilon)
