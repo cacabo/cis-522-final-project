@@ -282,6 +282,11 @@ class DeepRLModel(ModelInterface):
 
         self.learning_start = False
 
+        self.min_steps = 5
+        self.max_steps = 10
+        self.steps_remaining = 0
+        self.curr_action = None
+
     def get_action(self, state):
         if self.eval:
             state = encode_agent_state(self, state)
@@ -293,7 +298,13 @@ class DeepRLModel(ModelInterface):
             return None
 
         if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
-            return Action(np.random.randint(len(Action)))
+            if self.steps_remaining <= 0:
+            self.steps_remaining = np.random.randint(
+                self.min_steps, self.max_steps)
+            self.curr_action = Action(np.random.randint(len(Action)))
+
+        self.steps_remaining -= 1
+        return self.curr_action
 
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
