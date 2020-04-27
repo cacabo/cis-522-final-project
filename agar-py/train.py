@@ -3,6 +3,7 @@ from models.RandomModel import RandomModel
 from models.HeuristicModel import HeuristicModel
 from models.DeepRLModel import DeepRLModel
 from trainutil import train_models, test_models
+import random
 import fsutils as fs
 import sys
 
@@ -22,7 +23,8 @@ def train(episodes=1, steps=500):
 
     train_models(env, models, episodes=episodes, steps=steps)
     test_models(env, models, steps=steps)
-    # fs.save_net_to_disk(deep_rl_model.model, "test_drl_4")
+    fs.save_net_to_disk(deep_rl_model.model,
+                        "deep-rl-temp-{}".format(random.uniform(0, 2 ** 16)))
 
     # deep_rl_model.eval = True
     # main_model = ('DeepRL', deep_rl_model)
