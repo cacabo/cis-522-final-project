@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 
 from trainutil import select_model_actions
 
+FRAME_SKIP = 4
+UPDATE_FREQ = 4
+TARGET_NET_SYNC_FREQ = 2000
+
 def train_deepcnn_model(adversary_models):
     env = GameState()
     model = DeepCNNModel(camera_follow=True)        # ensure that this agent is at center of board
@@ -15,16 +19,22 @@ def train_deepcnn_model(adversary_models):
     env.reset(models)
     state = env.get_state()
     pixels = env.get_pixels()
-    # plt.imshow(pixels)
-    # plt.show()
+    
+    # used for frame skipping, to simply repeat the last action chosen
+    action = None
 
     training = True
     while training:
-        # append current pixel state to buffer, then stack last tau frames to
-        # get CNN action based on them
+        # append current pixel state to buffer
         model.state_buffer.append(model.preprocess_state(pixels))
-        s_0 = np.stack([model.state_buffer])
-        action = model.get_action(s_0)
+
+        # only update the current action every FRAME_SKIP frames of the game
+        if model.step_count % FRAME_SKIP == 0:
+            # stack last tau frames to get CNN action based on them
+            s_0 = np.stack([model.state_buffer])
+            action = model.get_action(s_0)
+            model.net_update_count += 1
+
         model.step_count += 1
         print(model.step_count)
 
@@ -43,11 +53,19 @@ def train_deepcnn_model(adversary_models):
         model.remember(pixels, action, next_pixels, rewards[0], dones[0])
 
         # optimize model
-        model.optimize()
+        if model.step_count % UPDATE_FREQ == 0:
+            model.optimize()
+
+        # re-sync the target network to updated network every on function of number
+        # of net parameter updates
+        if model.net_update_count % TARGET_NET_SYNC_FREQ == 0:
+            model.sync_target_net()
 
         if dones[0]:
             break
-
+        
+        # move state and pixels one step forward
         state = next_state
+        pixels = next_pixels
 
 train_deepcnn_model([])

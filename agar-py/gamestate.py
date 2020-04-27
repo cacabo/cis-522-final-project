@@ -146,8 +146,9 @@ class GameState():
                 if not other_cell.is_alive:
                     continue
                 elif self.check_cell_collision(agent_cell, other_cell):
-                    print('[%s] [CELL] %s ate one of %s\'s cells' %
-                          (self.get_time(), agent.name, other.name))
+                    if conf.ENABLE_LOGS:
+                        print('[%s] [CELL] %s ate one of %s\'s cells' %
+                            (self.get_time(), agent.name, other.name))
                     agent_cell.set_mass(agent_cell.mass + other_cell.mass)
                     mass_consumed += other_cell.mass
                     other_cell.is_alive = False
@@ -157,8 +158,9 @@ class GameState():
         other.cells = [cell for cell in other.cells if cell.is_alive]
 
         if len(other.cells) == 0:
-            print('[%s] [GAME] %s died! Was eaten by %s' %
-                  (self.get_time(), other.name, agent.name))
+            if conf.ENABLE_LOGS:
+                print('[%s] [GAME] %s died! Was eaten by %s' %
+                    (self.get_time(), other.name, agent.name))
             other.is_alive = False
         return mass_consumed
 
@@ -166,8 +168,9 @@ class GameState():
         for cell in agent.cells:
             if not self.check_food_collision(cell, food):
                 continue
-            # print('[%s] [FOOD] %s ate food item %s' %
-            #       (self.get_time(), agent.name, food.id))
+            if conf.ENABLE_LOGS:
+                print('[%s] [FOOD] %s ate food item %s' %
+                    (self.get_time(), agent.name, food.id))
             cell.eat_food(food)
             return food
 
@@ -175,8 +178,9 @@ class GameState():
         for cell in agent.cells:
             if not self.check_cell_collision(cell, mass):
                 continue
-            print('[%s] [MASS] %s ate mass %s' %
-                  (self.get_time(), agent.name, mass.id))
+            if conf.ENABLE_LOGS:
+                print('[%s] [MASS] %s ate mass %s' %
+                    (self.get_time(), agent.name, mass.id))
             cell.eat_mass(mass)
             return mass
 
@@ -190,8 +194,9 @@ class GameState():
         for cell in agent.cells:
             if not virus.is_alive or not self.check_virus_collision(cell, virus):
                 continue
-            print('[%s] [VIRUS] %s ate virus %s' %
-                  (self.get_time(), agent.name, virus.id))
+            if conf.ENABLE_LOGS:
+                print('[%s] [VIRUS] %s ate virus %s' %
+                    (self.get_time(), agent.name, virus.id))
             new_cells = cell.eat_virus(virus)
             ate_virus = True
             break
@@ -479,7 +484,6 @@ class GameState():
         for mass in self.masses:
             self.draw_circle(self.board, mass, color=mass.color)
 
-        # TODO don't redraw everything?
         for food in self.foods:
             self.draw_circle(self.board, food, color=food.color)
 

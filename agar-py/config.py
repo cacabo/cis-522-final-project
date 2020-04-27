@@ -5,12 +5,13 @@ import pygame
 # ------------------------------------------------------------------------------
 
 FULL_SCREEN = False
-SCREEN_WIDTH = 1440
+SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 AGENT_NAME_FONT = 'comicsans'
 AGENT_NAME_FONT_SIZE = 20
 NUM_DISPLAYED_ON_LEADERBOARD = 5
 CLOCK_TICK = 120
+ENABLE_LOGS = False
 
 # ------------------------------------------------------------------------------
 # Game settings
