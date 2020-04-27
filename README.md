@@ -31,26 +31,30 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
 - [x] Update rewards function to penalize being eaten (Mak)
 - [x] Privacy.com on AWS account & billing alerts (Cam)
+- [x] Setup infra on AWS EC2 (Salib)
+- [x] Try running it locally and then via sagemaker in a notebook (Salib)
+- [x] Refactor train file to not run on import (Mak)
+- [x] Optimize state encoding runtime (Cam)
+  - [x] Look into encoding state via pytorch -> distributed
+- [x] Store encoded state in buffer; make sure this is not by reference (mak)
 
 ### Up next
 
-- [ ] Optimize state encoding runtime (Cam)
-  - [ ] Look into encoding state via pytorch -> distributed
-- [x] Store encoded state in buffer; make sure this is not by reference (mak)
-- [ ] Look into ngrok for logging from AWS (Cam)
-- [ ] Training loop for basic RL agent (Mak + Cam)
-  - [x] Plug in the state encoding
-  - [ ] Analyze runtime bottleneck
-  - [ ] Play around with different state encodings and compare performance
+- [ ] Test state encoding, make sure it is seemingly correct (Cam)
+- [ ] Better parameterization for epsilon decay (and other hyperparams) (Cam)
+- [ ] Look at more examples online (Cam)
+- [ ] Write logs (or a subset?) to a file from train loop (Cam)
+- [x] Random actions until replay buffer is full (Mak) (rn 30%)
+  - [x] Make sure to print at useful points (like when buffer is full and we start training)
+  - [x] Don't learn until the buffer is full (edit, at a certain capacity, rn 30%)
+- [ ] Reach out to Vatsal for some help/suggestions (Mak)
+- [ ] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
+- [ ] Test different state encodings (Cam & Mak)
 - [ ] Convolutional jawn (Sam + Salib)
   - [ ] Rip the CNN 🎆
   - [ ] Model
   - [ ] Getting screenshots in the train loop (not just GUI)
     - [ ] Figure out a good frequency for this
-- [ ] [Setup infra on AWS EC2 (Salib)](https://piazza.com/class/k58sba3uizm5md?cid=600)
-- [ ] Try running it locally and then via sagemaker in a notebook (Salib)
-  - [ ] Locally
-  - [ ] Sagemaker
 
 ### Lower priority
 
@@ -61,17 +65,4 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - currently assumes game state properly keeps track which is ok i guess
   - edge case is manualy start a game where agentmodel.done = True
 - [ ] Figure out what logs / graphs we will want on the writeup
-
----
-
-No state encoding time to finish first episode (1000 ticks):
-
-- 19.5 seconds
-- 28.5 seconds
-- 31.5 seconds
-- 32.5 seconds
-- 32 seconds
-
-With state encoding time to finish first episode (1000 ticks):
-
-- 450 seconds
+- [ ] Have a policy net and a target net
