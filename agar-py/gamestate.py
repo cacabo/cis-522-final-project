@@ -1,4 +1,6 @@
 import pygame
+import numpy as np
+
 import config as conf
 import utils
 from food import Food
@@ -164,8 +166,8 @@ class GameState():
         for cell in agent.cells:
             if not self.check_food_collision(cell, food):
                 continue
-            print('[%s] [FOOD] %s ate food item %s' %
-                  (self.get_time(), agent.name, food.id))
+            # print('[%s] [FOOD] %s ate food item %s' %
+            #       (self.get_time(), agent.name, food.id))
             cell.eat_food(food)
             return food
 
@@ -202,30 +204,6 @@ class GameState():
             return virus
 
         return None
-
-    def init_model_agent(self, model):
-        """
-        Initialize a game agent for the given learning model
-        @param model - the learning model to create an agent for
-        """
-        if model is None:
-            raise ValueError('asked to initialize agent for None model')
-
-        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
-        pos = utils.gen_random_position(radius)
-        # TODO: make model name better, maybe give ID to Agent() instead
-        model_agent = Agent(
-            self,
-            model,
-            pos[0],
-            pos[1],
-            radius,
-            mass=conf.AGENT_STARTING_MASS,
-            color=conf.BLUE_COLOR,
-            name='Agent' + str(model.id),
-            manual_control=False
-        )
-        self.agents[model.id] = model_agent
 
     def _filter_objects(self, agent, arr, handler):
         """
@@ -350,16 +328,24 @@ class GameState():
     def reset(self, models):
         self.__init__()
         for model in models:
-            self.init_model_agent(model)
+            if model.camera_follow:
+                self.init_ai_agent(model, camera_follow=True)
+            else:
+                self.init_ai_agent(model)
 
     def get_state(self):
         """get the current game state"""
         return self.agents, self.foods, self.viruses, self.masses, self.time
 
-    def get_board_state(self):
-        """get game board image"""
-        state = pygame.surfarray.array3d(self.window)
-        return state
+    def get_pixels(self):
+        """get game board pixels"""
+        # pygame board needs to be initialized the first time
+        if not self.board:
+            self.setup_display(render_gui=False)
+
+        self.draw_window(draw_leaderboard=False)
+        pixels = pygame.surfarray.array3d(self.window)
+        return np.moveaxis(pixels, 1, 0)
 
     def update_game_state(self, models, actions):
         """update the game state based on actions taken by models"""
@@ -430,8 +416,6 @@ class GameState():
         Create agents which have self-contained strategies
 
         Parameters
-
-            num_agents    (number)    : how many agents to create
             model         (nn.Module) : the learning model which will decide actions
             name          (string)    : the display name for the agent
             camera_follow (boolean)   : whether or not the GUI camera should follow this agent
@@ -467,9 +451,11 @@ class GameState():
         for i in range(num_agents):
             self.init_ai_agent(model)
 
+
     def is_exit_command(self, event):
         """Check if the user is pressing an exit key"""
         return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
+
 
     def draw_circle(self, board, obj, color=None, stroke=None):
         """Draw a circle on the pygame GUI"""
@@ -484,60 +470,71 @@ class GameState():
         else:
             pygame.draw.circle(board, color, pos, radius)
 
-    def draw_window(self, board, window):
+
+    def draw_window(self, draw_leaderboard=True):
         # fill screen white, to clear old frames
-        window.fill(conf.WHITE_COLOR)
-        board.fill(conf.WHITE_COLOR)
+        self.window.fill(conf.WHITE_COLOR)
+        self.board.fill(conf.WHITE_COLOR)
 
         for mass in self.masses:
-            self.draw_circle(board, mass, color=mass.color)
+            self.draw_circle(self.board, mass, color=mass.color)
 
         # TODO don't redraw everything?
         for food in self.foods:
-            self.draw_circle(board, food, color=food.color)
+            self.draw_circle(self.board, food, color=food.color)
 
         for agent in sorted(self.agents.values(), key=lambda a: a.get_mass()):
             for cell in agent.cells:
-                self.draw_circle(board, cell, color=agent.color)
+                self.draw_circle(self.board, cell, color=agent.color)
                 agent_name_text = text_font.render(agent.name, 1, (0, 0, 0))
-                board.blit(agent_name_text, (cell.x_pos - (agent_name_text.get_width() / 2),
-                                             cell.y_pos - (agent_name_text.get_height() / 2)))
+                self.board.blit(agent_name_text, (cell.x_pos - (agent_name_text.get_width() / 2),
+                                                  cell.y_pos - (agent_name_text.get_height() / 2)))
 
         for virus in self.viruses:
-            self.draw_circle(board, virus, color=conf.VIRUS_COLOR)
+            self.draw_circle(self.board, virus, color=conf.VIRUS_COLOR)
             self.draw_circle(
-                board, virus, color=conf.VIRUS_OUTLINE_COLOR, stroke=4)
+                self.board, virus, color=conf.VIRUS_OUTLINE_COLOR, stroke=4)
 
-        window.blit(board, self.camera.get_pos())
+        self.window.blit(self.board, self.camera.get_pos())
 
         # draw leaderboard
-        sorted_agents = list(
-            reversed(sorted(self.agents.values(), key=lambda x: x.get_mass())))
-        leaderboard_title = text_font.render("Leaderboard", 1, (0, 0, 0))
-        start_y = 25
-        x = conf.SCREEN_WIDTH - leaderboard_title.get_width() - 20
-        window.blit(leaderboard_title, (x, 5))
-        top_n = min(len(self.agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
-        for idx, agent in enumerate(sorted_agents[:top_n]):
-            score = int(round(agent.get_mass()))
-            text = text_font.render(
-                str(idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
-            window.blit(text, (x, start_y + idx * 20))
+        if draw_leaderboard:
+            sorted_agents = list(
+                reversed(sorted(self.agents.values(), key=lambda x: x.get_mass())))
+            leaderboard_title = text_font.render("Leaderboard", 1, (0, 0, 0))
+            start_y = 25
+            x = conf.SCREEN_WIDTH - leaderboard_title.get_width() - 20
+            self.window.blit(leaderboard_title, (x, 5))
+            top_n = min(len(self.agents), conf.NUM_DISPLAYED_ON_LEADERBOARD)
+            for idx, agent in enumerate(sorted_agents[:top_n]):
+                score = int(round(agent.get_mass()))
+                text = text_font.render(
+                    str(idx + 1) + ". " + str(agent.name) + ' (' + str(score) + ')', 1, (0, 0, 0))
+                self.window.blit(text, (x, start_y + idx * 20))
+
+    def setup_display(self, render_gui=True):
+        self.board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
+
+        # toggle between rendering the window and just drawing it internally
+        if render_gui:
+            if conf.FULL_SCREEN:
+                self.window = pygame.display.set_mode(
+                    (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
+            else:
+                self.window = pygame.display.set_mode(
+                    (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+        else:
+            self.window = pygame.Surface((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
+
 
     def main_loop(self):
         if self.camera == None:
             raise ValueError(
                 'Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
-
-        if conf.FULL_SCREEN:
-            self.window = pygame.display.set_mode(
-                (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT), pygame.FULLSCREEN)
-        else:
-            self.window = pygame.display.set_mode(
-                (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
-
+        
+        self.setup_display(render_gui=True)
         pygame.display.set_caption('CIS 522: Final Project')
-        self.board = pygame.Surface((conf.BOARD_WIDTH, conf.BOARD_HEIGHT))
+
         clock = pygame.time.Clock()
         running = True
         while running:
@@ -555,7 +552,7 @@ class GameState():
                     running = False
 
             # redraw window then update the frame
-            self.draw_window(self.board, self.window)
+            self.draw_window(draw_leaderboard=True)
             pygame.display.update()
 
         pygame.quit()
