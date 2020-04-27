@@ -19,7 +19,7 @@ MIN_EPSILON = 0.001
 GAMMA = 0.99
 
 BATCH_SIZE = 128
-REPLAY_BUFFER_LENGTH = 100000
+REPLAY_BUFFER_LENGTH = 15000
 STATE_ENCODING_LENGTH = 46
 
 # Anything further than max_dist will (likely, unless very large) be outside
@@ -279,6 +279,8 @@ class DeepRLModel(ModelInterface):
         self.gamma = GAMMA
         self.done = False
 
+        self.learning_start = False
+
     def get_action(self, state):
         if self.eval:
             state = encode_agent_state(self, state)
@@ -288,6 +290,10 @@ class DeepRLModel(ModelInterface):
             return Action(action)
         if self.done:
             return None
+
+        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+            return Action(np.random.randint(len(Action)))
+
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
@@ -316,6 +322,13 @@ class DeepRLModel(ModelInterface):
         # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < BATCH_SIZE:
             return
+        
+        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+            return
+
+        if not self.learning_start:
+            self.learning_start = True
+            print("----LEARNING BEGINS----")
 
         batch = self.replay_buffer.sample(BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)

@@ -44,9 +44,9 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [ ] Better parameterization for epsilon decay (and other hyperparams) (Cam)
 - [ ] Look at more examples online (Cam)
 - [ ] Write logs (or a subset?) to a file from train loop (Cam)
-- [ ] Random actions until replay buffer is full (Mak)
-  - [ ] Make sure to print at useful points (like when buffer is full and we start training)
-  - [ ] Don't learn until the buffer is full
+- [x] Random actions until replay buffer is full (Mak) (rn 30%)
+  - [x] Make sure to print at useful points (like when buffer is full and we start training)
+  - [x] Don't learn until the buffer is full (edit, at a certain capacity, rn 30%)
 - [ ] Reach out to Vatsal for some help/suggestions (Mak)
 - [ ] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
 - [ ] Test different state encodings (Cam & Mak)
