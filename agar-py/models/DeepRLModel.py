@@ -245,8 +245,8 @@ class DQN(nn.Module):
         self.output_dim = output_dim
 
         self.fc1 = nn.Linear(self.input_dim, 2048)
-        self.fc2 = nn.Linear(2048, 4096)
-        self.fc3 = nn.Linear(4096, output_dim)
+        self.fc2 = nn.Linear(2048, 2048)
+        self.fc3 = nn.Linear(2048, output_dim)
 
         self.relu = nn.ReLU()
 
