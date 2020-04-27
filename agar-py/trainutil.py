@@ -55,8 +55,9 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200):
             if dones[0]:
                 break
             # terminate if all other players are dead
-            if (len(dones) > 1) & reduce(and_, dones[1:]):
-                break
+            if (len(dones) > 1): 
+                if reduce(and_, dones[1:]):
+                    break
 
             state = next_state  # update the state
 
