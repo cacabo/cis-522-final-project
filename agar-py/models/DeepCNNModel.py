@@ -130,7 +130,6 @@ class DeepCNNModel(ModelInterface):
         states_t = torch.FloatTensor(states).to(self.device)
         next_states_t = torch.FloatTensor(next_states).to(self.device)
 
-        dones_t[24] = True
         qvals = torch.gather(self.net(states_t), 1, actions_t.unsqueeze(1))
         qvals_next = torch.max(self.target_net(next_states_t), dim=-1)[0].detach()
         qvals_next[dones_t] = 0         # zero out terminal states
