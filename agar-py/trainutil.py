@@ -1,5 +1,6 @@
 from operator import add, and_
 import numpy as np
+from models.DeepCNNModel import DeepCNNModel
 import utils
 import config as conf
 from functools import reduce
