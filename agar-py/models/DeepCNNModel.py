@@ -107,6 +107,7 @@ class DeepCNNModel(ModelInterface):
         loss = self.calculate_loss(batch)
         loss.backward()
         self.optimizer.step()
+        return loss.item()
 
     def remember(self, state, action, next_state, reward, done):
         """Update replay buffer with what model chose to do"""
@@ -124,7 +125,7 @@ class DeepCNNModel(ModelInterface):
         # convert actions from enum to ints
         actions = np.array([action.value for action in actions])
 
-        actions_t = torch.tensor(actions).to(self.device)
+        actions_t = torch.LongTensor(actions).to(self.device)
         rewards_t = torch.FloatTensor(rewards).to(self.device)
         dones_t = torch.BoolTensor(dones).to(self.device)
         states_t = torch.FloatTensor(states).to(self.device)
