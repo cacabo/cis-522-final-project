@@ -2,8 +2,9 @@ import random
 
 
 class ReplayBuffer():
-    def __init__(self, capacity):
+    def __init__(self, capacity, prefill_amt=1):
         self.capacity = capacity
+        self.prefill_amt = prefill_amt
         self.buffer = []
         self.idx = 0
 
@@ -20,3 +21,6 @@ class ReplayBuffer():
 
     def __len__(self):
         return len(self.buffer)
+
+    def prefill_capacity(self):
+        return len(self.buffer) / self.prefill_amt

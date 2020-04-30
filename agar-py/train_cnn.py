@@ -4,7 +4,7 @@ import numpy as np
 from collections import deque
 import fsutils
 import time
-from utils import current_milli_time
+from utils import current_milli_time, get_random_action
 
 import matplotlib.pyplot as plt
 
@@ -21,6 +21,27 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     mean_rewards = []
 
     start_time = current_milli_time()
+
+    # burn in the replay buffer to fill it with some examples before starting to train
+    env.reset(models)
+    pixels = env.get_pixels()
+    while cnn_model.replay_buffer.prefill_capacity() < 1.0:
+        cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
+
+        actions = [get_random_action() for m in models]
+        rewards, dones = env.update_game_state(models, actions)
+
+        next_pixels = env.get_pixels()
+        cnn_model.next_state_buffer.append(cnn_model.preprocess_state(pixels))
+        cnn_model.remember(pixels, action, next_pixels, rewards[0], dones[0])
+
+        if dones[0]:
+            env.reset(models)
+            pixels = env.get_pixels()
+        else:
+            pixels = next_pixels
+
+    print('burned in! ' + str(len(cnn_model.replay_buffer)))
 
     for ep in range(max_eps):
         env.reset(models)

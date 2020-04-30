@@ -2,6 +2,7 @@ from models.ModelInterface import ModelInterface
 from model_utils.ReplayBuffer import ReplayBuffer
 from actions import Action
 from trainutil import get_epsilon_decay_factor
+from utils import get_random_action
 
 from collections import deque
 from copy import copy, deepcopy
@@ -26,6 +27,7 @@ GAMMA = 0.95
 START_EPSILON = 1.0
 END_EPSILON = 0.05
 DECAY_EP_WINDOW = 100
+PREFILL_AMT = REPLAY_BUF_CAPACITY * 0.1
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
@@ -77,7 +79,7 @@ class DeepCNNModel(ModelInterface):
         self.epsilon = START_EPSILON
         self.end_epsilon = END_EPSILON
         self.epsilon_decay_fac = get_epsilon_decay_factor(START_EPSILON, END_EPSILON, DECAY_EP_WINDOW)
-        self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY)
+        self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY, PREFILL_AMT)
 
         self.net = CNN()
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
@@ -114,7 +116,7 @@ class DeepCNNModel(ModelInterface):
         """Given the current (stacked) game state, determine what action the model will output"""
         # take a random action epsilon fraction of the time
         if random.random() < self.epsilon:
-            return Action(np.random.randint(len(Action)))
+            return get_random_action()
         # otherwise, take the action which maximizes expected reward
         else:
             q_values = self.net(torch.FloatTensor(stacked_state).to(self.device))

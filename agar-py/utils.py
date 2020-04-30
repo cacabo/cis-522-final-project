@@ -216,7 +216,7 @@ def get_action_closest_to_angle(angle):
 
 
 def get_random_action():
-    return Action(np.random.randint(8))
+    return Action(np.random.randint(len(Action)))
 
 
 def is_action_feasible(action, pos, radius):
