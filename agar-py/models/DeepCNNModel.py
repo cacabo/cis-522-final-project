@@ -22,6 +22,8 @@ DOWNSAMPLE_SIZE = (112, 112)
 N_ACTIONS = len(Action)
 LEARNING_RATE = 0.001
 GAMMA = 0.95
+START_EPSILON = 1.0
+END_EPSILON = 0.05
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
@@ -65,11 +67,12 @@ class CNN(nn.Module):
 
 # tau is the number of frames to stack to create one "state"
 class DeepCNNModel(ModelInterface):
-    def __init__(self, camera_follow, epsilon=0.0):
+    def __init__(self, camera_follow):
         super(DeepCNNModel, self).__init__()
         self.camera_follow = camera_follow
         self.tau = TAU
         self.gamma = GAMMA
+        self.epsilon = END_EPSILON
         self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY)
 
         self.net = CNN()
@@ -93,8 +96,6 @@ class DeepCNNModel(ModelInterface):
         
         # target network for more stable error
         self.target_net = deepcopy(self.net)
-
-        self.epsilon = epsilon
 
     def get_action(self, state):
         """Used when playing the actual game"""
