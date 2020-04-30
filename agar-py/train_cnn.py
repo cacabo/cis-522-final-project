@@ -33,7 +33,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
         next_pixels = env.get_pixels()
         cnn_model.next_state_buffer.append(cnn_model.preprocess_state(pixels))
-        cnn_model.remember(pixels, action, next_pixels, rewards[0], dones[0])
+        cnn_model.remember(pixels, actions[0], next_pixels, rewards[0], dones[0])
 
         if dones[0]:
             env.reset(models)
