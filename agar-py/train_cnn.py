@@ -32,7 +32,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
         update_losses = []
         ep_reward = 0
-        print("=== Starting Episode %s===" % ep)
+        print("=== Starting Episode %s ===" % ep)
         for step in range(max_steps_per_ep):
             if cnn_model.step_count % 250 == 0:
                 print("Step %s" % cnn_model.step_count)
@@ -97,7 +97,6 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
         print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward))
         print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
-        print(cnn_model.epsilon)
     
     # save the model!
     fsutils.save_net_to_disk(cnn_model.net, model_name)

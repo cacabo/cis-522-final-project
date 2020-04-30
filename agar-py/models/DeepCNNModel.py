@@ -25,7 +25,7 @@ LEARNING_RATE = 0.001
 GAMMA = 0.95
 START_EPSILON = 1.0
 END_EPSILON = 0.05
-DECAY_EP_WINDOW = 200
+DECAY_EP_WINDOW = 100
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
