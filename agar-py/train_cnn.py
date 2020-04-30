@@ -8,14 +8,9 @@ import matplotlib.pyplot as plt
 
 from trainutil import select_model_actions
 
-FRAME_SKIP = 4
-UPDATE_FREQ = 4
-TARGET_NET_SYNC_FREQ = 500
-MAX_EPISODES = 2
-MAX_STEPS_PER_EP = 5
-MEAN_REWARD_WINDOW = 10
-
-def train_deepcnn_model(cnn_model, model_name, adversary_models):
+def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
+                        update_freq=4, target_net_sync_freq=500, max_eps=200,
+                        max_steps_per_ep=500, mean_reward_window=10):
     env = GameState()
     cnn_model.camera_follow = True              # ensure the CNN model is centered in window
     models = [cnn_model] + adversary_models
@@ -23,7 +18,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models):
     training_rewards = []
     mean_rewards = []
 
-    for ep in range(MAX_EPISODES):
+    for ep in range(max_eps):
         env.reset(models)
         state = env.get_state()
         pixels = env.get_pixels()
@@ -34,14 +29,14 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models):
         update_losses = []
         ep_reward = 0
         print("=== Starting Episode %s===" % ep)
-        for step in range(MAX_STEPS_PER_EP):
+        for step in range(max_steps_per_ep):
             if cnn_model.step_count % 250 == 0:
                 print("Step %s" % cnn_model.step_count)
             # append current pixel state to buffer
             cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
 
             # only update the current action every FRAME_SKIP frames of the game
-            if step % FRAME_SKIP == 0:
+            if step % frame_skip == 0:
                 # stack last tau frames to get CNN action based on them
                 s_0 = np.stack([cnn_model.state_buffer])
                 action = cnn_model.get_stacked_action(s_0)
@@ -64,7 +59,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models):
             cnn_model.remember(pixels, action, next_pixels, rewards[0], dones[0])
 
             # optimize model
-            if step % UPDATE_FREQ == 0:
+            if step % update_freq == 0:
                 update_loss = cnn_model.optimize()
                 cnn_model.net_update_count += 1
                 if update_loss is not None:
@@ -72,7 +67,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models):
 
             # re-sync the target network to updated network every on function of number
             # of net parameter updates
-            if cnn_model.net_update_count % TARGET_NET_SYNC_FREQ == 0:
+            if cnn_model.net_update_count % target_net_sync_freq == 0:
                 cnn_model.sync_target_net()
 
             if dones[0]:
@@ -85,13 +80,13 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models):
         # at end of MAX_STEPS/when game terminates, keep track of
         # episode mean update loss, episode reward, and mean reward over last
         # MEAN_REWARD_WINDOW episodes
+        mean_reward = np.mean(training_rewards[-mean_reward_window:])
+
         training_losses.append(np.mean(update_losses))
         training_rewards.append(ep_reward)
-        mean_rewards.append(np.mean(training_rewards[-MEAN_REWARD_WINDOW:]))
+        mean_rewards.append(mean_reward)
 
-        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(
-            np.mean(update_losses), ep_reward, np.mean(training_rewards[-MEAN_REWARD_WINDOW:])
-        ))
+        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward)
     
     # save the model!
     fsutils.save_net_to_disk(cnn_model.net, model_name)
