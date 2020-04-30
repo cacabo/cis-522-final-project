@@ -34,14 +34,14 @@ max_dist = math.sqrt(conf.BOARD_WIDTH ** 2 + conf.BOARD_HEIGHT ** 2)
 # -------------------------------
 
 
-def get_avg_angles():
+def get_avg_angles(angles):
     """
     For example, this would go from conf.ANGLES of [0, 90, 180, 270] to
     [45, 135, 225, 315]
 
     NOTE this is effectively a closure that should only be run once
     """
-    angles = conf.ANGLES + [360]
+    angles = angles + [360]
     avg_angles = []
     for idx in range(0, len(angles) - 1):
         angle = angles[idx]
@@ -51,7 +51,7 @@ def get_avg_angles():
     return avg_angles
 
 
-avg_angles = get_avg_angles()
+avg_angles = get_avg_angles(conf.ANGLES)
 
 
 def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
@@ -88,6 +88,45 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
     return torch.sum(obj_dists_inv).item()
 
 
+def get_obj_poses_tensor(objs):
+    obj_poses = []
+    for obj in objs:
+        (x, y) = obj.get_pos()
+        obj_poses.append([x, y])
+    obj_poses_tensor = torch.Tensor(obj_poses)
+    return obj_poses_tensor
+
+
+def get_diff_tensor(agent, objs):
+    obj_poses_tensor = get_obj_poses_tensor(objs)
+    (agent_x, agent_y) = agent.get_pos()
+    agent_pos_tensor = torch.Tensor([agent_x, agent_y])
+    diff_tensor = obj_poses_tensor - agent_pos_tensor
+    return diff_tensor
+
+
+def get_dists_tensor(diff_tensor):
+    diff_sq_tensor = diff_tensor ** 2
+    sum_sq_tensor = torch.sum(diff_sq_tensor, 1)  # sum all x's and y's
+    dists_tensor = torch.sqrt(sum_sq_tensor)
+    return dists_tensor
+
+
+def get_filtered_angles_tensor(filtered_diff_tensor):
+    diff_invert_y_tensor = filtered_diff_tensor * torch.Tensor([1, -1])
+    dx = diff_invert_y_tensor[:, 0]
+    dy = diff_invert_y_tensor[:, 1]
+    radians_tensor = torch.atan2(dy, dx)
+    filtered_angles_tensor = radians_tensor * 180 / math.pi
+
+    # Convert negative angles to positive ones
+    filtered_angles_tensor = filtered_angles_tensor + \
+        ((filtered_angles_tensor < 0) * 360.0)
+    filtered_angles_tensor = filtered_angles_tensor.to(torch.float)
+
+    return filtered_angles_tensor
+
+
 def get_direction_scores(agent, objs):
     """
     For each direction (from right around the circle to down-right), compute a
@@ -107,28 +146,17 @@ def get_direction_scores(agent, objs):
         return np.zeros(len(conf.ANGLES))
 
     # Build an array to put into a tensor
-    obj_poses = []
-    for obj in objs:
-        (x, y) = obj.get_pos()
-        obj_poses.append([x, y])
-    obj_poses_tensor = torch.Tensor(obj_poses)
-    (agent_x, agent_y) = agent.get_pos()
-    agent_pos_tensor = torch.Tensor([agent_x, agent_y])
-    diff_tensor = obj_poses_tensor - agent_pos_tensor
-    diff_sq_tensor = diff_tensor ** 2
-    sum_sq_tensor = torch.sum(diff_sq_tensor, 1)  # sum all x's and y's
-    dists_tensor = torch.sqrt(sum_sq_tensor)
+    diff_tensor = get_diff_tensor(agent, objs)
+    dists_tensor = get_dists_tensor(diff_tensor)
 
     filter_mask_tensor = dists_tensor <= max_dist
+    filter_mask_tensor = filter_mask_tensor.to(
+        torch.bool)  # Ensure type is correct
     fitlered_dists_tensor = dists_tensor[filter_mask_tensor]
     filtered_diff_tensor = diff_tensor[filter_mask_tensor]
 
     # Invert y dimension since y increases as we go down
-    diff_invert_y_tensor = filtered_diff_tensor * torch.Tensor([1, -1])
-    dx = diff_invert_y_tensor[:, 0]
-    dy = diff_invert_y_tensor[:, 1]
-    radians_tensor = torch.atan2(dy, dx)
-    filtered_angles_tensor = radians_tensor * 180 / math.pi
+    filtered_angles_tensor = get_filtered_angles_tensor(filtered_diff_tensor)
 
     """
     Calculate score for the conic section immediately in the positive x
@@ -334,7 +362,7 @@ class DeepRLModel(ModelInterface):
         # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < BATCH_SIZE:
             return
-        
+
         if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
             return
 

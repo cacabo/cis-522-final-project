@@ -238,6 +238,7 @@ class Agent():
 
         self.is_alive = True
         self.manual_control = manual_control
+
         # True if the game camera is following this agent
         self.camera_follow = camera_follow
 
@@ -324,7 +325,7 @@ class Agent():
 
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
-        
+
         if len(self.cells) > 1:
             for cell in self.cells:
                 # Handle converging towards the middle
