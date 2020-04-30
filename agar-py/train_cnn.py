@@ -23,10 +23,10 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     start_time = current_milli_time()
 
     # burn in the replay buffer to fill it with some examples before starting to train
+    print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt / cnn_model.replay_buffer.capacity) + '% capacity...')
     env.reset(models)
     pixels = env.get_pixels()
     while cnn_model.replay_buffer.prefill_capacity() < 1.0:
-        print('capacity: ' + str(cnn_model.replay_buffer.prefill_capacity()))
         cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
 
         actions = [get_random_action() for m in models]
@@ -42,7 +42,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         else:
             pixels = next_pixels
 
-    print('burned in! ' + str(len(cnn_model.replay_buffer)))
+    print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples! Beginning training...')
 
     for ep in range(max_eps):
         env.reset(models)
