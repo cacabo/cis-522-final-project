@@ -25,7 +25,6 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Get bigger at edge of map -> should get scooched back into map boundary (Sam)
 - [x] When you die you keep getting negative reward -> this should only happen once (Mak)
 - [x] Create IAM users for each group member on ccabo@seas AWS account
-- [x] Fix food bug (all the boys 😤)
 - [x] Add GUI functionality to the training loop (Sam)
 - [x] Mass decay (cam)
 - [x] Infrastructure for saving model net params (maybe to a folder in github?) (cam)
@@ -37,24 +36,25 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Optimize state encoding runtime (Cam)
   - [x] Look into encoding state via pytorch -> distributed
 - [x] Store encoded state in buffer; make sure this is not by reference (mak)
+- [x] Random actions until replay buffer is full (Mak)
+  - [x] Make sure to print at useful points (like when buffer is full and we start training)
+  - [x] Don't learn until the buffer is full
+- [x] Convolutional jawn (Sam + Salib)
+  - [x] Rip the CNN
+  - [x] Model
+  - [x] Getting screenshots in the train loop (not just GUI)
 
 ### Up next
 
+- [ ] Add one more linear layer and make it normal sizes (Mak)
+- [ ] Have encode agent state return a tensor, look where it is used (Cam)
+- [ ] Remove time from state encoding, try radically simplifying things (Cam)
 - [ ] Test state encoding, make sure it is seemingly correct (Cam)
-- [ ] Better parameterization for epsilon decay (and other hyperparams) (Cam)
+- [ ] Better parameterization for epsilon decay (and other hyperparams, ex. decay over) (Cam)
 - [ ] Look at more examples online (Cam)
-- [ ] Write logs (or a subset?) to a file from train loop (Cam)
-- [ ] Random actions until replay buffer is full (Mak)
-  - [ ] Make sure to print at useful points (like when buffer is full and we start training)
-  - [ ] Don't learn until the buffer is full
-- [ ] Reach out to Vatsal for some help/suggestions (Mak)
 - [ ] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
 - [ ] Test different state encodings (Cam & Mak)
-- [ ] Convolutional jawn (Sam + Salib)
-  - [ ] Rip the CNN 🎆
-  - [ ] Model
-  - [ ] Getting screenshots in the train loop (not just GUI)
-    - [ ] Figure out a good frequency for this
+- [ ] CNN hyperparams (Sam + Salib)
 
 ### Lower priority
 

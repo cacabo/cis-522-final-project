@@ -171,8 +171,6 @@ def get_direction_scores(agent, objs):
 
 
 def encode_agent_state(model, state):
-    # return np.zeros((STATE_ENCODING_LENGTH,))
-
     (agents, foods, viruses, masses, time) = state
 
     # If the agent is dead
