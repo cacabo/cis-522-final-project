@@ -244,9 +244,9 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, 512)
-        self.fc2 = nn.Linear(512, 1024)
-        self.fc3 = nn.Linear(1024, output_dim)
+        self.fc1 = nn.Linear(self.input_dim, 2048)
+        self.fc2 = nn.Linear(2048, 2048)
+        self.fc3 = nn.Linear(2048, output_dim)
 
         self.relu = nn.ReLU()
 
@@ -274,12 +274,18 @@ class DeepRLModel(ModelInterface):
         self.device = "cpu"
         if torch.cuda.is_available():
             self.device = "cuda"
+        self.model.to(self.device)
 
         self.epsilon = EPSILON
         self.gamma = GAMMA
         self.done = False
 
         self.learning_start = False
+
+        self.min_steps = 5
+        self.max_steps = 10
+        self.steps_remaining = 0
+        self.curr_action = None
 
     def get_action(self, state):
         if self.eval:
@@ -293,6 +299,13 @@ class DeepRLModel(ModelInterface):
 
         if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
             return Action(np.random.randint(len(Action)))
+            # if self.steps_remaining <= 0:
+            #     self.steps_remaining = np.random.randint(
+            #         self.min_steps, self.max_steps)
+            #     self.curr_action = Action(np.random.randint(len(Action)))
+
+            #     self.steps_remaining -= 1
+            # return self.curr_action
 
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward

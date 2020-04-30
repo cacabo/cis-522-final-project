@@ -23,7 +23,10 @@ def load_net_from_disk(net, filename):
     NOTE prints IncompatibleKeys(missing_keys=[], unexpected_keys=[]) upon a
     successful load_state_dict ¯\_(ツ)_/¯
     """
-    checkpoint = torch.load(NET_PATH + filename + '.pt')
+    device = 'cpu'
+    if torch.cuda.is_available():
+        device = 'gpu'
+    checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
     net.load_state_dict(checkpoint['net'])
     return net
 
