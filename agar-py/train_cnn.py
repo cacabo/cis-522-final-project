@@ -26,6 +26,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     env.reset(models)
     pixels = env.get_pixels()
     while cnn_model.replay_buffer.prefill_capacity() < 1.0:
+        print('capacity: ' + str(cnn_model.replay_buffer.prefill_capacity()))
         cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
 
         actions = [get_random_action() for m in models]
