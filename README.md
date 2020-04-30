@@ -43,16 +43,18 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - [x] Rip the CNN
   - [x] Model
   - [x] Getting screenshots in the train loop (not just GUI)
+- [x] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
 
 ### Up next
 
 - [ ] Add one more linear layer and make it normal sizes (Mak)
+- [ ] epsilon decay over episodes (mak)
+- [ ] target net policy net (mak)
 - [ ] Have encode agent state return a tensor, look where it is used (Cam)
 - [ ] Remove time from state encoding, try radically simplifying things (Cam)
 - [ ] Test state encoding, make sure it is seemingly correct (Cam)
 - [ ] Better parameterization for epsilon decay (and other hyperparams, ex. decay over) (Cam)
 - [ ] Look at more examples online (Cam)
-- [ ] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
 - [ ] Test different state encodings (Cam & Mak)
 - [ ] CNN hyperparams (Sam + Salib)
 
