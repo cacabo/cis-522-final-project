@@ -1,5 +1,5 @@
 from models.DeepCNNModel import DeepCNNModel
-from gamestate import GameState
+from gamestate import GameState, start_ai_only_game
 import numpy as np
 from collections import deque
 import fsutils
@@ -44,8 +44,7 @@ def train_deepcnn_model(adversary_models):
             if step % FRAME_SKIP == 0:
                 # stack last tau frames to get CNN action based on them
                 s_0 = np.stack([model.state_buffer])
-                action = model.get_action(s_0)
-                model.net_update_count += 1
+                action = model.get_stacked_action(s_0)
 
             model.step_count += 1
 
@@ -67,6 +66,7 @@ def train_deepcnn_model(adversary_models):
             # optimize model
             if step % UPDATE_FREQ == 0:
                 update_loss = model.optimize()
+                model.net_update_count += 1
                 if update_loss is not None:
                     update_losses.append(update_loss)
 
@@ -112,6 +112,6 @@ def train_deepcnn_model(adversary_models):
     plt.ylabel("reward")
     plt.savefig('reward_plot.png')
 
-    #plt.show()
+    plt.show()
 
 train_deepcnn_model([])

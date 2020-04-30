@@ -5,7 +5,7 @@ import pygame
 # ------------------------------------------------------------------------------
 
 FULL_SCREEN = True
-SCREEN_WIDTH = 1440
+SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 AGENT_NAME_FONT = 'comicsans'
 AGENT_NAME_FONT_SIZE = 20
