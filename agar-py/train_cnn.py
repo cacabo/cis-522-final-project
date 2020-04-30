@@ -111,10 +111,10 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
         # also keep track of episode mean update loss, episode reward, and
         # mean reward over last MEAN_REWARD_WINDOW episodes
-        mean_reward = np.mean(training_rewards[-mean_reward_window:])
-
         training_losses.append(np.mean(update_losses))
         training_rewards.append(ep_reward)
+        
+        mean_reward = np.mean(training_rewards[-mean_reward_window:])
         mean_rewards.append(mean_reward)
 
         print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward))
