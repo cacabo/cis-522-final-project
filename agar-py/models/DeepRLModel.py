@@ -149,7 +149,7 @@ def get_direction_scores(agent, objs):
     diff_tensor = get_diff_tensor(agent, objs)
     dists_tensor = get_dists_tensor(diff_tensor)
 
-    filter_mask_tensor = dists_tensor <= max_dist
+    filter_mask_tensor = dists_tensor <= max_dist & dists_tensor > 0
     filter_mask_tensor = filter_mask_tensor.to(
         torch.bool)  # Ensure type is correct
     fitlered_dists_tensor = dists_tensor[filter_mask_tensor]
