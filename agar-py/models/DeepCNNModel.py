@@ -71,7 +71,11 @@ class DeepCNNModel(ModelInterface):
         self.tau = TAU
         self.gamma = GAMMA
         self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY)
+
         self.device = 'cpu'
+        if torch.cuda.is_available():
+            self.device = 'cuda'
+
         self.step_count = 0
         self.net_update_count = 0
 
@@ -91,8 +95,17 @@ class DeepCNNModel(ModelInterface):
 
         self.epsilon = epsilon
 
-    def get_action(self, stacked_state):
-        """Given the current game state, determine what action the model will output"""
+    def get_action(self, state):
+        """Used when playing the actual game"""
+        pp_state = self.preprocess_state(state)
+        self.state_buffer.append(pp_state)
+        stacked_state = np.stack([self.state_buffer])
+        q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device))
+        action_idx = torch.argmax(q_vals).item()
+        return Action(action_idx)
+
+    def get_stacked_action(self, stacked_state):
+        """Given the current (stacked) game state, determine what action the model will output"""
         # take a random action epsilon fraction of the time
         if random.random() < self.epsilon:
             return Action(np.random.randint(len(Action)))

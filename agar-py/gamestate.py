@@ -7,7 +7,7 @@ from food import Food
 from virus import Virus
 from agent import Agent
 from camera import Camera
-# from models.DQNModel import DQNModel
+from models.DeepCNNModel import DeepCNNModel
 
 # ------------------------------------------------------------------------------
 # Constants and config
@@ -382,9 +382,8 @@ class GameState():
             agent.handle_move_keys(keys, self.camera)
             agent.handle_other_keys(keys, self.camera)
         else:
-            # if (isinstance(agent.model, DQNModel)):
-            if False:
-                agent.act(self.get_board_state())
+            if (isinstance(agent.model, DeepCNNModel)):
+                agent.act(self.get_pixels())
             else:
                 agent.act(self.get_state())
 
