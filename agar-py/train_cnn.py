@@ -23,7 +23,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     start_time = current_milli_time()
 
     # burn in the replay buffer to fill it with some examples before starting to train
-    print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt / cnn_model.replay_buffer.capacity) + '% capacity...')
+    print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
     env.reset(models)
     pixels = env.get_pixels()
     while cnn_model.replay_buffer.prefill_capacity() < 1.0:
