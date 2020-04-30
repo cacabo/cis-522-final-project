@@ -172,5 +172,5 @@ class DeepCNNModel(ModelInterface):
         # convert RGB to grayscale via relative luminance
         gray_state = np.dot(state[...,:3], [0.299, 0.587, 0.114])
         # size down the image to speed up training
-        resized_state = transform.resize(gray_state, DOWNSAMPLE_SIZE)
+        resized_state = transform.resize(gray_state, DOWNSAMPLE_SIZE, mode='constant')
         return resized_state
