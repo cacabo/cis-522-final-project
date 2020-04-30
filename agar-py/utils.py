@@ -181,7 +181,7 @@ def get_angle_between_points(p1, p2):
     (x2, y2) = p2
     dx = x2 - x1
     dy = y1 - y2  # Since 0 is in the top left corner
-
+    
     angle = math.atan2(dy, dx) * 180 / math.pi
     if angle < 0:
         return angle + 360
