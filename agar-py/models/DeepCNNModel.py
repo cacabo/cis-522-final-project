@@ -75,6 +75,7 @@ class DeepCNNModel(ModelInterface):
         self.device = 'cpu'
         if torch.cuda.is_available():
             self.device = 'cuda'
+        self.net.to(self.device)
 
         self.step_count = 0
         self.net_update_count = 0
@@ -111,8 +112,7 @@ class DeepCNNModel(ModelInterface):
             return Action(np.random.randint(len(Action)))
         # otherwise, take the action which maximizes expected reward
         else:
-            net = self.net.to(self.device)
-            q_values = net(torch.FloatTensor(stacked_state).to(self.device))
+            q_values = self.net(torch.FloatTensor(stacked_state).to(self.device))
             action_idx = torch.argmax(q_values).item()
             return Action(action_idx)
 
