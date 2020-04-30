@@ -268,7 +268,7 @@ class DeepRLModel(ModelInterface):
         # TODO: fix w/ observation space
         self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
         self.optimizer = torch.optim.Adam(self.model.parameters())
-        self.loss = torch.nn.SmoothL1Loss()
+        self.loss = torch.nn.MSELoss()
 
         # run on a GPU if we have access to one in this env
         self.device = "cpu"
@@ -346,9 +346,6 @@ class DeepRLModel(ModelInterface):
         batch = self.replay_buffer.sample(BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
-        # states = [encode_agent_state(self, state) for state in states]
-        # next_states = [encode_agent_state(self, state)
-        #                for state in next_states]
         states = torch.Tensor(states).to(self.device)
         actions = torch.LongTensor(list(actions)).to(self.device)
 
@@ -363,7 +360,7 @@ class DeepRLModel(ModelInterface):
         currQ = self.model(states).gather(
             1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
-        max_nextQ = torch.max(nextQ, 1)[0]
+        max_nextQ = torch.max(nextQ, 1)[0].detach()
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
 
         loss = self.loss(currQ, expectedQ.unsqueeze(1))
