@@ -5,6 +5,7 @@ class ModelInterface:
         self.id = ModelInterface.ID_counter
         self.done = False
         self.eval = False
+        self.camera_follow = False
         ModelInterface.ID_counter += 1
 
     def get_action(self, state):
