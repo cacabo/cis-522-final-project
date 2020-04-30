@@ -100,7 +100,7 @@ class DeepCNNModel(ModelInterface):
         pp_state = self.preprocess_state(state)
         self.state_buffer.append(pp_state)
         stacked_state = np.stack([self.state_buffer])
-        q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device))
+        q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
         action_idx = torch.argmax(q_vals).item()
         return Action(action_idx)
 
@@ -111,7 +111,7 @@ class DeepCNNModel(ModelInterface):
             return Action(np.random.randint(len(Action)))
         # otherwise, take the action which maximizes expected reward
         else:
-            q_values = self.net(torch.FloatTensor(stacked_state).to(self.device))
+            q_values = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
             action_idx = torch.argmax(q_values).item()
             return Action(action_idx)
 
