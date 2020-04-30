@@ -558,6 +558,10 @@ class GameState():
             self.draw_window(draw_leaderboard=True)
             pygame.display.update()
 
+            if conf.ENABLE_TIME_LIMIT:
+                if self.time >= conf.TIME_LIMIT:
+                    running = False
+
         pygame.quit()
         quit()
 

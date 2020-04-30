@@ -22,6 +22,8 @@ BOARD_HEIGHT = 830
 FOOD_MASS = 1
 GAME_MASS = 20000
 MAX_FOOD = 200
+ENABLE_TIME_LIMIT = False
+TIME_LIMIT = 500
 
 # ------------------------------------------------------------------------------
 # Virus state
