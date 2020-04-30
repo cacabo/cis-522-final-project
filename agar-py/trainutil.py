@@ -4,7 +4,10 @@ import numpy as np
 import utils
 import config as conf
 from functools import reduce
+import math
 
+def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
+  return math.exp(math.log(e_min) * e_max / e_decay_window)
 
 def select_model_actions(models, state):
     model_actions = []

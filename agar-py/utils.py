@@ -2,6 +2,7 @@ import numpy as np
 import math
 import config as conf
 from actions import Action
+import time
 
 
 def mass_to_radius(mass):
@@ -288,3 +289,7 @@ def move_object(obj, angle, vel):
         move_object_up(obj, dy)
     elif dy < 0:
         move_object_down(obj, dy * -1)
+
+
+def current_milli_time():
+    return int(round(time.time() * 1000))

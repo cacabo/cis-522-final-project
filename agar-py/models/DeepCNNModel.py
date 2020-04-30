@@ -1,6 +1,7 @@
 from models.ModelInterface import ModelInterface
 from model_utils.ReplayBuffer import ReplayBuffer
 from actions import Action
+from trainutil import get_epsilon_decay_factor
 
 from collections import deque
 from copy import copy, deepcopy
@@ -24,6 +25,7 @@ LEARNING_RATE = 0.001
 GAMMA = 0.95
 START_EPSILON = 1.0
 END_EPSILON = 0.05
+DECAY_EP_WINDOW = 200
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
@@ -72,7 +74,9 @@ class DeepCNNModel(ModelInterface):
         self.camera_follow = camera_follow
         self.tau = TAU
         self.gamma = GAMMA
-        self.epsilon = END_EPSILON
+        self.epsilon = START_EPSILON
+        self.end_epsilon = END_EPSILON
+        self.epsilon_decay_fac = get_epsilon_decay_factor(START_EPSILON, END_EPSILON, DECAY_EP_WINDOW)
         self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY)
 
         self.net = CNN()

@@ -3,6 +3,8 @@ from gamestate import GameState, start_ai_only_game
 import numpy as np
 from collections import deque
 import fsutils
+import time
+from utils import current_milli_time
 
 import matplotlib.pyplot as plt
 
@@ -17,6 +19,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     training_losses = []
     training_rewards = []
     mean_rewards = []
+
+    start_time = current_milli_time()
 
     for ep in range(max_eps):
         env.reset(models)
@@ -77,9 +81,14 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
             state = next_state
             pixels = next_pixels
 
-        # at end of MAX_STEPS/when game terminates, keep track of
-        # episode mean update loss, episode reward, and mean reward over last
-        # MEAN_REWARD_WINDOW episodes
+        # at end of episode, decay epsilon
+        if cnn_model.epsilon > cnn_model.end_epsilon:
+            cnn_model.epsilon *= cnn_model.epsilon_decay_fac
+        else:
+            cnn_model.epsilon = cnn_model.end_epsilon
+
+        # also keep track of episode mean update loss, episode reward, and
+        # mean reward over last MEAN_REWARD_WINDOW episodes
         mean_reward = np.mean(training_rewards[-mean_reward_window:])
 
         training_losses.append(np.mean(update_losses))
@@ -87,6 +96,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         mean_rewards.append(mean_reward)
 
         print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward))
+        print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
+        print(cnn_model.epsilon)
     
     # save the model!
     fsutils.save_net_to_disk(cnn_model.net, model_name)
