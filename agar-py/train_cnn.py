@@ -86,7 +86,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         training_rewards.append(ep_reward)
         mean_rewards.append(mean_reward)
 
-        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward)
+        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward))
     
     # save the model!
     fsutils.save_net_to_disk(cnn_model.net, model_name)
