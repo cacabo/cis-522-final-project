@@ -10,9 +10,9 @@ from trainutil import select_model_actions
 
 FRAME_SKIP = 4
 UPDATE_FREQ = 4
-TARGET_NET_SYNC_FREQ = 2000
-MAX_EPISODES = 20
-MAX_STEPS_PER_EP = 20    # TODO: do we want this? does it make sense?
+TARGET_NET_SYNC_FREQ = 500
+MAX_EPISODES = 100
+MAX_STEPS_PER_EP = 500    # TODO: do we want this? does it make sense?
 MEAN_REWARD_WINDOW = 10
 
 def train_deepcnn_model(adversary_models):
@@ -35,7 +35,7 @@ def train_deepcnn_model(adversary_models):
         ep_reward = 0
         print("=== Starting Episode %s===" % ep)
         for step in range(MAX_STEPS_PER_EP):
-            if model.step_count % 500 == 0:
+            if model.step_count % 250 == 0:
                 print("Step %s" % model.step_count)
             # append current pixel state to buffer
             model.state_buffer.append(model.preprocess_state(pixels))

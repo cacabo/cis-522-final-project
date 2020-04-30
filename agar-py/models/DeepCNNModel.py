@@ -20,8 +20,8 @@ REPLAY_BUF_CAPACITY = 10000
 BATCH_SIZE = 32
 DOWNSAMPLE_SIZE = (112, 112)
 N_ACTIONS = len(Action)
-LEARNING_RATE = 0.00025
-GAMMA = 0.99
+LEARNING_RATE = 0.001
+GAMMA = 0.95
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
@@ -33,20 +33,26 @@ class CNN(nn.Module):
         self.output_dim = N_ACTIONS
 
         self.convnet = nn.Sequential(
-            nn.Conv2d(self.tau, 32, kernel_size=8, stride=4),
+            nn.Conv2d(self.tau, 32, kernel_size=8, stride=1),
+            nn.MaxPool2d(kernel_size=4),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2),
+            nn.Conv2d(32, 64, kernel_size=4, stride=1),
+            nn.MaxPool2d(kernel_size=2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Conv2d(64, 64, kernel_size=3, stride=1),
+            nn.MaxPool2d(kernel_size=2),
+            nn.BatchNorm2d(64),
             nn.ReLU()
         )
 
         self.fc_input_dim = self.calc_cnn_out_dim()
 
         self.fcnet = nn.Sequential(
-            nn.Linear(self.fc_input_dim, 512, bias=True),
+            nn.Linear(self.fc_input_dim, 128, bias=True),
             nn.ReLU(),
-            nn.Linear(512, self.output_dim)
+            nn.Linear(128, self.output_dim)
         )
 
     def forward(self, x):
