@@ -72,6 +72,10 @@ class DeepCNNModel(ModelInterface):
         self.gamma = GAMMA
         self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY)
 
+        self.net = CNN()
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
+        self.loss_fn = nn.MSELoss()
+
         self.device = 'cpu'
         if torch.cuda.is_available():
             self.device = 'cuda'
@@ -86,10 +90,6 @@ class DeepCNNModel(ModelInterface):
         for i in range(self.tau):
             self.state_buffer.append(np.zeros(DOWNSAMPLE_SIZE))
             self.next_state_buffer.append(np.zeros(DOWNSAMPLE_SIZE))
-
-        self.net = CNN()
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
-        self.loss_fn = nn.MSELoss()
         
         # target network for more stable error
         self.target_net = deepcopy(self.net)
