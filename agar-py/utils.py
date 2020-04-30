@@ -174,13 +174,18 @@ def get_angle_between_points(p1, p2):
         p2 : tuple (x, y)
 
     Returns angle in degrees of line drawn between points and positive x dir
+
+    Note this angle is in the range [0, 360)
     """
     (x1, y1) = p1
     (x2, y2) = p2
     dx = x2 - x1
     dy = y1 - y2  # Since 0 is in the top left corner
 
-    return math.atan2(dy, dx)
+    angle = math.atan2(dy, dx) * 180 / math.pi
+    if angle < 0:
+        return angle + 360
+    return angle
 
 
 def get_angle_between_objects(a, b):

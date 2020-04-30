@@ -8,12 +8,48 @@ from food import Food
 import config as conf
 
 """
-Constants
+constants
 """
 
 agent_x = 200
 agent_y = 200
 offset = 50
+
+"""
+testing helper functions
+"""
+
+
+def get_food(offset_x, offset_y):
+    food_radius = utils.mass_to_radius(conf.FOOD_MASS)
+    return Food(agent_x + offset_x, agent_y + offset_y, food_radius, conf.RED_COLOR)
+
+
+def assert_shape(t, d0, d1=None):
+    assert t.shape[0] == d0
+    if d1 is not None:
+        assert t.shape[1] == d1
+
+
+def assert_tensor_eq(t, arr):
+    arr_tensor = torch.Tensor(arr)
+    arr_tensor = arr_tensor.to(t.dtype)
+
+    if t.dtype == torch.float:
+        return torch.allclose(t, arr_tensor)
+
+    assert torch.all(torch.eq(t, arr_tensor)).item()
+
+
+def assert_all_zero_except(arr, exceptIdx):
+    """
+    Assert that all elements in the provided array are zero except the element at
+    the specified exceptIdx
+    """
+    for (idx, elt) in enumerate(arr):
+        if idx != exceptIdx:
+            assert elt == 0
+
 
 """
 get_avg_angles
@@ -71,28 +107,6 @@ assert new_score > score
 """
 get_obj_poses_tensor
 """
-
-
-def get_food(offset_x, offset_y):
-    food_radius = utils.mass_to_radius(conf.FOOD_MASS)
-    return Food(agent_x + offset_x, agent_y + offset_y, food_radius, conf.RED_COLOR)
-
-
-def assert_shape(t, d0, d1=None):
-    assert t.shape[0] == d0
-    if d1 is not None:
-        assert t.shape[1] == d1
-
-
-def assert_tensor_eq(t, arr):
-    arr_tensor = torch.Tensor(arr)
-    arr_tensor = arr_tensor.to(t.dtype)
-
-    if t.dtype == torch.float:
-        return torch.allclose(t, arr_tensor)
-
-    assert torch.all(torch.eq(t, arr_tensor)).item()
-
 
 food_right = get_food(offset, 0)
 food_up_right = get_food(offset, -offset)
@@ -205,20 +219,10 @@ get_direction_score
 """
 
 # No objs -> no score
-# objs = []
-# scores = get_direction_scores(agent, objs)
-# for score in scores:
-#     assert score == 0
-
-
-# def assert_all_zero_except(arr, exceptIdx):
-#     """
-#     Assert that all elements in the provided array are zero except the element at
-#     the specified exceptIdx
-#     """
-#     for (idx, elt) in enumerate(arr):
-#         if idx != exceptIdx:
-#             assert elt == 0
+objs = []
+scores = get_direction_scores(agent, objs)
+for score in scores:
+    assert score == 0
 
 
 # scores = get_direction_scores(agent, [food_right])
