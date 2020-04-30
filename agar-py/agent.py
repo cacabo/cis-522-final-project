@@ -324,15 +324,16 @@ class Agent():
 
         avg_x = self.get_avg_x_pos()
         avg_y = self.get_avg_y_pos()
+        
+        if len(self.cells) > 1:
+            for cell in self.cells:
+                # Handle converging towards the middle
+                penalty = -2  # Move this many pixels towards the center
+                angle_to_avg = utils.get_angle_between_points(
+                    (avg_x, avg_y), cell.get_pos())
 
-        for cell in self.cells:
-            # Handle converging towards the middle
-            penalty = -2  # Move this many pixels towards the center
-            angle_to_avg = utils.get_angle_between_points(
-                (avg_x, avg_y), cell.get_pos())
-
-            if angle_to_avg is not None:
-                cell.move(angle_to_avg, penalty)
+                if angle_to_avg is not None:
+                    cell.move(angle_to_avg, penalty)
 
         for (idx, cell) in enumerate(self.cells):
             # Handle overlapping cells

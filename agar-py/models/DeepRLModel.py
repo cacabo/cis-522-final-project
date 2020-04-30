@@ -19,7 +19,7 @@ MIN_EPSILON = 0.001
 GAMMA = 0.99
 
 BATCH_SIZE = 128
-REPLAY_BUFFER_LENGTH = 100000
+REPLAY_BUFFER_LENGTH = 15000
 STATE_ENCODING_LENGTH = 46
 
 # Anything further than max_dist will (likely, unless very large) be outside
@@ -242,9 +242,10 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, 512)
-        self.fc2 = nn.Linear(512, 1024)
-        self.fc3 = nn.Linear(1024, output_dim)
+        self.fc1 = nn.Linear(self.input_dim, 128)
+        self.fc2 = nn.Linear(128, 128)
+        # self.fc3 = nn.Linear(2048, 2048)
+        self.fc3 = nn.Linear(128, output_dim)
 
         self.relu = nn.ReLU()
 
@@ -266,16 +267,24 @@ class DeepRLModel(ModelInterface):
         # TODO: fix w/ observation space
         self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
         self.optimizer = torch.optim.Adam(self.model.parameters())
-        self.loss = torch.nn.SmoothL1Loss()
+        self.loss = torch.nn.MSELoss()
 
         # run on a GPU if we have access to one in this env
         self.device = "cpu"
         if torch.cuda.is_available():
             self.device = "cuda"
+        self.model.to(self.device)
 
         self.epsilon = EPSILON
         self.gamma = GAMMA
         self.done = False
+
+        self.learning_start = False
+
+        self.min_steps = 5
+        self.max_steps = 10
+        self.steps_remaining = 0
+        self.curr_action = None
 
     def get_action(self, state):
         if self.eval:
@@ -286,6 +295,17 @@ class DeepRLModel(ModelInterface):
             return Action(action)
         if self.done:
             return None
+
+        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+            return Action(np.random.randint(len(Action)))
+            # if self.steps_remaining <= 0:
+            #     self.steps_remaining = np.random.randint(
+            #         self.min_steps, self.max_steps)
+            #     self.curr_action = Action(np.random.randint(len(Action)))
+
+            #     self.steps_remaining -= 1
+            # return self.curr_action
+
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
             state = encode_agent_state(self, state)
@@ -314,13 +334,17 @@ class DeepRLModel(ModelInterface):
         # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < BATCH_SIZE:
             return
+        
+        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+            return
+
+        if not self.learning_start:
+            self.learning_start = True
+            print("----LEARNING BEGINS----")
 
         batch = self.replay_buffer.sample(BATCH_SIZE)
         states, actions, next_states, rewards, dones = zip(*batch)
 
-        # states = [encode_agent_state(self, state) for state in states]
-        # next_states = [encode_agent_state(self, state)
-        #                for state in next_states]
         states = torch.Tensor(states).to(self.device)
         actions = torch.LongTensor(list(actions)).to(self.device)
 
@@ -335,7 +359,7 @@ class DeepRLModel(ModelInterface):
         currQ = self.model(states).gather(
             1, actions.unsqueeze(1))  # TODO: understand this
         nextQ = self.model(next_states)
-        max_nextQ = torch.max(nextQ, 1)[0]
+        max_nextQ = torch.max(nextQ, 1)[0].detach()
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
 
         loss = self.loss(currQ, expectedQ.unsqueeze(1))

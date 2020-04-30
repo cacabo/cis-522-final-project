@@ -5,12 +5,13 @@ import pygame
 # ------------------------------------------------------------------------------
 
 FULL_SCREEN = True
-SCREEN_WIDTH = 1440
+SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 AGENT_NAME_FONT = 'comicsans'
 AGENT_NAME_FONT_SIZE = 20
 NUM_DISPLAYED_ON_LEADERBOARD = 5
 CLOCK_TICK = 120
+ENABLE_LOGS = False
 
 # ------------------------------------------------------------------------------
 # Game settings
@@ -48,7 +49,7 @@ BLUE_COLOR = (0, 0, 255)
 
 MASS_DECAY_FACTOR = 0.9999
 ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
-AGENT_STARTING_MASS = 200
+AGENT_STARTING_MASS = 50
 MIN_MASS_TO_SHOOT = 50
 MASS_MASS = 20  # The mass which cells can shoot out
 MIN_CELL_MASS = 50
