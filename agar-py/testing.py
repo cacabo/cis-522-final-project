@@ -12,7 +12,7 @@ FRAME_SKIP = 4
 UPDATE_FREQ = 4
 TARGET_NET_SYNC_FREQ = 500
 MAX_EPISODES = 100
-MAX_STEPS_PER_EP = 500    # TODO: do we want this? does it make sense?
+MAX_STEPS_PER_EP = 500
 MEAN_REWARD_WINDOW = 10
 
 def train_deepcnn_model(adversary_models):
@@ -102,6 +102,7 @@ def train_deepcnn_model(adversary_models):
     plt.title("Mean Loss per Training Episode")
     plt.xlabel("episode")
     plt.ylabel("loss")
+    plt.savefig('training_loss_plot.png')
 
     plt.figure()
     plt.plot([i for i in range(MAX_EPISODES)], training_rewards, 'c-',
@@ -109,7 +110,8 @@ def train_deepcnn_model(adversary_models):
     plt.title("Reward per Training Episode")
     plt.xlabel("epsiode")
     plt.ylabel("reward")
+    plt.savefig('reward_plot.png')
 
-    plt.show()
+    #plt.show()
 
 train_deepcnn_model([])
