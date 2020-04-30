@@ -92,16 +92,17 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     fsutils.save_net_to_disk(cnn_model.net, model_name)
 
     # plot training loss and reward
+    eps_enumerated = [i for i in range(max_eps)]
     plt.figure()
-    plt.plot([i for i in range(MAX_EPISODES)], training_losses)
+    plt.plot(eps_enumerated, training_losses)
     plt.title("Mean Loss per Training Episode")
     plt.xlabel("episode")
     plt.ylabel("loss")
     plt.savefig(str(model_name) + 'training_loss_plot.png')
 
     plt.figure()
-    plt.plot([i for i in range(MAX_EPISODES)], training_rewards, 'c-',
-             [i for i in range(MAX_EPISODES)], mean_rewards, 'r-')
+    plt.plot(eps_enumerated, training_rewards, 'c-',
+             eps_enumerated, mean_rewards, 'r-')
     plt.title("Reward per Training Episode")
     plt.xlabel("epsiode")
     plt.ylabel("reward")
