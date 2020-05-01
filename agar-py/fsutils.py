@@ -19,8 +19,8 @@ def load_deep_cnn_from_device(cnn_model, filename, device):
     saved_buf = load_replay_buf_from_disk(filename + '_replay_buf')
 
     cnn_model.net = saved_net
-    cnn_model.target_net = deepcopy(cnn_model.net)
     cnn_model.replay_buffer = saved_buf
+    cnn_model.sync_target_net()
     return cnn_model
 
 

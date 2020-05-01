@@ -49,12 +49,6 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
     print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples! Beginning training...')
 
-    fs.save_replay_buf_to_disk(cnn_model.replay_buffer, 'test_fill_buf')
-    loaded_buf = fs.load_replay_buf_from_disk('test_fill_buf')
-
-    print(loaded_buf.equals(cnn_model.replay_buffer))
-    raise ValueError
-
     for ep in range(max_eps):
         env.reset(models)
         state = env.get_state()
@@ -133,8 +127,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(update_losses), ep_reward, mean_reward))
         print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
     
-    # save the model!
-    fs.save_net_to_disk(cnn_model.net, model_name)
+    # save the full model!
+    fs.save_deep_cnn_to_disk(cnn_model, model_name)
 
     # plot training loss and reward
     eps_enumerated = [i for i in range(max_eps)]
