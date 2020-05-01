@@ -11,12 +11,12 @@ REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
 
 def save_deep_cnn_to_disk(cnn_model, filename):
     save_net_to_disk(cnn_model.net, filename)
-    save_replay_buf_to_disk(cnn_model.replay_buffer, filename.rsplit('.', 1)[0] + '_replay_buf.dill')
+    save_replay_buf_to_disk(cnn_model.replay_buffer, filename + '_replay_buf')
 
 
 def load_deep_cnn_from_device(cnn_model, filename, device):
     saved_net = load_net_from_device(cnn_model.net, filename, device)
-    saved_buf = load_replay_buf_from_disk(filename.rsplit('.', 1)[0] + '_replay_buf.dill')
+    saved_buf = load_replay_buf_from_disk(filename + '_replay_buf')
 
     cnn_model.net = saved_net
     cnn_model.target_net = deepcopy(cnn_model.net)
