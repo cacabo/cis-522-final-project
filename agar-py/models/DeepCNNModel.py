@@ -147,6 +147,9 @@ class DeepCNNModel(ModelInterface):
                                  deepcopy(stacked_next_state), reward, done))
 
     def calculate_loss(self, batch):
+        # set net back to training mode for optimizing
+        self.net.train()
+
         states, actions, next_states, rewards, dones = zip(*batch)
 
         # convert actions from enum to ints
