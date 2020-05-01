@@ -31,6 +31,12 @@ def load_net_from_disk(net, filename):
     return net
 
 
+def load_net_from_device(net, filename, device):
+    checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
+    net.load_state_dict(checkpoint['net'])
+    return net
+
+
 def save_df_to_disk(df, fname):
     if not os.path.exists(DF_PATH):
         os.mkdir(DF_PATH)
