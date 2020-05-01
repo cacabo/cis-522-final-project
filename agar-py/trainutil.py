@@ -71,7 +71,10 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200):
         print("------EPISODE %s rewards------" % episode)
         for idx, model in enumerate(models):
             print("Model %s: %s" % (model.id, episode_rewards[idx]))
-
+        
+        if models[0].learning_start:
+            epsilon = models[0].decay_epsilon()
+            print("epsilon after decay: ", epsilon)
 
 def test_models(env, models, steps=2500, print_every=200):
     print("\nTEST MODE")
