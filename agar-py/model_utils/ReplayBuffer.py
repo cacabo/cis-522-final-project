@@ -24,3 +24,14 @@ class ReplayBuffer():
 
     def prefill_capacity(self):
         return len(self.buffer) / self.prefill_amt
+
+    def equals(self, other):
+        eq_capacities = self.capacity == other.capacity
+        eq_prefill_amts = self.prefill_amt == other.prefill_amt
+        eq_idxs = self.idx == other.idx
+
+        eq_bufs = True
+        for (self_i, other_i) in zip(self.buffer, other.buffer):
+            eq_bufs = eq_bufs and (self_i == other_i).all()
+
+        return eq_capacities and eq_prefill_amts and eq_idxs and eq_bufs

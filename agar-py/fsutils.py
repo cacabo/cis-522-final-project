@@ -6,6 +6,17 @@ ROOT = './store/'
 DF_PATH = ROOT + 'dfs/'
 NET_PATH = ROOT + 'nets/'
 REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
+REPLAY_BUF_FILE_EXTENSION
+
+
+def save_deep_cnn_to_disk(cnn_model, filename):
+    save_net_to_disk(cnn_model.net, filename)
+    save_replay_buf_to_disk(cnn_model.replay_buffer, filename + '_replay_buf')
+
+
+def load_deep_cnn_from_device(cnn_model, filename, device):
+    saved_net = load_net_from_device(cnn_model.net, filename, device)
+    saved_buf = load_replay_buf_from_disk(filename + '_')
 
 
 def save_net_to_disk(net, filename):

@@ -52,9 +52,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     fs.save_replay_buf_to_disk(cnn_model.replay_buffer, 'test_fill_buf')
     loaded_buf = fs.load_replay_buf_from_disk('test_fill_buf')
 
-    print(loaded_buf)
-    print(cnn_model.replay_buffer)
-    print(loaded_buf == cnn_model.replay_buffer)
+    print(loaded_buf.equals(cnn_model.replay_buf))
     raise ValueError
 
     for ep in range(max_eps):
