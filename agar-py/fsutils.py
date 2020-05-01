@@ -26,9 +26,7 @@ def load_net_from_disk(net, filename):
     device = 'cpu'
     if torch.cuda.is_available():
         device = 'gpu'
-    checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
-    net.load_state_dict(checkpoint['net'])
-    return net
+    return load_net_from_device(net, filename, device)
 
 
 def load_net_from_device(net, filename, device):
