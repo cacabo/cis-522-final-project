@@ -27,28 +27,30 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
     start_time = current_milli_time()
 
-    # burn in the replay buffer to fill it with some examples before starting to train
-    print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
-    env.reset(models)
-    pixels = env.get_pixels()
-    while cnn_model.replay_buffer.prefill_capacity() < 1.0:
-        cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
+    # if specified, burn in the replay buffer to fill it with some examples before starting to train
+    if cnn_model.replay_buffer.prefill_amt > 0:
+        print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
+        env.reset(models)
+        pixels = env.get_pixels()
+        while cnn_model.replay_buffer.prefill_capacity() < 1.0:
+            cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
 
-        actions = [get_random_action() for m in models]
-        rewards, dones = env.update_game_state(models, actions)
+            actions = [get_random_action() for m in models]
+            rewards, dones = env.update_game_state(models, actions)
 
-        next_pixels = env.get_pixels()
-        cnn_model.next_state_buffer.append(cnn_model.preprocess_state(pixels))
-        cnn_model.remember(pixels, actions[0], next_pixels, rewards[0], dones[0])
+            next_pixels = env.get_pixels()
+            cnn_model.next_state_buffer.append(cnn_model.preprocess_state(pixels))
+            cnn_model.remember(pixels, actions[0], next_pixels, rewards[0], dones[0])
 
-        if dones[0]:
-            env.reset(models)
-            pixels = env.get_pixels()
-        else:
-            pixels = next_pixels
+            if dones[0]:
+                env.reset(models)
+                pixels = env.get_pixels()
+            else:
+                pixels = next_pixels
 
-    print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples! Beginning training...')
+        print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples!')
 
+    print ('Beginning training...')
     for ep in range(max_eps):
         env.reset(models)
         state = env.get_state()
