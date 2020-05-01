@@ -47,8 +47,8 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 
 ### Up next
 
-- [ ] Add one more linear layer and make it normal sizes (Mak)
-- [ ] epsilon decay over episodes (mak)
+- [x] Add one more linear layer and make it normal sizes (Mak)
+- [x] epsilon decay over episodes (mak)
 - [ ] target net policy net (mak)
 - [ ] Have encode agent state return a tensor, look where it is used (Cam)
 - [ ] Remove time from state encoding, try radically simplifying things (Cam)

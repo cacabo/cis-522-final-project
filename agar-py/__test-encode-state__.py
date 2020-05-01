@@ -7,13 +7,16 @@ from agent import Agent
 from food import Food
 import config as conf
 
+
 """
 constants
 """
 
+
 agent_x = 200
 agent_y = 200
 offset = 50
+
 
 """
 testing helper functions
@@ -55,6 +58,7 @@ def assert_all_zero_except(arr, exceptIdx):
 get_avg_angles
 """
 
+
 angles = conf.ANGLES
 avg_angles = get_avg_angles(angles)
 
@@ -67,9 +71,11 @@ avg_angles = get_avg_angles(angles)
 assert len(angles) == len(avg_angles)
 assert avg_angles == [45, 135, 225, 315]
 
+
 """
 get_direction_score
 """
+
 
 game = GameState()
 model = DeepRLModel()
@@ -104,9 +110,11 @@ obj_dists = torch.Tensor([50, 100]).to(torch.float)
 new_score = get_direction_score(agent, obj_angles, obj_dists, 22.5, 67.5)
 assert new_score > score
 
+
 """
 get_obj_poses_tensor
 """
+
 
 food_right = get_food(offset, 0)
 food_up_right = get_food(offset, -offset)
@@ -151,9 +159,11 @@ assert_tensor_eq(t, [
     [food_down_right.x_pos, food_down_right.y_pos],
 ])
 
+
 """
 get_diff_tensor
 """
+
 
 t = get_diff_tensor(agent, [food_right])
 assert_shape(t, 1, 2)
@@ -172,9 +182,11 @@ assert_tensor_eq(t, [
     [offset, offset],
 ])
 
+
 """
 get_dists_tensor
 """
+
 
 t = get_diff_tensor(agent, [food_right])
 t = get_dists_tensor(t)
@@ -193,9 +205,11 @@ offset_diag = math.sqrt(2 * (offset ** 2))
 assert_tensor_eq(t, [offset, offset_diag, offset, offset_diag,
                      offset, offset_diag, offset, offset_diag])
 
+
 """
 get_filtered_angles_tensor
 """
+
 
 t = get_diff_tensor(agent, [food_right])
 t = get_filtered_angles_tensor(t)
@@ -212,11 +226,17 @@ t = get_filtered_angles_tensor(t)
 assert_shape(t, 4)
 assert_tensor_eq(t, [0, 90, 180, 270])
 
-# TODO continue
+t = get_diff_tensor(
+    agent, [food_up_right, food_up_left, food_down_left, food_down_right])
+t = get_filtered_angles_tensor(t)
+assert_shape(t, 4)
+assert_tensor_eq(t, [45, 135, 225, 315])
+
 
 """
 get_direction_score
 """
+
 
 # No objs -> no score
 objs = []
@@ -225,75 +245,58 @@ for score in scores:
     assert score == 0
 
 
-# scores = get_direction_scores(agent, [food_right])
-# assert scores[0] > 0
-# assert_all_zero_except(scores, 0)
+scores = get_direction_scores(agent, [food_right])
+assert scores[0] > 0
+assert_all_zero_except(scores, 0)
 
-# scores = get_direction_scores(agent, [food_up_right])
-# assert scores[1] > 0
-# assert_all_zero_except(scores, 1)
+scores = get_direction_scores(agent, [food_up_right])
+assert scores[1] > 0
+assert_all_zero_except(scores, 1)
 
-# scores = get_direction_scores(agent, [food_up])
-# assert scores[2] > 0
-# assert_all_zero_except(scores, 2)
+scores = get_direction_scores(agent, [food_up])
+assert scores[2] > 0
+assert_all_zero_except(scores, 2)
 
-# scores = get_direction_scores(agent, [food_up_left])
-# assert scores[3] > 0
-# assert_all_zero_except(scores, 3)
+scores = get_direction_scores(agent, [food_up_left])
+assert scores[3] > 0
+assert_all_zero_except(scores, 3)
 
-# scores = get_direction_scores(agent, [food_left])
-# assert scores[4] > 0
-# assert_all_zero_except(scores, 4)
+scores = get_direction_scores(agent, [food_left])
+assert scores[4] > 0
+assert_all_zero_except(scores, 4)
 
-# scores = get_direction_scores(agent, [food_down_left])
-# assert scores[5] > 0
-# assert_all_zero_except(scores, 5)
+scores = get_direction_scores(agent, [food_down_left])
+assert scores[5] > 0
+assert_all_zero_except(scores, 5)
 
-# scores = get_direction_scores(agent, [food_down])
-# assert scores[6] > 0
-# assert_all_zero_except(scores, 6)
+scores = get_direction_scores(agent, [food_down])
+assert scores[6] > 0
+assert_all_zero_except(scores, 6)
 
-# scores = get_direction_scores(agent, [food_down_right])
-# assert scores[7] > 0
-# assert_all_zero_except(scores, 7)
+scores = get_direction_scores(agent, [food_down_right])
+assert scores[7] > 0
+assert_all_zero_except(scores, 7)
 
-# One obj -> score in one direction
-# food = Food(agent_x + 50, agent_y - 50, food_r, conf.RED_COLOR)
-# objs = [food]
-# scores = get_direction_scores(agent, objs)
-# print(scores)
-# assert len(scores) == len(conf.ANGLES)
-# assert scores[1] > 0
-# assert scores[0] == 0
-# for i in range(2, len(conf.ANGLES)):
-#     assert scores[i] == 0
-
-# # TODO test other directions
-# food_left = Food(agent_x - 50, agent_y, food_r, conf.RED_COLOR)
-# objs = [food]
-# scores = get_direction_scores(agent, objs)
-# print(scores)
-# left_score = scores[4]
-# assert left_score > 0
 
 # Two objs in two directions -> two scores
-# food2 = Food(agent_x + 50, agent_y, food_r, conf.RED_COLOR)
-# objs = [food, food2]
-# scores = get_direction_scores(agent, objs)
-# assert len(scores) == len(conf.ANGLES)
-# assert scores[1] > 0
-# assert scores[0] > 0
-# assert scores[0] > scores[1]  # This food is closer -> score higher
-# for i in range(2, len(conf.ANGLES)):
-#     assert scores[i] == 0
+objs = [food_right, food_up_right]
+scores = get_direction_scores(agent, objs)
+assert len(scores) == len(conf.ANGLES)
+assert scores[0] > 0
+assert scores[1] > 0
+assert scores[0] > scores[1]  # This food is closer -> score higher
+for i in range(2, len(conf.ANGLES)):
+    assert scores[i] == 0
 
 # Two foods which are equidistant in different directions -> same score
-# food3 = Food(agent_x + 50, agent_y + 50, food_r, conf.RED_COLOR)
-# objs = [food, food3]
-# scores = get_direction_scores(agent, objs)
-# print(scores)
-# score1 = scores[1]
-# score2 = scores[-1]
-# assert score1 == score2
+scores = get_direction_scores(agent, [food_up_right, food_down_right])
+score1 = scores[1]
+score2 = scores[-1]
+assert score1 == score2
 
-# TODO test helper functions as well
+# Two objects -> twice the score
+scores = get_direction_scores(
+    agent, [food_up_right, food_up_right, food_down_right])
+score1 = scores[1]
+score2 = scores[-1]
+assert score1 == 2 * score2

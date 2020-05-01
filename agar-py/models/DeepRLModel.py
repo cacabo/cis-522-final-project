@@ -19,8 +19,9 @@ MIN_EPSILON = 0.001
 GAMMA = 0.99
 
 BATCH_SIZE = 128
+REPLAY_BUFFER_LEARN_THRESH = 0.5
 REPLAY_BUFFER_LENGTH = 15000
-STATE_ENCODING_LENGTH = 46
+STATE_ENCODING_LENGTH = 45
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -149,7 +150,7 @@ def get_direction_scores(agent, objs):
     diff_tensor = get_diff_tensor(agent, objs)
     dists_tensor = get_dists_tensor(diff_tensor)
 
-    filter_mask_tensor = dists_tensor <= max_dist & dists_tensor > 0
+    filter_mask_tensor = (dists_tensor <= max_dist) & (dists_tensor > 0)
     filter_mask_tensor = filter_mask_tensor.to(
         torch.bool)  # Ensure type is correct
     fitlered_dists_tensor = dists_tensor[filter_mask_tensor]
@@ -241,7 +242,6 @@ def encode_agent_state(model, state):
     food_state = get_direction_scores(agent, foods)
     virus_state = get_direction_scores(agent, viruses)
     mass_state = get_direction_scores(agent, masses)
-    time_state = [time]
 
     # Encode important attributes about this agent
     this_agent_state = [
@@ -258,7 +258,6 @@ def encode_agent_state(model, state):
         other_agent_state,
         virus_state,
         mass_state,
-        time_state,
     ))
 
     return encoded_state
@@ -272,24 +271,26 @@ class DQN(nn.Module):
 
         self.fc1 = nn.Linear(self.input_dim, 128)
         self.fc2 = nn.Linear(128, 128)
-        # self.fc3 = nn.Linear(2048, 2048)
-        self.fc3 = nn.Linear(128, output_dim)
+        self.fc3 = nn.Linear(128, 128)
+        self.fc4 = nn.Linear(128, output_dim)
 
         self.relu = nn.ReLU()
 
     def forward(self, state):
-        x = self.relu(self.fc1(state))
+        x = state
+        x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        qvals = self.fc3(x)
+        x = self.relu(self.fc3(x))
+        qvals = self.fc4(x)
         return qvals
 
 
 class DeepRLModel(ModelInterface):
-    def __init__(self):
+    def __init__(self, epsilon=EPSILON, min_epsilon=MIN_EPSILON, epsilon_decay=EPSILON_DECAY, buffer_capacity=REPLAY_BUFFER_LENGTH):
         super().__init__()
 
         # init replay buffer
-        self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_LENGTH)
+        self.replay_buffer = ReplayBuffer(capacity=buffer_capacity)
 
         # init model
         # TODO: fix w/ observation space
@@ -303,7 +304,9 @@ class DeepRLModel(ModelInterface):
             self.device = "cuda"
         self.model.to(self.device)
 
-        self.epsilon = EPSILON
+        self.epsilon = epsilon
+        self.min_epsilon = min_epsilon
+        self.epsilon_decay = epsilon_decay
         self.gamma = GAMMA
         self.done = False
 
@@ -324,7 +327,7 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return None
 
-        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
             return Action(np.random.randint(len(Action)))
             # if self.steps_remaining <= 0:
             #     self.steps_remaining = np.random.randint(
@@ -363,7 +366,7 @@ class DeepRLModel(ModelInterface):
         if len(self.replay_buffer) < BATCH_SIZE:
             return
 
-        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
             return
 
         if not self.learning_start:
@@ -396,7 +399,9 @@ class DeepRLModel(ModelInterface):
         loss.backward()
         self.optimizer.step()
 
+    def decay_epsilon(self):
         # decay epsilon
-        if self.epsilon != MIN_EPSILON:
-            self.epsilon *= EPSILON_DECAY
-            self.epsilon = max(MIN_EPSILON, self.epsilon)
+        if self.epsilon != self.min_epsilon:
+            self.epsilon *= self.epsilon_decay
+            self.epsilon = max(self.min_epsilon, self.epsilon)
+        return self.epsilon
