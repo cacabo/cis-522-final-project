@@ -32,6 +32,10 @@ class ReplayBuffer():
 
         eq_bufs = True
         for (self_i, other_i) in zip(self.buffer, other.buffer):
+            print(self_i)
+            print(other_i)
+            print(self_i.shape)
+            print(other_i.shape)
             eq_bufs = eq_bufs and (self_i == other_i).all()
 
         return eq_capacities and eq_prefill_amts and eq_idxs and eq_bufs
