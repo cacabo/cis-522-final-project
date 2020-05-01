@@ -2,7 +2,7 @@ from models.DeepCNNModel import DeepCNNModel
 from gamestate import GameState, start_ai_only_game
 import numpy as np
 from collections import deque
-import fsutils
+import fsutils as fs
 import time
 from utils import current_milli_time, get_random_action
 import torch
@@ -15,13 +15,19 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                         update_freq=4, target_net_sync_freq=500, max_eps=200,
                         max_steps_per_ep=500, mean_reward_window=10):
     env = GameState()
-    cnn_model.camera_follow = True              # ensure the CNN model is centered in window
+
+    # ensure the CNN model is centered in window
+    if not cnn_model.camera_follow:
+        raise ValueError("Camera needs to be following CNN")
+
     models = [cnn_model] + adversary_models
     training_losses = []
     training_rewards = []
     mean_rewards = []
 
     start_time = current_milli_time()
+
+    fs.save_replay_buf_to_disk(cnn_model.replay_buffer, 'test_buf')
 
     # burn in the replay buffer to fill it with some examples before starting to train
     print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
@@ -124,7 +130,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
     
     # save the model!
-    fsutils.save_net_to_disk(cnn_model.net, model_name)
+    fs.save_net_to_disk(cnn_model.net, model_name)
 
     # plot training loss and reward
     eps_enumerated = [i for i in range(max_eps)]

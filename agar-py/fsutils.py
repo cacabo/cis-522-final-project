@@ -1,9 +1,11 @@
 import torch
 import os
+import pickle
 
 ROOT = './store/'
 DF_PATH = ROOT + 'dfs/'
 NET_PATH = ROOT + 'nets/'
+REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
 
 
 def save_net_to_disk(net, filename):
@@ -33,6 +35,19 @@ def load_net_from_device(net, filename, device):
     checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
     net.load_state_dict(checkpoint['net'])
     return net
+
+
+def save_replay_buf_to_disk(buf, filename):
+    if not os.path.exists(REPLAY_BUF_PATH):
+        os.mkdir(REPLAY_BUF_PATH)
+    
+    with open(REPLAY_BUF_PATH + filename + '.dill', 'wb') as f:
+        pickle.dump(buf, f)
+
+
+def load_replay_buf_from_disk(buf, filename):
+    with open(REPLAY_BUF_PATH + filename + '.dill', 'rb') as f:
+        return pickle.load(f)
 
 
 def save_df_to_disk(df, fname):

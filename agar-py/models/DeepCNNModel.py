@@ -17,26 +17,16 @@ from skimage import transform
 import matplotlib.pyplot as plt
 
 # configurable hyperparameters
-TAU = 4
-REPLAY_BUF_CAPACITY = 10000
 BATCH_SIZE = 32
-DOWNSAMPLE_SIZE = (112, 112)
-N_ACTIONS = len(Action)
-LEARNING_RATE = 0.001
-GAMMA = 0.95
-START_EPSILON = 1.0
-END_EPSILON = 0.05
-DECAY_EP_WINDOW = 50
-PREFILL_AMT = REPLAY_BUF_CAPACITY * 0.1
 
 
 # CNN which takes in the game state as TODO and returns Q-values for each possible action
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, tau, downsample_size):
         super(CNN, self).__init__()
-        self.tau = TAU
-        self.input_dim = DOWNSAMPLE_SIZE
-        self.output_dim = N_ACTIONS
+        self.tau = tau
+        self.input_dim = downsample_size
+        self.output_dim = len(Action)
 
         self.convnet = nn.Sequential(
             nn.Conv2d(self.tau, 32, kernel_size=8, stride=1),
@@ -71,18 +61,22 @@ class CNN(nn.Module):
 
 # tau is the number of frames to stack to create one "state"
 class DeepCNNModel(ModelInterface):
-    def __init__(self, camera_follow):
+    def __init__(self, tau=4, gamma=0.95, eps_start=1.0, eps_end=0.05, eps_decay_window=50,
+                 replay_buf_capacity=10000, replay_buf_prefill_amt=1000, lr=0.001,
+                 downsample_size=(112, 112), batch_size=32, camera_follow=True):
         super(DeepCNNModel, self).__init__()
         self.camera_follow = camera_follow
-        self.tau = TAU
-        self.gamma = GAMMA
-        self.epsilon = START_EPSILON
-        self.end_epsilon = END_EPSILON
-        self.epsilon_decay_fac = get_epsilon_decay_factor(START_EPSILON, END_EPSILON, DECAY_EP_WINDOW)
-        self.replay_buffer = ReplayBuffer(REPLAY_BUF_CAPACITY, PREFILL_AMT)
+        self.downsample_size = downsample_size
+        self.batch_size = batch_size
+        self.tau = tau
+        self.gamma = gamma
+        self.epsilon = eps_start
+        self.end_epsilon = eps_end
+        self.epsilon_decay_fac = get_epsilon_decay_factor(eps_start, eps_end, eps_decay_window)
+        self.replay_buffer = ReplayBuffer(replay_buf_capacity, replay_buf_prefill_amt)
 
-        self.net = CNN()
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=LEARNING_RATE)
+        self.net = CNN(tau, downsample_size)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
         self.loss_fn = nn.MSELoss()
 
         self.device = 'cpu'
@@ -97,8 +91,8 @@ class DeepCNNModel(ModelInterface):
         self.state_buffer = deque(maxlen=self.tau)
         self.next_state_buffer = deque(maxlen=self.tau)
         for i in range(self.tau):
-            self.state_buffer.append(np.zeros(DOWNSAMPLE_SIZE))
-            self.next_state_buffer.append(np.zeros(DOWNSAMPLE_SIZE))
+            self.state_buffer.append(np.zeros(downsample_size))
+            self.next_state_buffer.append(np.zeros(downsample_size))
         
         # target network for more stable error
         self.target_net = deepcopy(self.net)
@@ -126,11 +120,11 @@ class DeepCNNModel(ModelInterface):
     def optimize(self):
         """Given reward received, optimize the model"""
         # wait for a full training batch before doing any optimizing
-        if len(self.replay_buffer) < BATCH_SIZE:
+        if len(self.replay_buffer) < self.batch_size:
             return
 
         self.optimizer.zero_grad()
-        batch = self.replay_buffer.sample(BATCH_SIZE)
+        batch = self.replay_buffer.sample(self.batch_size)
         loss = self.calculate_loss(batch)
         loss.backward()
         self.optimizer.step()
@@ -175,5 +169,5 @@ class DeepCNNModel(ModelInterface):
         # convert RGB to grayscale via relative luminance
         gray_state = np.dot(state[...,:3], [0.299, 0.587, 0.114])
         # size down the image to speed up training
-        resized_state = transform.resize(gray_state, DOWNSAMPLE_SIZE, mode='constant')
+        resized_state = transform.resize(gray_state, self.downsample_size, mode='constant')
         return resized_state
