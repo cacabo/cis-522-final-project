@@ -13,7 +13,7 @@ from trainutil import select_model_actions
 
 def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                         update_freq=4, target_net_sync_freq=500, max_eps=200,
-                        max_steps_per_ep=500, mean_reward_window=10):
+                        max_steps_per_ep=500, mean_reward_window=10, prefill_buffer=False):
     env = GameState()
 
     # ensure the CNN model is centered in window
@@ -28,7 +28,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     start_time = current_milli_time()
 
     # if specified, burn in the replay buffer to fill it with some examples before starting to train
-    if cnn_model.replay_buffer.prefill_amt > 0:
+    if prefill_buffer:
         print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
         env.reset(models)
         pixels = env.get_pixels()
@@ -49,6 +49,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                 pixels = next_pixels
 
         print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples!')
+    else:
+        print('Replay buffer prefill disabled.')
 
     print ('Beginning training...')
     for ep in range(max_eps):
