@@ -18,7 +18,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
     # ensure the CNN model is centered in window
     if not cnn_model.camera_follow:
-        raise ValueError("Camera needs to be following CNN")
+        raise ValueError('Camera needs to be following CNN')
 
     models = [cnn_model] + adversary_models
     training_losses = []
@@ -59,10 +59,10 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
         update_losses = []
         ep_reward = 0
-        print("=== Starting Episode %s ===" % ep)
+        print('=== Starting Episode %s ===' % ep)
         for step in range(max_steps_per_ep):
             if cnn_model.step_count % 250 == 0:
-                print("Step %s" % cnn_model.step_count)
+                print('Step %s' % cnn_model.step_count)
             # append current pixel state to buffer
             cnn_model.state_buffer.append(cnn_model.preprocess_state(pixels))
 
@@ -134,17 +134,17 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     eps_enumerated = [i for i in range(max_eps)]
     plt.figure()
     plt.plot(eps_enumerated, training_losses)
-    plt.title("Mean Loss per Training Episode")
-    plt.xlabel("episode")
-    plt.ylabel("loss")
-    plt.savefig(str(model_name) + '_training_loss_plot.png')
+    plt.title('Mean Loss per Training Episode')
+    plt.xlabel('episode')
+    plt.ylabel('loss')
+    plt.savefig('plots/' + str(model_name) + '_training_loss_plot.png')
 
     plt.figure()
     plt.plot(eps_enumerated, training_rewards, 'c-',
              eps_enumerated, mean_rewards, 'r-')
-    plt.title("Reward per Training Episode")
-    plt.xlabel("epsiode")
-    plt.ylabel("reward")
-    plt.savefig(str(model_name) + '_reward_plot.png')
+    plt.title('Reward per Training Episode')
+    plt.xlabel('epsiode')
+    plt.ylabel('reward')
+    plt.savefig('plots/' + str(model_name) + '_reward_plot.png')
 
     plt.show()
