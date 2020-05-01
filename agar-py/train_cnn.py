@@ -27,8 +27,6 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
     start_time = current_milli_time()
 
-    fs.save_replay_buf_to_disk(cnn_model.replay_buffer, 'test_buf')
-
     # burn in the replay buffer to fill it with some examples before starting to train
     print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
     env.reset(models)
@@ -50,6 +48,14 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
             pixels = next_pixels
 
     print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples! Beginning training...')
+
+    fs.save_replay_buf_to_disk(cnn_model.replay_buffer, 'test_fill_buf')
+    loaded_buf = fs.load_replay_buf_from_disk('test_fill_buf')
+
+    print(loaded_buf)
+    print(cnn_model.replay_buffer)
+    print(loaded_buf == cnn_model.replay_buffer)
+    raise ValueError
 
     for ep in range(max_eps):
         env.reset(models)

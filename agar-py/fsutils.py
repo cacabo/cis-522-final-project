@@ -45,7 +45,7 @@ def save_replay_buf_to_disk(buf, filename):
         pickle.dump(buf, f)
 
 
-def load_replay_buf_from_disk(buf, filename):
+def load_replay_buf_from_disk(filename):
     with open(REPLAY_BUF_PATH + filename + '.dill', 'rb') as f:
         return pickle.load(f)
 
