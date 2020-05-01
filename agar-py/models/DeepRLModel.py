@@ -19,8 +19,9 @@ MIN_EPSILON = 0.001
 GAMMA = 0.99
 
 BATCH_SIZE = 128
+REPLAY_BUFFER_LEARN_THRESH = 0.5
 REPLAY_BUFFER_LENGTH = 15000
-STATE_ENCODING_LENGTH = 46
+STATE_ENCODING_LENGTH = 45
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -241,7 +242,6 @@ def encode_agent_state(model, state):
     food_state = get_direction_scores(agent, foods)
     virus_state = get_direction_scores(agent, viruses)
     mass_state = get_direction_scores(agent, masses)
-    time_state = [time]
 
     # Encode important attributes about this agent
     this_agent_state = [
@@ -258,7 +258,6 @@ def encode_agent_state(model, state):
         other_agent_state,
         virus_state,
         mass_state,
-        time_state,
     ))
 
     return encoded_state
@@ -278,7 +277,8 @@ class DQN(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, state):
-        x = self.relu(self.fc1(state))
+        x = state
+        x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
         x = self.relu(self.fc3(x))
         qvals = self.fc4(x)
@@ -327,7 +327,7 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return None
 
-        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
             return Action(np.random.randint(len(Action)))
             # if self.steps_remaining <= 0:
             #     self.steps_remaining = np.random.randint(
@@ -366,7 +366,7 @@ class DeepRLModel(ModelInterface):
         if len(self.replay_buffer) < BATCH_SIZE:
             return
 
-        if len(self.replay_buffer) < 0.3 * self.replay_buffer.capacity:
+        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
             return
 
         if not self.learning_start:
@@ -398,7 +398,7 @@ class DeepRLModel(ModelInterface):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-    
+
     def decay_epsilon(self):
         # decay epsilon
         if self.epsilon != self.min_epsilon:
