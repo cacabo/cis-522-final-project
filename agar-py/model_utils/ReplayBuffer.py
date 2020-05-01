@@ -31,11 +31,13 @@ class ReplayBuffer():
         eq_idxs = self.idx == other.idx
 
         eq_bufs = True
-        for (self_i, other_i) in zip(self.buffer, other.buffer):
-            print(self_i)
-            print(other_i)
-            print(self_i.shape)
-            print(other_i.shape)
-            eq_bufs = eq_bufs and (self_i == other_i).all()
+        for ((self_s0, self_act, self_s1, self_reward, self_done), (other_s0, other_act, other_s1, other_reward, other_done)) in zip(self.buffer, other.buffer):
+            eq_s0s = (self_s0 == other_s0).all()
+            eq_act = self_act == other_act
+            eq_s1s = (self_s1 == other_s1).all()
+            eq_rewards = self_reward == other_reward
+            eq_done = self_done == other_done
+            
+            eq_bufs = eq_bufs and eq_s0s and eq_act and eq_s1s and eq_rewards and eq_done
 
         return eq_capacities and eq_prefill_amts and eq_idxs and eq_bufs
