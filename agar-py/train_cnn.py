@@ -5,6 +5,7 @@ from collections import deque
 import fsutils
 import time
 from utils import current_milli_time, get_random_action
+import torch
 
 import matplotlib.pyplot as plt
 
