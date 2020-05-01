@@ -63,9 +63,10 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
             # only update the current action every FRAME_SKIP frames of the game
             if step % frame_skip == 0:
-                # stack last tau frames to get CNN action based on them
-                s_0 = np.stack([cnn_model.state_buffer])
-                action = cnn_model.get_stacked_action(s_0)
+                with torch.no_grad():
+                    # stack last tau frames to get CNN action based on them
+                    s_0 = np.stack([cnn_model.state_buffer])
+                    action = cnn_model.get_stacked_action(s_0)
 
             cnn_model.step_count += 1
 
