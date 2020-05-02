@@ -6,7 +6,7 @@ from copy import deepcopy
 ROOT = './store/'
 DF_PATH = ROOT + 'dfs/'
 NET_PATH = ROOT + 'nets/'
-REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
+REPLAY_BUF_PATH = '/tmp/replay_bufs/'
 
 
 def save_deep_cnn_to_disk(cnn_model, filename):
