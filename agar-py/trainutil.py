@@ -5,9 +5,32 @@ import utils
 import config as conf
 from functools import reduce
 import math
+import matplotlib.pyplot as plt
+
+def plot_training_episode_avg_loss(training_losses, model_name):
+    x_vals = [i for i in range(len(training_losses))]
+    plt.figure()
+    plt.plot(x_vals, training_losses)
+    plt.title('Mean Loss per Training Episode')
+    plt.xlabel('episode')
+    plt.ylabel('loss')
+    plt.savefig('plots/' + str(model_name) + '_training_loss_plot.png')
+
+
+def plot_episode_rewards_and_mean(epsiode_rewards, mean_rewards, model_name):
+    x_vals = [i for i in range(len(episode_rewards))]
+    plt.figure()
+    plt.plot(x_vals, episode_rewards, 'c-',
+             x_vals, mean_rewards, 'r-')
+    plt.title('Reward per Training Episode')
+    plt.xlabel('epsiode')
+    plt.ylabel('reward')
+    plt.savefig('plots/' + str(model_name) + '_reward_plot.png')
+
 
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
   return math.exp(math.log(e_min / e_max) / e_decay_window)
+
 
 def select_model_actions(models, state):
     model_actions = []

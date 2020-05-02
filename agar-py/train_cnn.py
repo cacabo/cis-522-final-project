@@ -135,20 +135,6 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     fs.save_deep_cnn_to_disk(cnn_model, model_name)
 
     # plot training loss and reward
-    eps_enumerated = [i for i in range(max_eps)]
-    plt.figure()
-    plt.plot(eps_enumerated, training_losses)
-    plt.title('Mean Loss per Training Episode')
-    plt.xlabel('episode')
-    plt.ylabel('loss')
-    plt.savefig('plots/' + str(model_name) + '_training_loss_plot.png')
-
-    plt.figure()
-    plt.plot(eps_enumerated, training_rewards, 'c-',
-             eps_enumerated, mean_rewards, 'r-')
-    plt.title('Reward per Training Episode')
-    plt.xlabel('epsiode')
-    plt.ylabel('reward')
-    plt.savefig('plots/' + str(model_name) + '_reward_plot.png')
-
+    plot_training_episode_avg_loss(training_losses, model_name)
+    plot_episode_rewards_and_mean(training_rewards, mean_rewards, model_name)
     plt.show()
