@@ -96,15 +96,21 @@ class DeepCNNModel(ModelInterface):
         
         # target network for more stable error
         self.target_net = deepcopy(self.net)
+        
+        self.eval_last_action = None
+        self.eval_last_action_time = 0
 
     def get_action(self, state):
         """Used when playing the actual game"""
-        pp_state = self.preprocess_state(state)
-        self.state_buffer.append(pp_state)
-        stacked_state = np.stack([self.state_buffer])
-        q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
-        action_idx = torch.argmax(q_vals).item()
-        return Action(action_idx)
+        # make sure we keep the previously selected action for 4 frames
+        if self.eval_last_action_time % 4 == 0:
+            pp_state = self.preprocess_state(state)
+            self.state_buffer.append(pp_state)
+            stacked_state = np.stack([self.state_buffer])
+            q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
+            action_idx = torch.argmax(q_vals).item()
+            self.eval_last_action = Action(action_idx)
+        return self.eval_last_action
 
     def get_stacked_action(self, stacked_state):
         """Given the current (stacked) game state, determine what action the model will output"""
