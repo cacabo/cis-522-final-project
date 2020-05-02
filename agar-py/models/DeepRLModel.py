@@ -21,7 +21,7 @@ GAMMA = 0.99
 BATCH_SIZE = 128
 REPLAY_BUFFER_LEARN_THRESH = 0.5
 REPLAY_BUFFER_LENGTH = 15000
-STATE_ENCODING_LENGTH = 45
+STATE_ENCODING_LENGTH = 37
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -241,7 +241,7 @@ def encode_agent_state(model, state):
         (larger_agent_state, smaller_agent_state))
     food_state = get_direction_scores(agent, foods)
     virus_state = get_direction_scores(agent, viruses)
-    mass_state = get_direction_scores(agent, masses)
+    # mass_state = get_direction_scores(agent, masses)
 
     # Encode important attributes about this agent
     this_agent_state = [
@@ -257,7 +257,7 @@ def encode_agent_state(model, state):
         this_agent_state,
         other_agent_state,
         virus_state,
-        mass_state,
+        # mass_state,
     ))
 
     return encoded_state
