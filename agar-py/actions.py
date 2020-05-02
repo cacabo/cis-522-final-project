@@ -12,3 +12,4 @@ class Action(Enum):
     MOVE_DOWN_LEFT = 5
     MOVE_DOWN = 6
     MOVE_DOWN_RIGHT = 7
+    SPLIT = 8

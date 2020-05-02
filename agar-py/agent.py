@@ -273,6 +273,8 @@ class Agent():
             self.angle = 270
         elif action == Action.MOVE_DOWN_RIGHT:
             self.angle = 315
+        elif action == Action.SPLIT:
+            self.handle_split()
         else:
             raise ValueError('Agent received bad action in do_action()')
 
