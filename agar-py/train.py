@@ -7,23 +7,63 @@ import random
 import fsutils as fs
 import sys
 
+"""
+Constants
+"""
 
-def train(episodes=1, steps=500):
+PRINT_EVERY = 1000
+
+"""
+Hyperparameters
+"""
+
+START_EPSILON = 1.0  # NOTE this is the starting value, which decays over time
+MIN_EPSILON = 0.001
+DECAY_EPISODE_WINDOW = 150
+
+GAMMA = 0.99
+BATCH_SIZE = 128
+
+REPLAY_BUFFER_LEARN_THRESH = 0.1
+REPLAY_BUFFER_CAPACITY = 10000
+
+EPISODES = 200
+STEPS_PER_EPISODE = 500
+
+# TODO learning rate
+
+
+def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
+    """
+    Training loop for training the DeepRLModel
+    """
     print("Running Train | Episodes: {} | Steps: {}".format(episodes, steps))
 
     # Define environment
     env = GameState()
 
-    epsilon_decay = get_epsilon_decay_factor(0.99, 0.01, episodes)
-    print("Epsilon decay: ", epsilon_decay)
-    deep_rl_model = DeepRLModel(epsilon=0.99, min_epsilon=0.01, epsilon_decay=epsilon_decay, buffer_capacity=1000)
+    epsilon_decay = get_epsilon_decay_factor(
+        START_EPSILON, MIN_EPSILON, DECAY_EPISODE_WINDOW)
+    deep_rl_model = DeepRLModel(
+        epsilon=START_EPSILON,
+        min_epsilon=MIN_EPSILON,
+        epsilon_decay=epsilon_decay,
+        buffer_capacity=REPLAY_BUFFER_CAPACITY,
+        replay_buffer_learn_thresh=REPLAY_BUFFER_LEARN_THRESH,
+        gamma=GAMMA,
+        batch_size=BATCH_SIZE,
+    )
+
+    models = [deep_rl_model]
+
     # heuristic_model = HeuristicModel()
-    rand_model_1 = RandomModel(min_steps=5, max_steps=10)
-    rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+    # rand_model_1 = RandomModel(min_steps=5, max_steps=10)
+    # rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-    models = [deep_rl_model, rand_model_1, rand_model_2]
+    # models = [deep_rl_model, rand_model_1, rand_model_2]
 
-    train_models(env, models, episodes=episodes, steps=steps)
+    train_models(env, models, episodes=episodes,
+                 steps=steps, print_every=PRINT_EVERY)
     test_models(env, models, steps=steps)
     fs.save_net_to_disk(deep_rl_model.model,
                         "deep-rl-temp-{}".format(random.uniform(0, 2 ** 16)))

@@ -11,17 +11,7 @@ from actions import Action
 import config as conf
 import utils
 
-# Exploration (this could be moved to the agent instead though)
-EPSILON = 0.99  # NOTE this is the starting value, which decays over time
-EPSILON_DECAY = 0.9999
-MIN_EPSILON = 0.001
-
-GAMMA = 0.99
-
-BATCH_SIZE = 128
-REPLAY_BUFFER_LEARN_THRESH = 0.5
-REPLAY_BUFFER_LENGTH = 15000
-STATE_ENCODING_LENGTH = 37
+STATE_ENCODING_LENGTH = 45 - 8 - 16
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -237,8 +227,8 @@ def encode_agent_state(model, state):
     larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
     smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
 
-    other_agent_state = np.concatenate(
-        (larger_agent_state, smaller_agent_state))
+    # other_agent_state = np.concatenate(
+    #     (larger_agent_state, smaller_agent_state))
     food_state = get_direction_scores(agent, foods)
     virus_state = get_direction_scores(agent, viruses)
     # mass_state = get_direction_scores(agent, masses)
@@ -255,7 +245,7 @@ def encode_agent_state(model, state):
     encoded_state = np.concatenate((
         food_state,
         this_agent_state,
-        other_agent_state,
+        # other_agent_state,
         virus_state,
         # mass_state,
     ))
@@ -286,11 +276,24 @@ class DQN(nn.Module):
 
 
 class DeepRLModel(ModelInterface):
-    def __init__(self, epsilon=EPSILON, min_epsilon=MIN_EPSILON, epsilon_decay=EPSILON_DECAY, buffer_capacity=REPLAY_BUFFER_LENGTH):
+    def __init__(
+            self,
+            epsilon=1,
+            min_epsilon=0.01,
+            epsilon_decay=0.999,
+            buffer_capacity=1000,
+            gamma=0.9,
+            batch_size=64,
+            replay_buffer_learn_thresh=0.5):
         super().__init__()
 
         # init replay buffer
         self.replay_buffer = ReplayBuffer(capacity=buffer_capacity)
+        self.replay_buffer_learn_thresh = replay_buffer_learn_thresh
+
+        # Before we start learning, we populate the replay buffer with states
+        # derived from taking random actions
+        self.learning_start = False
 
         # init model
         # TODO: fix w/ observation space
@@ -307,15 +310,17 @@ class DeepRLModel(ModelInterface):
         self.epsilon = epsilon
         self.min_epsilon = min_epsilon
         self.epsilon_decay = epsilon_decay
-        self.gamma = GAMMA
+        self.gamma = gamma
+        self.batch_size = batch_size
         self.done = False
-
-        self.learning_start = False
 
         self.min_steps = 5
         self.max_steps = 10
         self.steps_remaining = 0
         self.curr_action = None
+
+    def is_replay_buffer_ready(self):
+        return len(self.replay_buffer) >= self.replay_buffer_learn_thresh * self.replay_buffer.capacity
 
     def get_action(self, state):
         if self.eval:
@@ -327,7 +332,7 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return None
 
-        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
+        if not self.is_replay_buffer_ready():
             return Action(np.random.randint(len(Action)))
             # if self.steps_remaining <= 0:
             #     self.steps_remaining = np.random.randint(
@@ -363,17 +368,18 @@ class DeepRLModel(ModelInterface):
             return
 
         # TODO: could toggle batch_size to be diff from minibatch below
-        if len(self.replay_buffer) < BATCH_SIZE:
+        if len(self.replay_buffer) < self.batch_size:
             return
 
-        if len(self.replay_buffer) < REPLAY_BUFFER_LEARN_THRESH * self.replay_buffer.capacity:
+        if not self.is_replay_buffer_ready():
             return
 
         if not self.learning_start:
+            # Stop taking only random actions
             self.learning_start = True
             print("----LEARNING BEGINS----")
 
-        batch = self.replay_buffer.sample(BATCH_SIZE)
+        batch = self.replay_buffer.sample(self.batch_size)
         states, actions, next_states, rewards, dones = zip(*batch)
 
         states = torch.Tensor(states).to(self.device)
@@ -382,13 +388,12 @@ class DeepRLModel(ModelInterface):
         rewards = torch.Tensor(list(rewards)).to(self.device)
         next_states = torch.Tensor(next_states).to(self.device)
 
-        # what about these/considering terminating states TODO: mask, properly update the eqns
+        # what about these/considering terminating states
         dones = torch.Tensor(list(dones)).to(self.device)
 
         # do Q computation
-        # TODO: understand the equations
         currQ = self.model(states).gather(
-            1, actions.unsqueeze(1))  # TODO: understand this
+            1, actions.unsqueeze(1))
         nextQ = self.model(next_states)
         max_nextQ = torch.max(nextQ, 1)[0].detach()
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
@@ -404,4 +409,5 @@ class DeepRLModel(ModelInterface):
         if self.epsilon != self.min_epsilon:
             self.epsilon *= self.epsilon_decay
             self.epsilon = max(self.min_epsilon, self.epsilon)
+
         return self.epsilon

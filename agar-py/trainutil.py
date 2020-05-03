@@ -6,8 +6,10 @@ import config as conf
 from functools import reduce
 import math
 
+
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
-  return math.exp(math.log(e_min / e_max) / e_decay_window)
+    return math.exp(math.log(e_min / e_max) / e_decay_window)
+
 
 def select_model_actions(models, state):
     model_actions = []
@@ -58,23 +60,24 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200):
             if dones[0]:
                 break
             # terminate if all other players are dead
-            if (len(dones) > 1): 
+            if (len(dones) > 1):
                 if reduce(and_, dones[1:]):
                     break
 
             state = next_state  # update the state
 
-            if step % print_every == 0:
+            if step % print_every == 0 and step != 0:
                 print("----STEP %s rewards----" % step)
                 for idx, model in enumerate(models):
                     print("Model %s: %s" % (model.id, episode_rewards[idx]))
         print("------EPISODE %s rewards------" % episode)
         for idx, model in enumerate(models):
             print("Model %s: %s" % (model.id, episode_rewards[idx]))
-        
+
         if models[0].learning_start:
             epsilon = models[0].decay_epsilon()
             print("epsilon after decay: ", epsilon)
+
 
 def test_models(env, models, steps=2500, print_every=200):
     print("\nTEST MODE")
