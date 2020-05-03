@@ -11,7 +11,7 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 45 - 8 - 16
+STATE_ENCODING_LENGTH = 45 - 8 - 16 - 8 - 4
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -236,17 +236,17 @@ def encode_agent_state(model, state):
     # Encode important attributes about this agent
     this_agent_state = [
         agent_mass,
-        len(agent.cells),
-        agent.get_avg_x_pos(),
-        agent.get_avg_y_pos(),
-        agent.get_stdev_mass(),
+        # len(agent.cells),
+        # agent.get_avg_x_pos(),
+        # agent.get_avg_y_pos(),
+        # agent.get_stdev_mass(),
     ]
 
     encoded_state = np.concatenate((
         this_agent_state,
         food_state,
         # other_agent_state,
-        virus_state,
+        # virus_state,
         # mass_state,
     ))
 
