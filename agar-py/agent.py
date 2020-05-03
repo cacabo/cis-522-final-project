@@ -39,8 +39,6 @@ class AgentCell():
         else:
             self.radius = utils.mass_to_radius(mass)
 
-        print(self.mass, self.radius)
-
     def get_velocity(self):
         # return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
         if self.mass > 0:

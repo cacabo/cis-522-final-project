@@ -215,6 +215,28 @@ def get_action_closest_to_angle(angle):
         return Action.MOVE_RIGHT
 
 
+def get_action_farthest_from_angle(angle):
+    half_angle = 45 / 2
+    if angle <= (45 - half_angle):
+        return Action.MOVE_LEFT
+    elif angle <= (90 - half_angle):
+        return Action.MOVE_DOWN_LEFT
+    elif angle <= (135 - half_angle):
+        return Action.MOVE_DOWN
+    elif angle <= (180 - half_angle):
+        return Action.MOVE_DOWN_RIGHT
+    elif angle <= (225 - half_angle):
+        return Action.MOVE_RIGHT
+    elif angle <= (270 - half_angle):
+        return Action.MOVE_UP_RIGHT
+    elif angle <= (315 - half_angle):
+        return Action.MOVE_UP
+    elif angle <= (360 - half_angle):
+        return Action.MOVE_UP_LEFT
+    else:
+        return Action.MOVE_LEFT
+
+
 def get_random_action():
     return Action(np.random.randint(len(Action)))
 
