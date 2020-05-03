@@ -368,9 +368,6 @@ class GameState():
 
         return rewards, dones
 
-        # TODO: go through rewards to see if anyone died and if so, add "done"
-        # return [0 for model in models], [False for model in models]
-
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
     # ------------------------------------------------------------------------------

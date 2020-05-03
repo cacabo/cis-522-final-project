@@ -243,8 +243,8 @@ def encode_agent_state(model, state):
     ]
 
     encoded_state = np.concatenate((
-        food_state,
         this_agent_state,
+        food_state,
         # other_agent_state,
         virus_state,
         # mass_state,
