@@ -420,7 +420,7 @@ class Agent():
     def handle_merge(self):
         # TODO merge with actual sibling cell if possible, not just arbitrary index?
         # TODO normally this should only happen if the user moves cells near each other
-        if len(self.cells) < 2:
+        if len(self.cells) <= 1:
             return
 
         curr_time = self.game.get_time()
