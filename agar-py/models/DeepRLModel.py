@@ -11,7 +11,7 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 45 - 8 - 16
+STATE_ENCODING_LENGTH = 45 - 8 - 16 - 8 - 4
 
 # Anything further than max_dist will (likely, unless very large) be outside
 # of the agent's field of view
@@ -236,17 +236,17 @@ def encode_agent_state(model, state):
     # Encode important attributes about this agent
     this_agent_state = [
         agent_mass,
-        len(agent.cells),
-        agent.get_avg_x_pos(),
-        agent.get_avg_y_pos(),
-        agent.get_stdev_mass(),
+        # len(agent.cells),
+        # agent.get_avg_x_pos(),
+        # agent.get_avg_y_pos(),
+        # agent.get_stdev_mass(),
     ]
 
     encoded_state = np.concatenate((
-        food_state,
         this_agent_state,
+        food_state,
         # other_agent_state,
-        virus_state,
+        # virus_state,
         # mass_state,
     ))
 
@@ -307,6 +307,11 @@ class DeepRLModel(ModelInterface):
             self.device = "cuda"
         self.model.to(self.device)
 
+        #target net
+        self.target_net = DQN(STATE_ENCODING_LENGTH, len(Action)).to(self.device)
+        self.target_net.load_state_dict(self.model.state_dict())
+        self.target_net.eval()
+
         self.epsilon = epsilon
         self.min_epsilon = min_epsilon
         self.epsilon_decay = epsilon_decay
@@ -324,11 +329,12 @@ class DeepRLModel(ModelInterface):
 
     def get_action(self, state):
         if self.eval:
-            state = encode_agent_state(self, state)
-            state = torch.Tensor(state)
-            q_values = self.model(state)
-            action = torch.argmax(q_values).item()
-            return Action(action)
+            with torch.no_grad():
+                state = encode_agent_state(self, state)
+                state = torch.Tensor(state)
+                q_values = self.model(state)
+                action = torch.argmax(q_values).item()
+                return Action(action)
         if self.done:
             return None
 
@@ -344,11 +350,12 @@ class DeepRLModel(ModelInterface):
 
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
-            state = encode_agent_state(self, state)
-            state = torch.Tensor(state).to(self.device)
-            q_values = self.model(state)
-            action = torch.argmax(q_values).item()
-            action = Action(action)
+            with torch.no_grad():
+                state = encode_agent_state(self, state)
+                state = torch.Tensor(state).to(self.device)
+                q_values = self.model(state)
+                action = torch.argmax(q_values).item()
+                action = Action(action)
         else:
             # take a random action
             action = Action(np.random.randint(len(Action)))  # random action
@@ -394,7 +401,7 @@ class DeepRLModel(ModelInterface):
         # do Q computation
         currQ = self.model(states).gather(
             1, actions.unsqueeze(1))
-        nextQ = self.model(next_states)
+        nextQ = self.target_net(next_states)
         max_nextQ = torch.max(nextQ, 1)[0].detach()
         expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
 
@@ -413,3 +420,6 @@ class DeepRLModel(ModelInterface):
             self.epsilon = max(self.min_epsilon, self.epsilon)
 
         return self.epsilon
+
+    def sync_target_net(self):
+        self.target_net.load_state_dict(self.model.state_dict())

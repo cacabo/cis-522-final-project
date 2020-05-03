@@ -50,7 +50,7 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_reward_window=10):
+def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_reward_window=10, target_update=10):
     print("\nTRAIN MODE")
 
     training_losses = []
@@ -113,6 +113,10 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
         if model.learning_start:
             epsilon = models[0].decay_epsilon()
             # print("epsilon after decay: ", epsilon)
+
+        #sync target net with policy
+        if episode % target_update == 0:
+            model.sync_target_net()
 
         training_losses.append(np.mean(episode_loss))
         training_rewards.append(episode_rewards[0])
