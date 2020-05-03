@@ -39,6 +39,8 @@ class AgentCell():
         else:
             self.radius = utils.mass_to_radius(mass)
 
+        print(self.mass, self.radius)
+
     def get_velocity(self):
         # return int(max(conf.AGENT_STARTING_SPEED - (self.mass * 0.05), 1))
         if self.mass > 0:
@@ -273,6 +275,8 @@ class Agent():
             self.angle = 270
         elif action == Action.MOVE_DOWN_RIGHT:
             self.angle = 315
+        # elif action == Action.SPLIT:
+        #     self.handle_split()
         else:
             raise ValueError('Agent received bad action in do_action()')
 
@@ -418,7 +422,7 @@ class Agent():
     def handle_merge(self):
         # TODO merge with actual sibling cell if possible, not just arbitrary index?
         # TODO normally this should only happen if the user moves cells near each other
-        if len(self.cells) < 2:
+        if len(self.cells) <= 1:
             return
 
         curr_time = self.game.get_time()
