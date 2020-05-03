@@ -404,6 +404,8 @@ class DeepRLModel(ModelInterface):
         loss.backward()
         self.optimizer.step()
 
+        return loss.item()
+
     def decay_epsilon(self):
         # decay epsilon
         if self.epsilon != self.min_epsilon:
