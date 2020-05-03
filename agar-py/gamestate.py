@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+import random
 
 import config as conf
 import utils
@@ -398,7 +399,13 @@ class GameState():
                              agent.get_avg_radius())
 
     def init_manual_agent(self, name):
-        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+        # starting mass is either random in certain range or fixed
+        if conf.ENABLE_RANDOM_MASS_INIT:
+            mass = random.randint(conf.RANDOM_MASS_INIT_LO, conf.RANDOM_MASS_INIT_HI)
+        else:
+            mass = conf.AGENT_STARTING_MASS
+
+        radius = utils.mass_to_radius(mass)
         pos = utils.gen_random_position(radius)
         player = Agent(
             self,
@@ -406,7 +413,7 @@ class GameState():
             pos[0],
             pos[1],
             radius,
-            mass=conf.AGENT_STARTING_MASS,
+            mass=mass,
             color=conf.GREEN_COLOR,
             name=name,
             manual_control=True,
@@ -430,8 +437,14 @@ class GameState():
         if name == None:
             name = 'Agent' + str(GameState.ID_counter)
             GameState.ID_counter += 1
+        
+        # starting mass is either random in certain range or fixed
+        if conf.ENABLE_RANDOM_MASS_INIT:
+            mass = random.randint(conf.RANDOM_MASS_INIT_LO, conf.RANDOM_MASS_INIT_HI)
+        else:
+            mass = conf.AGENT_STARTING_MASS
 
-        radius = utils.mass_to_radius(conf.AGENT_STARTING_MASS)
+        radius = utils.mass_to_radius(mass)
         pos = utils.gen_random_position(radius)
         ai_agent = Agent(
             self,
@@ -439,7 +452,7 @@ class GameState():
             pos[0],
             pos[1],
             radius,
-            mass=conf.AGENT_STARTING_MASS,
+            mass=mass,
             color=conf.BLUE_COLOR,
             name=name,
             manual_control=False,
