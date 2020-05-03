@@ -112,7 +112,7 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
         # decay epsilon
         if model.learning_start:
             epsilon = models[0].decay_epsilon()
-            print("epsilon after decay: ", epsilon)
+            # print("epsilon after decay: ", epsilon)
 
         training_losses.append(np.mean(episode_loss))
         training_rewards.append(episode_rewards[0])
