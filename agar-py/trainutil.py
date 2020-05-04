@@ -70,12 +70,11 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_reward_window=10, target_update=10):
+def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_window=10, target_update=10):
     print("\nTRAIN MODE")
 
     training_losses = []
     training_rewards = []
-    mean_rewards = []
 
     model = models[0]
     
@@ -140,13 +139,12 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
 
         training_losses.append(np.mean(episode_loss))
         training_rewards.append(episode_rewards[0])
-        mean_reward = np.mean(training_rewards[-mean_reward_window:])
-        mean_rewards.append(mean_reward)
 
-        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(episode_loss), episode_rewards[0], mean_reward))
+        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(
+            np.mean(episode_loss), episode_rewards[0], np.mean(training_rewards[-mean_window:])))
 
-    plot_training_episode_avg_loss(training_losses, model_name)
-    plot_episode_rewards_and_mean(training_rewards, mean_rewards, model_name)
+    plot_episode_avg_train_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_rewards(training_rewards, model_name, plot_mean=True, window_size=mean_window)
     plt.show()
 
 def test_models(env, models, steps=2500, print_every=200):
