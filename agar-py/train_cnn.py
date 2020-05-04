@@ -142,7 +142,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         mean_rewards.append(mean_reward)
         mean_steps_survived.append(mean_steps)
 
-        print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {:%4i} | Mean Steps Survived: {:.4f}'.format(cnn_agent.max_mass, mean_score, cnn_agent.steps_taken, mean_steps_survived))
+        print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {:d} | Mean Steps Survived: {:.4f}'.format(cnn_agent.max_mass, mean_score, cnn_agent.steps_taken, mean_steps_survived))
         print('Mean Ep Loss: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(mean_loss, ep_reward, mean_reward))
         print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
     
