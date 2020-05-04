@@ -1,5 +1,6 @@
 from models.DeepRLModel import DeepRLModel
 from models.RandomModel import RandomModel
+from models.HeuristicModel import HeuristicModel
 from models.DeepCNNModel import DeepCNNModel
 from gamestate import GameState, start_ai_only_game
 import fsutils as fs
@@ -36,8 +37,9 @@ def test(model_type, model_name):
     rand_model_1 = RandomModel(min_steps=5, max_steps=10)
     rand_model_2 = RandomModel(min_steps=5, max_steps=10)
     rand_model_3 = RandomModel(min_steps=5, max_steps=10)
-    rand_model_4 = RandomModel(min_steps=5, max_steps=10)
-    other_models = [('Random1', rand_model_1), ('Random2', rand_model_2), ('Random3', rand_model_3), ('Random4', rand_model_4)]
+    heur_model_1 = HeuristicModel()
+    heur_model_2 = HeuristicModel()
+    other_models = [('Random1', rand_model_1), ('Random2', rand_model_2), ('Random3', rand_model_3), ('Heur1', heur_model_1), ('Heur2', heur_model_2)]
     start_ai_only_game(main_model, other_models)
 
 if __name__ == "__main__":

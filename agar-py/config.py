@@ -23,7 +23,7 @@ FOOD_MASS = 1
 GAME_MASS = 20000
 MAX_FOOD = 200
 ENABLE_TIME_LIMIT = False
-TIME_LIMIT = 500
+TIME_LIMIT = 1000
 
 # ------------------------------------------------------------------------------
 # Virus state
@@ -64,7 +64,7 @@ AGENT_TICKS_TO_MERGE_CELLS = 500
 # must wait a certain number of ticks after splitting before splitting again
 AGENT_TICKS_TO_SPLIT_AGAIN = 5
 
-ENABLE_RANDOM_MASS_INIT = False
+ENABLE_RANDOM_MASS_INIT = True
 RANDOM_MASS_INIT_LO = 50
 RANDOM_MASS_INIT_HI = 150
 
@@ -92,4 +92,4 @@ NUM_AI = 2
 # ------------------------------------------------------------------------------
 
 SURVIVAL_REWARD = 0
-DEATH_REWARD = -100
+DEATH_REWARD = 0
