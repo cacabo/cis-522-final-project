@@ -259,10 +259,10 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 128)
-        self.fc4 = nn.Linear(128, output_dim)
+        self.fc1 = nn.Linear(self.input_dim, 32)
+        self.fc2 = nn.Linear(32, 32)
+        self.fc3 = nn.Linear(32, 32)
+        self.fc4 = nn.Linear(32, output_dim)
 
         self.relu = nn.ReLU()
 
@@ -334,6 +334,7 @@ class DeepRLModel(ModelInterface):
                 state = torch.Tensor(state)
                 q_values = self.model(state)
                 action = torch.argmax(q_values).item()
+                # print(Action(action))
                 return Action(action)
         if self.done:
             return None
