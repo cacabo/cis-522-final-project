@@ -9,7 +9,7 @@ import torch
 
 import matplotlib.pyplot as plt
 
-from trainutil import select_model_actions, plot_training_episode_avg_loss, plot_episode_rewards, plot_episode_scores, plot_episode_steps_survived
+from trainutil import select_model_actions, plot_episode_avg_train_loss, plot_episode_rewards, plot_episode_scores, plot_episode_steps_survived
 
 def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                         update_freq=4, target_net_sync_freq=500, max_eps=200,
@@ -142,7 +142,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     fs.save_deep_cnn_to_disk(cnn_model, model_name)
 
     # plot training loss, training score, reward, and steps survived
-    plot_training_episode_avg_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_avg_train_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
     plot_episode_rewards(training_rewards, model_name, plot_mean=True, window_size=mean_window)
     plot_episode_scores(training_scores, model_name, plot_mean=True, window_size=mean_window)
     plot_episode_steps_survived(training_steps_survived, model_name, plot_mean=True, window_size=mean_window)

@@ -28,7 +28,7 @@ def plot_vals(vals, title, xlabel, ylabel, filename, plot_mean=False, mean_windo
     plt.savefig('plots/' + str(filename))
 
 
-def plot_training_episode_avg_loss(training_losses, model_name, plot_mean=False, window_size=None):
+def plot_episode_avg_train_loss(training_losses, model_name, plot_mean=False, window_size=None):
     plot_vals(training_losses, 'Mean Loss per Training Episode', 'episode', 'loss',
               str(model_name) + '_loss_plot.png', plot_mean=plot_mean, mean_window=window_size)
 
