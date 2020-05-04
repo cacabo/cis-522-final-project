@@ -6,8 +6,29 @@ from functools import reduce
 import math
 import matplotlib.pyplot as plt
 
+def get_means_over_window(vals, window_size):
+    means = []
+    for i in range(len(vals)):
+        if i < window_size - 1:
+            means.append(np.mean(vals[0:i]))
+        else:
+            means.append(np.mean(vals[(i - window_size + 1):i]))
+    return means
 
-def plot_vals_and_mean(vals, mean_vals, plot_name, title, xlabel, ylabel):
+
+def plot_vals(vals, title, xlabel, ylabel, filename, plot_mean=False, mean_window=None):
+    x_vals = [i for i in range(len(vals))]
+    plt.figure()
+    plt.plot(x_vals, vals)
+    if plot_mean and mean_window is not None:
+        plt.plot(x_vals, get_means_over_window(vals, mean_window), 'r-')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig('plots/' + str(filename))
+
+
+def plot_vals_with_mean(vals, mean_vals, plot_name, title, xlabel, ylabel):
     x_vals = [i for i in range(len(vals))]
     plt.figure()
     plt.plot(x_vals, vals, 'c-', x_vals, mean_vals, 'r-')
@@ -27,16 +48,22 @@ def plot_training_episode_avg_loss(training_losses, model_name):
     plt.savefig('plots/' + str(model_name) + '_training_loss_plot.png')
 
 
-def plot_episode_rewards_and_mean(episode_rewards, mean_rewards, model_name):
-    plot_vals_and_mean(episode_rewards, mean_rewards,
+def plot_episode_rewards_with_mean(episode_rewards, mean_rewards, model_name):
+    plot_vals_with_mean(episode_rewards, mean_rewards,
                        str(model_name) + '_reward_plot.png',
                        'Reward per Training Episode', 'episode', 'reward')
 
 
-def plot_episode_scores_and_mean(episode_scores, mean_scores, model_name):
-    plot_vals_and_mean(episode_scores, mean_scores,
+def plot_episode_scores_with_mean(episode_scores, mean_scores, model_name):
+    plot_vals_with_mean(episode_scores, mean_scores,
                     str(model_name) + '_score_plot.png',
                     'Score per Training Episode', 'episode', 'score')
+
+
+def plot_episode_steps_survived_with_mean(episode_steps_survived, mean_steps_survived, model_name):
+    plot_vals_with_mean(episode_steps_survived, mean_steps_survived,
+                        str(model_name) + '_steps_survived_plot.png',
+                        'Steps Survived per Training Episode', 'epsiode', 'steps survived')
 
 
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):

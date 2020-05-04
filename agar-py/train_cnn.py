@@ -9,7 +9,7 @@ import torch
 
 import matplotlib.pyplot as plt
 
-from trainutil import select_model_actions, plot_training_episode_avg_loss, plot_episode_rewards_and_mean, plot_episode_scores_and_mean
+from trainutil import select_model_actions, plot_training_episode_avg_loss, plot_episode_rewards_with_mean, plot_episode_scores_with_mean, plot_episode_steps_survived_with_mean, get_means_over_window
 
 def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                         update_freq=4, target_net_sync_freq=500, max_eps=200,
@@ -26,6 +26,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
     mean_rewards = []
     training_scores = []
     mean_scores = []
+    training_steps_survived = []
+    mean_steps_survived = []
 
     start_time = current_milli_time()
 
@@ -128,25 +130,33 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         # episode reward, and mean score/reward over last MEAN_REWARD_WINDOW episodes
         training_rewards.append(ep_reward)
         training_scores.append(cnn_agent.max_mass)
+        training_steps_survived.append(cnn_agent.steps_taken)
 
         mean_loss = np.mean(update_losses)
         mean_score = np.mean(training_scores[-mean_reward_window:])
         mean_reward = np.mean(training_rewards[-mean_reward_window:])
+        mean_steps_survived = np.mean(training_steps_survived[-mean_reward_window:])
 
         training_losses.append(mean_loss)
         mean_scores.append(mean_score)
         mean_rewards.append(mean_reward)
+        mean_steps_survived.append(mean_steps_survived)
 
-        print('Mean Ep Loss: {:.4f} | Ep Score: {:.4f} | Mean Score: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(
-            mean_loss, cnn_agent.max_mass, mean_score, ep_reward, mean_reward)
+        print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {} | Mean Steps Survived: {:.4f}'.format(
+            cnn_agent.max_mass, mean_score, cnn_agent.steps_taken, mean_steps_survived
         )
+        print('Mean Ep Loss: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(mean_loss, ep_reward, mean_reward))
         print('Model has been training for {:.4f} minutes.'.format((current_milli_time() - start_time) / 60000))
     
     # save the full model!
     fs.save_deep_cnn_to_disk(cnn_model, model_name)
 
+    calc_means = get_means_over_window(training_rewards, mean_reward_window)
+    print(calc_means == mean_rewards)
+
     # plot training loss, training score, and reward
     plot_training_episode_avg_loss(training_losses, model_name)
-    plot_episode_rewards_and_mean(training_rewards, mean_rewards, model_name)
-    plot_episode_scores_and_mean(training_scores, mean_scores, model_name)
+    plot_episode_rewards_with_mean(training_rewards, mean_rewards, model_name)
+    plot_episode_scores_with_mean(training_scores, mean_scores, model_name)
+    plot_episode_steps_survived_with_mean(training_steps_survived, mean_steps_survived, model_name)
     plt.show()
