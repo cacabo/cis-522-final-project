@@ -6,25 +6,39 @@ import fsutils as fs
 import sys
 # from train import test_models
 
+# CNN hyperparams
+TAU = 4
+GAMMA = 0.95
+EPS_START = 0.05
+EPS_END = 0.05
+EPS_DECAY_WINDOW = 50
+REPLAY_BUF_CAPACITY = 10000
+REPLAY_BUF_PREFILL_AMT = 5000
+LR = 0.001
+DOWNSAMPLE_SIZE = (112, 112)
+BATCH_SIZE = 32
+
 def test(model_type, model_name):
-    # deep_cnn_model = DeepCNNModel(camera_follow=True)
     if model_type == 'drl':
         agarai_model = DeepRLModel()
         agarai_model.model = fs.load_net_from_disk(agarai_model.model, model_name)
     elif model_type == 'cnn':
-        agarai_model = DeepCNNModel(camera_follow=True)
+        agarai_model = DeepCNNModel(tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
+                            eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
+                            replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT, lr=LR,
+                            downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
+        agarai_model.net = fs.load_net_from_disk(agarai_model.net, model_name)
 
-    # models = [deep_rl_model, rand_model_1, rand_model_2]
-    # env = GameState()
-    # test_models(env, models)
 
     agarai_model.eval = True
     main_model = ('AgarAI', agarai_model)
 
     rand_model_1 = RandomModel(min_steps=5, max_steps=10)
     rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-    other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-    start_ai_only_game(main_model, [])
+    rand_model_3 = RandomModel(min_steps=5, max_steps=10)
+    rand_model_4 = RandomModel(min_steps=5, max_steps=10)
+    other_models = [('Random1', rand_model_1), ('Random2', rand_model_2), ('Random3', rand_model_3), ('Random4', rand_model_4)]
+    start_ai_only_game(main_model, other_models)
 
 if __name__ == "__main__":
     num_args = len(sys.argv)
