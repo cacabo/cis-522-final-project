@@ -135,12 +135,12 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         mean_loss = np.mean(update_losses)
         mean_score = np.mean(training_scores[-mean_reward_window:])
         mean_reward = np.mean(training_rewards[-mean_reward_window:])
-        mean_steps_survived = np.mean(training_steps_survived[-mean_reward_window:])
+        mean_steps = np.mean(training_steps_survived[-mean_reward_window:])
 
         training_losses.append(mean_loss)
         mean_scores.append(mean_score)
         mean_rewards.append(mean_reward)
-        mean_steps_survived.append(mean_steps_survived)
+        mean_steps_survived.append(mean_steps)
 
         print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {:.4i} | Mean Steps Survived: {:.4f}'.format(cnn_agent.max_mass, mean_score, cnn_agent.steps_taken, mean_steps_survived))
         print('Mean Ep Loss: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(mean_loss, ep_reward, mean_reward))
