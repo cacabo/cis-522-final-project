@@ -32,6 +32,7 @@ class AgentCell():
 
         self.mass = mass
         self.mode = mode
+
         self.is_alive = True
 
         if radius is not None:
@@ -248,6 +249,9 @@ class Agent():
         self.cells = [cell]
         self.cells_lost = []
 
+        self.max_mass = mass
+        self.steps_taken = 0
+
     def handle_mass_decay(self):
         return sum([cell.handle_mass_decay() for cell in self.cells])
         # for cell in self.cells:
@@ -257,6 +261,9 @@ class Agent():
         self.last_split = self.game.get_time()
 
     def do_action(self, action):
+        self.steps_taken += 1
+        self.max_mass = max(self.max_mass, self.get_mass())
+
         if action == Action.MOVE_RIGHT:
             self.angle = 0
         elif action == Action.MOVE_UP_RIGHT:

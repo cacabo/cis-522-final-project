@@ -6,26 +6,46 @@ from functools import reduce
 import math
 import matplotlib.pyplot as plt
 
-def plot_training_episode_avg_loss(training_losses, model_name):
-    x_vals = [i for i in range(len(training_losses))]
+def get_means_over_window(vals, window_size):
+    means = []
+    for i in range(len(vals)):
+        if i < window_size - 1:
+            means.append(np.mean(vals[0:(i+1)]))
+        else:
+            means.append(np.mean(vals[(i - window_size + 1):(i+1)]))
+    return means
+
+
+def plot_vals(vals, title, xlabel, ylabel, filename, plot_mean=False, mean_window=None):
+    x_vals = [i for i in range(len(vals))]
     plt.figure()
-    plt.plot(x_vals, training_losses)
-    plt.title('Mean Loss per Training Episode')
-    plt.xlabel('episode')
-    plt.ylabel('loss')
-    plt.savefig('plots/' + str(model_name) + '_training_loss_plot.png')
+    plt.plot(x_vals, vals)
+    if plot_mean and mean_window is not None:
+        plt.plot(x_vals, get_means_over_window(vals, mean_window), 'r-')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig('plots/' + str(filename))
 
 
-def plot_episode_rewards_and_mean(episode_rewards, mean_rewards, model_name):
-    x_vals = [i for i in range(len(episode_rewards))]
-    plt.figure()
-    plt.plot(x_vals, episode_rewards, 'c-',
-             x_vals, mean_rewards, 'r-')
-    plt.title('Reward per Training Episode')
-    plt.xlabel('epsiode')
-    plt.ylabel('reward')
-    plt.savefig('plots/' + str(model_name) + '_reward_plot.png')
+def plot_episode_avg_train_loss(training_losses, model_name, plot_mean=False, window_size=None):
+    plot_vals(training_losses, 'Mean Loss per Training Episode', 'episode', 'loss',
+              str(model_name) + '_loss_plot.png', plot_mean=plot_mean, mean_window=window_size)
 
+
+def plot_episode_rewards(episode_rewards, model_name, plot_mean=False, window_size=None):
+    plot_vals(episode_rewards, 'Reward per Training Episode', 'episode', 'reward',
+              str(model_name) + '_reward_plot.png', plot_mean=plot_mean, mean_window=window_size)
+
+
+def plot_episode_scores(episode_scores, model_name, plot_mean=False, window_size=None):
+    plot_vals(episode_scores, 'Score per Training Episode', 'episode', 'score',
+              str(model_name) + '_score_plot.png', plot_mean=plot_mean, mean_window=window_size)
+
+
+def plot_episode_steps_survived(episode_steps_survived, model_name, plot_mean=False, window_size=None):
+    plot_vals(episode_steps_survived, 'Steps Survived per Training Episode', 'episode', 'steps survived',
+              str(model_name) + '_steps_survived_plot.png', plot_mean=plot_mean, mean_window=window_size)
 
 
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
@@ -50,12 +70,11 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_reward_window=10, target_update=10):
+def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_window=10, target_update=10):
     print("\nTRAIN MODE")
 
     training_losses = []
     training_rewards = []
-    mean_rewards = []
 
     model = models[0]
     
@@ -120,13 +139,12 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
 
         training_losses.append(np.mean(episode_loss))
         training_rewards.append(episode_rewards[0])
-        mean_reward = np.mean(training_rewards[-mean_reward_window:])
-        mean_rewards.append(mean_reward)
 
-        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(np.mean(episode_loss), episode_rewards[0], mean_reward))
+        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(
+            np.mean(episode_loss), episode_rewards[0], np.mean(training_rewards[-mean_window:])))
 
-    plot_training_episode_avg_loss(training_losses, model_name)
-    plot_episode_rewards_and_mean(training_rewards, mean_rewards, model_name)
+    plot_episode_avg_train_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_rewards(training_rewards, model_name, plot_mean=True, window_size=mean_window)
     plt.show()
 
 def test_models(env, models, steps=2500, print_every=200):

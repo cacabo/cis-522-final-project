@@ -369,6 +369,12 @@ class GameState():
 
         return rewards, dones
 
+    def get_agent_of_model(self, model):
+        """get game agent associated with given model instance"""
+        if model.id in self.agents:
+            return self.agents[model.id]
+        return None
+
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
     # ------------------------------------------------------------------------------
