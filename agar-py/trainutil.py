@@ -10,9 +10,9 @@ def get_means_over_window(vals, window_size):
     means = []
     for i in range(len(vals)):
         if i < window_size - 1:
-            means.append(np.mean(vals[0:i]))
+            means.append(np.mean(vals[0:(i+1)]))
         else:
-            means.append(np.mean(vals[(i - window_size + 1):i]))
+            means.append(np.mean(vals[(i - window_size + 1):(i+1)]))
     return means
 
 
