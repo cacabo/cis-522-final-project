@@ -11,6 +11,10 @@ class HeuristicModel(ModelInterface):
 
     def get_action(self, state):
         (agents, foods, viruses, masses, time) = state
+        
+        # only get an action if agent is alive
+        if self.id not in agents:
+            return None
         my_agent = agents[self.id]
 
         # try to go towards/run away from nearest enemy first (if can consume/can be consumed)

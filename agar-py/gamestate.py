@@ -33,6 +33,7 @@ class GameState():
         self.foods = []
         self.viruses = []
         self.masses = []
+        self.dead_agent_store = {}
         self.time = 0
         self.board = None
         self.window = None
@@ -299,10 +300,12 @@ class GameState():
                     rewards.append(0)
 
         # after ticking all the agents, remove the dead ones
-        dead_agents = [key for key, agent in self.agents.items()
-                       if not agent.is_alive]
-        for dead_agent in dead_agents:
-            del self.agents[dead_agent]
+        dead_agent_ids = [key for key, agent in self.agents.items()
+                          if not agent.is_alive]
+        for dead_agent_id in dead_agent_ids:
+            # keep track of agents that died so we can look at their info
+            self.dead_agent_store[dead_agent_id] = self.agents[dead_agent_id]
+            del self.agents[dead_agent_id]
 
         if models:
             dones = []
@@ -318,8 +321,9 @@ class GameState():
                     rewards[idx] -= sum([cell.mass for cell in agent.cells_lost])
                     agent.cells_lost = []
                 else:
+                    # TODO: testing if reward for dying should be negative your mass
                     dones.append(True)
-                    rewards[idx] = conf.DEATH_REWARD
+                    rewards[idx] = -1 * self.dead_agent_store[model.id].get_mass()
 
         self.time += 1
 
@@ -373,7 +377,9 @@ class GameState():
         """get game agent associated with given model instance"""
         if model.id in self.agents:
             return self.agents[model.id]
-        return None
+        elif model.id in self.dead_agent_store:
+            return self.dead_agent_store[model.id]
+        raise ValueError('agent of given model does not exist')
 
     # ------------------------------------------------------------------------------
     # Methods for playing the game in interactive mode
