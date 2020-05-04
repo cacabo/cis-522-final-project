@@ -6,6 +6,17 @@ from functools import reduce
 import math
 import matplotlib.pyplot as plt
 
+
+def plot_vals_and_mean(vals, mean_vals, plot_name, title, xlabel, ylabel):
+    x_vals = [i for i in range(len(vals))]
+    plt.figure()
+    plt.plot(x_vals, vals, 'c-', x_vals, mean_vals, 'r-')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig('plots/' + str(plot_name))
+
+
 def plot_training_episode_avg_loss(training_losses, model_name):
     x_vals = [i for i in range(len(training_losses))]
     plt.figure()
@@ -17,15 +28,15 @@ def plot_training_episode_avg_loss(training_losses, model_name):
 
 
 def plot_episode_rewards_and_mean(episode_rewards, mean_rewards, model_name):
-    x_vals = [i for i in range(len(episode_rewards))]
-    plt.figure()
-    plt.plot(x_vals, episode_rewards, 'c-',
-             x_vals, mean_rewards, 'r-')
-    plt.title('Reward per Training Episode')
-    plt.xlabel('epsiode')
-    plt.ylabel('reward')
-    plt.savefig('plots/' + str(model_name) + '_reward_plot.png')
+    plot_vals_and_mean(episode_rewards, mean_rewards,
+                       str(model_name) + '_reward_plot.png',
+                       'Reward per Training Episode', 'episode', 'reward')
 
+
+def plot_episode_scores_and_mean(episode_scores, mean_scores, model_name):
+    plot_vals_and_mean(episode_scores, mean_scores,
+                    str(model_name) + '_score_plot.png',
+                    'Score per Training Episode', 'episode', 'score')
 
 
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
