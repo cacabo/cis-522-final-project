@@ -285,6 +285,7 @@ class DeepRLModel(ModelInterface):
             gamma=0.9,
             batch_size=64,
             replay_buffer_learn_thresh=0.5,
+            lr = 1e-3,
             model=None):
         super().__init__()
 
@@ -301,7 +302,7 @@ class DeepRLModel(ModelInterface):
             self.model = model
         else:
             self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
-        self.optimizer = torch.optim.Adam(self.model.parameters())
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.loss = torch.nn.MSELoss()
 
         # run on a GPU if we have access to one in this env
