@@ -10,6 +10,10 @@ class HeuristicModel(ModelInterface):
         super().__init__()
 
     def get_action(self, state):
+        # only get an action if agent is alive
+        if self.done:
+            return None
+
         (agents, foods, viruses, masses, time) = state
         my_agent = agents[self.id]
 
