@@ -10,7 +10,7 @@ def test(model_type, model_name):
     # deep_cnn_model = DeepCNNModel(camera_follow=True)
     if model_type == 'drl':
         agarai_model = DeepRLModel()
-        agarai_model.model = fs.load_net_from_disk(agarai_model.model, model_name)
+        fs.load_net_from_disk(agarai_model.model, model_name)
     elif model_type == 'cnn':
         agarai_model = DeepCNNModel(camera_follow=True)
 
