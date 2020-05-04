@@ -249,6 +249,7 @@ class Agent():
         self.cells = [cell]
         self.cells_lost = []
 
+        self.starting_mass = mass
         self.max_mass = mass
         self.steps_taken = 0
 

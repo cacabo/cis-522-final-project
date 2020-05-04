@@ -127,11 +127,11 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         # episode reward, and mean score/reward over last {mean_window} episodes
         training_losses.append(np.mean(update_losses))
         training_rewards.append(ep_reward)
-        training_scores.append(cnn_agent.max_mass)
+        training_scores.append(cnn_agent.max_mass - cnn_agent.starting_mass)        # subtract starting mass to get accurate count of maximum growth even with random init mass
         training_steps_survived.append(cnn_agent.steps_taken)
 
         print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {:d} | Mean Steps Survived: {:.2f}'.format(
-            cnn_agent.max_mass, np.mean(training_scores[-mean_window:]),
+            cnn_agent.max_mass - cnn_agent.starting_mass, np.mean(training_scores[-mean_window:]),
             cnn_agent.steps_taken, np.mean(training_steps_survived[-mean_window:])))
         print('Mean Ep Loss: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(
             np.mean(update_losses), ep_reward, np.mean(training_scores[-mean_window:])))
