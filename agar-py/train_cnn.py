@@ -9,7 +9,7 @@ import torch
 
 import matplotlib.pyplot as plt
 
-from trainutil import select_model_actions, plot_training_episode_avg_loss, plot_episode_rewards_with_mean, plot_episode_scores_with_mean, plot_episode_steps_survived_with_mean, get_means_over_window
+from trainutil import select_model_actions, plot_training_episode_avg_loss, plot_episode_rewards, plot_episode_scores, plot_episode_steps_survived
 
 def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
                         update_freq=4, target_net_sync_freq=500, max_eps=200,
