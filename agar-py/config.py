@@ -91,5 +91,5 @@ NUM_AI = 2
 # Other rewards
 # ------------------------------------------------------------------------------
 
-SURVIVAL_REWARD = 0
+SURVIVAL_REWARD = -0.01
 DEATH_REWARD = 0

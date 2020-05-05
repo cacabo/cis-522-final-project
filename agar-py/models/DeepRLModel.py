@@ -12,6 +12,10 @@ import config as conf
 import utils
 
 STATE_ENCODING_LENGTH = 8
+INERTIA_PROB = 0.05
+
+# 0.2 is too high
+ANGLE_PENALTY_FACTOR = 0.05
 
 # TODO we could account for radius in making this decision
 # TODO this could also be based on actual screen dimensions, not just the
@@ -80,9 +84,9 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
 
     # TODO A/B test this encoding
     # obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
-    # obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
-    # return torch.sum(obj_dists_inv).item()
-    return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
+    obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
+    return torch.sum(obj_dists_inv).item()
+    # return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
 
 
 def get_obj_poses_tensor(objs):
@@ -219,6 +223,14 @@ def get_direction_scores(agent, objs):
     return direction_states
 
 
+def get_angle_penalties(angle):
+    if angle is None:
+        return torch.zeros(len(conf.ANGLES))
+    angle_penalties = torch.Tensor(conf.ANGLES)
+    angle_penalties = ((angle_penalties - angle) % 360) * -1 / 360
+    return angle_penalties * ANGLE_PENALTY_FACTOR
+
+
 def encode_agent_state(model, state):
     (agents, foods, _viruses, _masses, _time) = state
 
@@ -228,6 +240,9 @@ def encode_agent_state(model, state):
 
     agent = agents[model.id]
     agent_mass = agent.get_mass()
+    angle = agent.get_angle()
+    angle_penalites = get_angle_penalties(angle)
+    angle_weights = (1 + angle_penalites).numpy()
 
     # TODO improvements to how we encode state
     # TODO what about ones that are larger but can't eat you?
@@ -260,6 +275,9 @@ def encode_agent_state(model, state):
     # other_agent_state = np.concatenate(
     #     (larger_agent_state, smaller_agent_state))
     food_state = get_direction_scores(agent, foods)
+    food_state = [a * b for (a, b) in zip(food_state, angle_weights)]
+
+    # print(food_state)
     # virus_state = get_direction_scores(agent, viruses)
     # mass_state = get_direction_scores(agent, masses)
 
@@ -269,9 +287,11 @@ def encode_agent_state(model, state):
         # len(agent.cells),
         # agent.get_avg_x_pos() / conf.BOARD_WIDTH,
         # agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
-        # agent.get_angle(),
+        # agent.get_angle() / 360,
         # agent.get_stdev_mass(),
     ]
+
+    # print(this_agent_state)
 
     encoded_state = np.concatenate((
         this_agent_state,
@@ -354,24 +374,25 @@ class DeepRLModel(ModelInterface):
         self.done = False
 
     def is_replay_buffer_ready(self):
+        """Wait until the replay buffer has reached a certain thresh"""
         return len(self.replay_buffer) >= self.replay_buffer_learn_thresh * self.replay_buffer.capacity
 
     def get_action(self, state):
         if self.eval:
-            with torch.no_grad():
-                state = encode_agent_state(self, state)
-                state = torch.Tensor(state)
-                q_values = self.model(state)
-                action = torch.argmax(q_values).item()
-                return Action(action)
-
-        if self.done:
+            if random.random() <= INERTIA_PROB and self.prev_action:
+                action = self.prev_action
+            else:
+                with torch.no_grad():
+                    state = encode_agent_state(self, state)
+                    state = torch.Tensor(state)
+                    q_values = self.model(state)
+                    action = torch.argmax(q_values).item()
+                    action = Action(action)
+        elif self.done:
             return None
-
-        if not self.is_replay_buffer_ready():
+        elif not self.is_replay_buffer_ready():
             return Action(np.random.randint(len(Action)))
-
-        if random.random() > self.epsilon:
+        elif random.random() > self.epsilon:
             # take the action which maximizes expected reward
             with torch.no_grad():
                 state = encode_agent_state(self, state)
@@ -383,6 +404,7 @@ class DeepRLModel(ModelInterface):
             # take a random action
             action = Action(np.random.randint(len(Action)))  # random action
 
+        self.prev_action = action
         return action
 
     def remember(self, state, action, next_state, reward, done):

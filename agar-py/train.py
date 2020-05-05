@@ -12,6 +12,7 @@ Constants
 """
 
 PRINT_EVERY = 2000
+NUM_CHECKPOINTS = 5
 
 """
 Hyperparameters
@@ -29,7 +30,7 @@ REPLAY_BUFFER_CAPACITY = 10000
 
 EPISODES = 50
 STEPS_PER_EPISODE = 1000
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.00005
 
 
 def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
@@ -68,7 +69,7 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
         steps=steps,
         print_every=PRINT_EVERY,
         model_name="train_drl_{}".format(random.randint(0, 2 ** 16)),
-        num_checkpoints=10)
+        num_checkpoints=NUM_CHECKPOINTS)
     test_models(env, models, steps=steps)
 
     # deep_rl_model.eval = True

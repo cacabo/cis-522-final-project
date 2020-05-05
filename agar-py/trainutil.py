@@ -149,7 +149,7 @@ def train_models(
         if episode % target_update == 0:
             model.sync_target_net()
 
-        if episode % save_every == 0 and episode != 0:
+        if (episode + 1) % save_every == 0:
             print('Saving checkpoint...')
             fs.save_net_to_disk(
                 model.model,
