@@ -1,6 +1,6 @@
 import pygame
 import config as conf
-from gamestate import GameState, start_game
+from gamestate import start_game
 from models.HeuristicModel import HeuristicModel
 from models.RandomModel import RandomModel
 

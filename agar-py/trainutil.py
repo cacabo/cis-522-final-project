@@ -5,6 +5,8 @@ import config as conf
 from functools import reduce
 import math
 import matplotlib.pyplot as plt
+import fsutils as fs
+
 
 def get_means_over_window(vals, window_size):
     means = []
@@ -52,7 +54,6 @@ def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
     return math.exp(math.log(e_min / e_max) / e_decay_window)
 
 
-
 def select_model_actions(models, state):
     model_actions = []
     for model in models:
@@ -70,16 +71,26 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
         model.remember(state, action, next_state, reward, done)
 
 
-def train_models(env, models, episodes=10, steps=2500, print_every=200, model_name="train_drl", mean_window=10, target_update=10):
+def train_models(
+        env,
+        models,
+        episodes=10,
+        steps=2500,
+        print_every=200,
+        model_name="train_drl",
+        mean_window=10,
+        target_update=10,
+        num_checkpoints=10):
     print("\nTRAIN MODE")
 
     training_losses = []
     training_rewards = []
 
     model = models[0]
-    
+    save_every = int(episodes / num_checkpoints)
+
     for episode in range(episodes):
-        print('=== Starting Episode %s ===' % episode)
+        # print('=== Starting Episode %s ===' % episode)
 
         # done = False  # whether game is done or not (terminal state)
         # reset the environment to fresh starting state with game agents initialized for models
@@ -107,8 +118,7 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
 
             # optimize models
             loss = model.optimize()
-            if loss is not None:
-                episode_loss.append(loss)
+            episode_loss.append(loss)
 
             # check for termination of our player #TODO
             if dones[0]:
@@ -121,9 +131,11 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
             state = next_state  # update the state
 
             if step % print_every == 0 and step != 0:
-                print("----STEP %s rewards----" % step)
+                print("----STEP %s----" % step)
                 for idx, model in enumerate(models):
-                    print("Model %s: %s" % (model.id, episode_rewards[idx]))
+                    print("Model %s | Reward: %s\tLoss: %s" %
+                          (model.id, episode_rewards[idx], episode_loss[idx]))
+
         # print("------EPISODE %s rewards------" % episode)
         # for idx, model in enumerate(models):
         #     print("Model %s: %s" % (model.id, episode_rewards[idx]))
@@ -133,19 +145,29 @@ def train_models(env, models, episodes=10, steps=2500, print_every=200, model_na
             epsilon = models[0].decay_epsilon()
             # print("epsilon after decay: ", epsilon)
 
-        #sync target net with policy
+        # sync target net with policy
         if episode % target_update == 0:
             model.sync_target_net()
 
+        if episode % save_every == 0 and episode != 0:
+            print('Saving checkpoint...')
+            fs.save_net_to_disk(
+                model.model,
+                "{}_{}".format(model_name, episode))
+
+        episode_loss = [loss for loss in episode_loss if loss is not None]
         training_losses.append(np.mean(episode_loss))
         training_rewards.append(episode_rewards[0])
 
-        print('Mean Episode Loss: {:.4f} | Episode Reward: {:.4f} | Mean Reward: {:.4f}'.format(
-            np.mean(episode_loss), episode_rewards[0], np.mean(training_rewards[-mean_window:])))
+        print('{}\tMean Episode Loss: {:.4f}\tEpisode Reward: {:.4f}\tMean Reward: {:.4f}\tEpsilon: {:.4f}'.format(
+            episode, np.mean(episode_loss), episode_rewards[0], np.mean(training_rewards[-mean_window:]), epsilon))
 
-    plot_episode_avg_train_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
-    plot_episode_rewards(training_rewards, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_avg_train_loss(
+        training_losses, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_rewards(training_rewards, model_name,
+                         plot_mean=True, window_size=mean_window)
     plt.show()
+
 
 def test_models(env, models, steps=2500, print_every=200):
     print("\nTEST MODE")

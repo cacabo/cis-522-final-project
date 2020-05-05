@@ -11,14 +11,15 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 45 - 8 - 16 - 8 - 4
+STATE_ENCODING_LENGTH = 8
 
-# Anything further than max_dist will (likely, unless very large) be outside
-# of the agent's field of view
 # TODO we could account for radius in making this decision
 # TODO this could also be based on actual screen dimensions, not just the
 # longest radius
-max_dist = math.sqrt(conf.BOARD_WIDTH ** 2 + conf.BOARD_HEIGHT ** 2)
+
+# Anything further than this will (likely, unless very large) be outside
+# of the agent's field of view
+MAX_DIST = math.sqrt(conf.SCREEN_WIDTH ** 2 + conf.SCREEN_HEIGHT ** 2) / 2
 
 # -------------------------------
 # Other helpers
@@ -74,12 +75,29 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
     if filtered_obj_dists.shape[0] == 0:
         return 0
 
+    # If just number of food, use this:
+    # return filtered_obj_dists.shape[0]
+
     # TODO A/B test this encoding
-    obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
-    return torch.sum(obj_dists_inv).item()
+    # obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
+    # obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
+    # return torch.sum(obj_dists_inv).item()
+    return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
 
 
 def get_obj_poses_tensor(objs):
+    """
+    Get positions of all objects in a Tensor of shape (n, 2) where the 2 is
+    each object's [x, y] position tuple
+
+    Parameters
+
+        objs : list of objects with get_pos() method implemented
+
+    Returns
+
+        positions : torch.Tensor
+    """
     obj_poses = []
     for obj in objs:
         (x, y) = obj.get_pos()
@@ -89,6 +107,18 @@ def get_obj_poses_tensor(objs):
 
 
 def get_diff_tensor(agent, objs):
+    """
+    Get dx and dy distance between the agent and each object
+
+    Parameters:
+
+        agent : object with get_pos() method implemented
+        objs  : list of n objects with get_pos() method implemented
+
+    Returns:
+
+        torch.Tensor of size n by 2
+    """
     obj_poses_tensor = get_obj_poses_tensor(objs)
     (agent_x, agent_y) = agent.get_pos()
     agent_pos_tensor = torch.Tensor([agent_x, agent_y])
@@ -140,7 +170,7 @@ def get_direction_scores(agent, objs):
     diff_tensor = get_diff_tensor(agent, objs)
     dists_tensor = get_dists_tensor(diff_tensor)
 
-    filter_mask_tensor = (dists_tensor <= max_dist) & (dists_tensor > 0)
+    filter_mask_tensor = (dists_tensor <= MAX_DIST) & (dists_tensor > 0)
     filter_mask_tensor = filter_mask_tensor.to(
         torch.bool)  # Ensure type is correct
     fitlered_dists_tensor = dists_tensor[filter_mask_tensor]
@@ -190,7 +220,7 @@ def get_direction_scores(agent, objs):
 
 
 def encode_agent_state(model, state):
-    (agents, foods, viruses, masses, time) = state
+    (agents, foods, _viruses, _masses, _time) = state
 
     # If the agent is dead
     if model.id not in agents:
@@ -224,21 +254,22 @@ def encode_agent_state(model, state):
             all_smaller_agent_cells.append(cell)
 
     # Compute scores for cells for each direction
-    larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
-    smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
+    # larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
+    # smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
 
     # other_agent_state = np.concatenate(
     #     (larger_agent_state, smaller_agent_state))
     food_state = get_direction_scores(agent, foods)
-    virus_state = get_direction_scores(agent, viruses)
+    # virus_state = get_direction_scores(agent, viruses)
     # mass_state = get_direction_scores(agent, masses)
 
     # Encode important attributes about this agent
     this_agent_state = [
-        agent_mass,
+        # agent_mass,
         # len(agent.cells),
-        # agent.get_avg_x_pos(),
-        # agent.get_avg_y_pos(),
+        # agent.get_avg_x_pos() / conf.BOARD_WIDTH,
+        # agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
+        # agent.get_angle(),
         # agent.get_stdev_mass(),
     ]
 
@@ -259,10 +290,9 @@ class DQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, 32)
-        self.fc2 = nn.Linear(32, 32)
-        self.fc3 = nn.Linear(32, 32)
-        self.fc4 = nn.Linear(32, output_dim)
+        self.fc1 = nn.Linear(self.input_dim, 16)
+        self.fc2 = nn.Linear(16, 16)
+        self.fc3 = nn.Linear(16, self.output_dim)
 
         self.relu = nn.ReLU()
 
@@ -270,9 +300,8 @@ class DQN(nn.Module):
         x = state
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.relu(self.fc3(x))
-        qvals = self.fc4(x)
-        return qvals
+        x = self.fc3(x)
+        return x
 
 
 class DeepRLModel(ModelInterface):
@@ -285,7 +314,7 @@ class DeepRLModel(ModelInterface):
             gamma=0.9,
             batch_size=64,
             replay_buffer_learn_thresh=0.5,
-            lr = 1e-3,
+            lr=1e-3,
             model=None):
         super().__init__()
 
@@ -311,8 +340,9 @@ class DeepRLModel(ModelInterface):
             self.device = "cuda"
         self.model.to(self.device)
 
-        #target net
-        self.target_net = DQN(STATE_ENCODING_LENGTH, len(Action)).to(self.device)
+        # target net
+        self.target_net = DQN(STATE_ENCODING_LENGTH,
+                              len(Action)).to(self.device)
         self.target_net.load_state_dict(self.model.state_dict())
         self.target_net.eval()
 
@@ -322,11 +352,6 @@ class DeepRLModel(ModelInterface):
         self.gamma = gamma
         self.batch_size = batch_size
         self.done = False
-
-        self.min_steps = 5
-        self.max_steps = 10
-        self.steps_remaining = 0
-        self.curr_action = None
 
     def is_replay_buffer_ready(self):
         return len(self.replay_buffer) >= self.replay_buffer_learn_thresh * self.replay_buffer.capacity
@@ -338,20 +363,13 @@ class DeepRLModel(ModelInterface):
                 state = torch.Tensor(state)
                 q_values = self.model(state)
                 action = torch.argmax(q_values).item()
-                # print(Action(action))
                 return Action(action)
+
         if self.done:
             return None
 
         if not self.is_replay_buffer_ready():
             return Action(np.random.randint(len(Action)))
-            # if self.steps_remaining <= 0:
-            #     self.steps_remaining = np.random.randint(
-            #         self.min_steps, self.max_steps)
-            #     self.curr_action = Action(np.random.randint(len(Action)))
-
-            #     self.steps_remaining -= 1
-            # return self.curr_action
 
         if random.random() > self.epsilon:
             # take the action which maximizes expected reward
@@ -364,6 +382,7 @@ class DeepRLModel(ModelInterface):
         else:
             # take a random action
             action = Action(np.random.randint(len(Action)))  # random action
+
         return action
 
     def remember(self, state, action, next_state, reward, done):
@@ -419,7 +438,7 @@ class DeepRLModel(ModelInterface):
         return loss.item()
 
     def decay_epsilon(self):
-        # decay epsilon
+        """Decay epsilon without dipping below min_epsilon"""
         if self.epsilon != self.min_epsilon:
             self.epsilon *= self.epsilon_decay
             self.epsilon = max(self.min_epsilon, self.epsilon)

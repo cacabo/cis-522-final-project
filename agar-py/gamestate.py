@@ -27,7 +27,7 @@ text_font = pygame.font.SysFont(
 class GameState():
     ID_counter = 0
 
-    def __init__(self):
+    def __init__(self, with_viruses=True, with_masses=True, with_random_mass_init=False):
         self.camera = None
         self.agents = {}
         self.foods = []
@@ -37,6 +37,11 @@ class GameState():
         self.time = 0
         self.board = None
         self.window = None
+
+        # Flags for modifying game state
+        self.with_viruses = with_viruses
+        self.with_masses = with_masses
+        self.with_random_mass_init = with_random_mass_init
 
         # set up the game state with balanced mass
         self.balance_mass()
@@ -98,6 +103,9 @@ class GameState():
 
         # TODO removing food if necessary
 
+        if not self.with_viruses:
+            return
+
         num_virus_to_add = conf.MAX_VIRUSES - len(self.viruses)
 
         if num_virus_to_add > 0:
@@ -151,7 +159,7 @@ class GameState():
                 elif self.check_cell_collision(agent_cell, other_cell):
                     if conf.ENABLE_LOGS:
                         print('[%s] [CELL] %s ate one of %s\'s cells' %
-                            (self.get_time(), agent.name, other.name))
+                              (self.get_time(), agent.name, other.name))
                     agent_cell.set_mass(agent_cell.mass + other_cell.mass)
                     mass_consumed += other_cell.mass
                     other_cell.is_alive = False
@@ -163,7 +171,7 @@ class GameState():
         if len(other.cells) == 0:
             if conf.ENABLE_LOGS:
                 print('[%s] [GAME] %s died! Was eaten by %s' %
-                    (self.get_time(), other.name, agent.name))
+                      (self.get_time(), other.name, agent.name))
             other.is_alive = False
         return mass_consumed
 
@@ -173,7 +181,7 @@ class GameState():
                 continue
             if conf.ENABLE_LOGS:
                 print('[%s] [FOOD] %s ate food item %s' %
-                    (self.get_time(), agent.name, food.id))
+                      (self.get_time(), agent.name, food.id))
             cell.eat_food(food)
             return food
 
@@ -183,7 +191,7 @@ class GameState():
                 continue
             if conf.ENABLE_LOGS:
                 print('[%s] [MASS] %s ate mass %s' %
-                    (self.get_time(), agent.name, mass.id))
+                      (self.get_time(), agent.name, mass.id))
             cell.eat_mass(mass)
             return mass
 
@@ -199,7 +207,7 @@ class GameState():
                 continue
             if conf.ENABLE_LOGS:
                 print('[%s] [VIRUS] %s ate virus %s' %
-                    (self.get_time(), agent.name, virus.id))
+                      (self.get_time(), agent.name, virus.id))
             new_cells = cell.eat_virus(virus)
             ate_virus = True
             break
@@ -255,26 +263,37 @@ class GameState():
         num_food_eaten = len(
             list(filter(lambda x: x != None, food_eaten_or_none)))
 
-        # Iterate over all masses, remove those which were eaten
-        remaining_mass, mass_eaten_or_none = self._filter_objects(
-            agent, self.masses, self.handle_mass)
-        self.masses = remaining_mass
-        num_mass_eaten = len(
-            list(filter(lambda x: x != None, mass_eaten_or_none)))
+        if self.with_masses:
+            # Iterate over all masses, remove those which were eaten
+            remaining_mass, mass_eaten_or_none = self._filter_objects(
+                agent, self.masses, self.handle_mass)
+            self.masses = remaining_mass
+            num_mass_eaten = len(
+                list(filter(lambda x: x != None, mass_eaten_or_none)))
+        else:
+            num_mass_eaten = 0
 
-        # Iterate over all viruses, remove viruses which were eaten
-        remaining_virus, virus_eaten_or_none = self._filter_objects(
-            agent, self.viruses, self.handle_virus)
-        self.viruses = remaining_virus
-        num_virus_eaten = len(
-            list(filter(lambda x: x != None, virus_eaten_or_none)))
+        if self.with_viruses:
+            # Iterate over all viruses, remove viruses which were eaten
+            remaining_virus, virus_eaten_or_none = self._filter_objects(
+                agent, self.viruses, self.handle_virus)
+            self.viruses = remaining_virus
+            num_virus_eaten = len(
+                list(filter(lambda x: x != None, virus_eaten_or_none)))
+        else:
+            num_virus_eaten = 0
 
         # get a list of all agents which have collided with the current one, and see
         # if it eats any of them
         agent_mass_eaten = 0
         for other in self.agents.values():
             agent_mass_eaten += self.handle_eat_agent(agent, other)
-        return agent_mass_eaten + conf.FOOD_MASS * num_food_eaten + conf.VIRUS_MASS * num_virus_eaten + conf.MASS_MASS * num_mass_eaten + mass_decay
+        return (
+            agent_mass_eaten +
+            conf.FOOD_MASS * num_food_eaten +
+            conf.VIRUS_MASS * num_virus_eaten +
+            conf.MASS_MASS * num_mass_eaten +
+            mass_decay)
 
     def tick_game_state(self, models):
         # make sure food/virus/player mass is balanced on the board
@@ -323,7 +342,8 @@ class GameState():
                 else:
                     # TODO: testing if reward for dying should be negative your mass
                     dones.append(True)
-                    rewards[idx] = -1 * self.dead_agent_store[model.id].get_mass()
+                    rewards[idx] = -1 * \
+                        self.dead_agent_store[model.id].get_mass()
 
         self.time += 1
 
@@ -410,8 +430,9 @@ class GameState():
 
     def init_manual_agent(self, name):
         # starting mass is either random in certain range or fixed
-        if conf.ENABLE_RANDOM_MASS_INIT:
-            mass = random.randint(conf.RANDOM_MASS_INIT_LO, conf.RANDOM_MASS_INIT_HI)
+        if self.with_random_mass_init:
+            mass = random.randint(conf.RANDOM_MASS_INIT_LO,
+                                  conf.RANDOM_MASS_INIT_HI)
         else:
             mass = conf.AGENT_STARTING_MASS
 
@@ -447,10 +468,11 @@ class GameState():
         if name == None:
             name = 'Agent' + str(GameState.ID_counter)
             GameState.ID_counter += 1
-        
+
         # starting mass is either random in certain range or fixed
-        if conf.ENABLE_RANDOM_MASS_INIT:
-            mass = random.randint(conf.RANDOM_MASS_INIT_LO, conf.RANDOM_MASS_INIT_HI)
+        if self.with_random_mass_init:
+            mass = random.randint(conf.RANDOM_MASS_INIT_LO,
+                                  conf.RANDOM_MASS_INIT_HI)
         else:
             mass = conf.AGENT_STARTING_MASS
 
@@ -478,11 +500,9 @@ class GameState():
         for i in range(num_agents):
             self.init_ai_agent(model)
 
-
     def is_exit_command(self, event):
         """Check if the user is pressing an exit key"""
         return event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE)
-
 
     def draw_circle(self, board, obj, color=None, stroke=None):
         """Draw a circle on the pygame GUI"""
@@ -496,7 +516,6 @@ class GameState():
             pygame.draw.circle(board, color, pos, radius, stroke)
         else:
             pygame.draw.circle(board, color, pos, radius)
-
 
     def draw_window(self, draw_leaderboard=True):
         # fill screen white, to clear old frames
@@ -550,14 +569,14 @@ class GameState():
                 self.window = pygame.display.set_mode(
                     (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
         else:
-            self.window = pygame.Surface((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
-
+            self.window = pygame.Surface(
+                (conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
 
     def main_loop(self, eval_mode=False, eval_model_id=None):
         if self.camera == None:
             raise ValueError(
                 'Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
-        
+
         self.setup_display(render_gui=True)
         pygame.display.set_caption('CIS 522: Final Project')
 
@@ -591,20 +610,23 @@ class GameState():
             if conf.ENABLE_TIME_LIMIT:
                 if self.time >= conf.TIME_LIMIT:
                     running = False
-        
+
         if eval_mode:
             return running_scores
         else:
             pygame.quit()
             quit()
-            step +=1
+            step += 1
 
 
 # -------------------------------
 # Functions for displaying trained models mid-training
 # -------------------------------
-def start_game(other_models, eval_mode=False):
-    game = GameState()
+def start_game(other_models):
+    game = GameState(
+        with_viruses=True,
+        with_masses=True,
+        with_random_mass_init=True)
 
     # initialize player agent
     game.init_manual_agent('AgarAI')
