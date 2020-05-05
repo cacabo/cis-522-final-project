@@ -22,7 +22,7 @@ BATCH_SIZE = 32
 def test(model_type, model_name):
     if model_type == 'drl':
         agarai_model = DeepRLModel()
-        agarai_model.model = fs.load_net_from_disk(agarai_model.model, model_name)
+        fs.load_net_from_disk(agarai_model.model, model_name)
     elif model_type == 'cnn':
         agarai_model = DeepCNNModel(tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
                             eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
