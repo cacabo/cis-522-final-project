@@ -153,7 +153,7 @@ def train_models(
             print('Saving checkpoint...')
             fs.save_net_to_disk(
                 model.model,
-                "{}_{}".format(model_name, episode))
+                "{}_{}".format(model_name, episode + 1))
 
         episode_loss = [loss for loss in episode_loss if loss is not None]
         training_losses.append(np.mean(episode_loss))

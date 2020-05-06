@@ -13,6 +13,7 @@ import utils
 
 STATE_ENCODING_LENGTH = 8
 INERTIA_PROB = 0.05
+NOISE = 0
 
 # 0.2 is too high
 ANGLE_PENALTY_FACTOR = 0.05
@@ -80,12 +81,12 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
         return 0
 
     # If just number of food, use this:
-    # return filtered_obj_dists.shape[0]
+    return filtered_obj_dists.shape[0]
 
     # TODO A/B test this encoding
     # obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
-    obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
-    return torch.sum(obj_dists_inv).item()
+    # obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
+    # return torch.sum(obj_dists_inv).item()
     # return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
 
 
@@ -277,6 +278,9 @@ def encode_agent_state(model, state):
     food_state = get_direction_scores(agent, foods)
     food_state = [a * b for (a, b) in zip(food_state, angle_weights)]
 
+    noise = np.random.normal(1, NOISE, len(conf.ANGLES))
+    food_state = [a * b for (a, b) in zip(food_state, noise)]
+
     # print(food_state)
     # virus_state = get_direction_scores(agent, viruses)
     # mass_state = get_direction_scores(agent, masses)
@@ -309,10 +313,11 @@ class DQN(nn.Module):
         super(DQN, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
+        hidden_size = 32
 
-        self.fc1 = nn.Linear(self.input_dim, 16)
-        self.fc2 = nn.Linear(16, 16)
-        self.fc3 = nn.Linear(16, self.output_dim)
+        self.fc1 = nn.Linear(self.input_dim, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, self.output_dim)
 
         self.relu = nn.ReLU()
 
@@ -372,6 +377,8 @@ class DeepRLModel(ModelInterface):
         self.gamma = gamma
         self.batch_size = batch_size
         self.done = False
+
+        self.prev_action = None
 
     def is_replay_buffer_ready(self):
         """Wait until the replay buffer has reached a certain thresh"""
@@ -449,7 +456,8 @@ class DeepRLModel(ModelInterface):
             1, actions.unsqueeze(1))
         nextQ = self.target_net(next_states)
         max_nextQ = torch.max(nextQ, 1)[0].detach()
-        expectedQ = rewards + (1 - dones) * self.gamma * max_nextQ
+        mask = 1 - dones
+        expectedQ = rewards + mask * self.gamma * max_nextQ
 
         loss = self.loss(currQ, expectedQ.unsqueeze(1))
 

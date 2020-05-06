@@ -31,9 +31,12 @@ def save_net_to_disk(net, filename):
     if not os.path.exists(NET_PATH):
         os.mkdir(NET_PATH)
 
+    if not filename.endswith('.pt'):
+        filename = filename + '.pt'
+
     # Set up checkpoint
     checkpoint = {'net': net.state_dict()}
-    torch.save(checkpoint, NET_PATH + filename + '.pt')
+    torch.save(checkpoint, NET_PATH + filename)
 
 
 def load_net_from_disk(net, filename):
@@ -48,7 +51,10 @@ def load_net_from_disk(net, filename):
 
 
 def load_net_from_device(net, filename, device):
-    checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
+    if not filename.endswith('.pt'):
+        filename = filename + '.pt'
+
+    checkpoint = torch.load(NET_PATH + filename, map_location=device)
     net.load_state_dict(checkpoint['net'])
     return net
 
@@ -56,7 +62,7 @@ def load_net_from_device(net, filename, device):
 def save_replay_buf_to_disk(buf, filename):
     if not os.path.exists(REPLAY_BUF_PATH):
         os.mkdir(REPLAY_BUF_PATH)
-    
+
     with open(REPLAY_BUF_PATH + filename + '.dill', 'wb') as f:
         pickle.dump(buf, f)
 

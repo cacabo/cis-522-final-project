@@ -47,8 +47,9 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 
 ### Up next
 
+- [ ] Try dx and dy?
 - [ ] Try stacking
-- [ ] Try disallowing certain actions
+- [ ] Try disallowing certain actions (it's not getting stuck on walls really anymore)
 - [x] Add one more linear layer and make it normal sizes (Mak)
 - [x] epsilon decay over episodes (mak)
 - [ ] Plot max reward over episodes
