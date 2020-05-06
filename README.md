@@ -44,23 +44,22 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
   - [x] Model
   - [x] Getting screenshots in the train loop (not just GUI)
 - [x] Analyze RL runtime bottleneck (local v. AWS v. GPU) (Mak)
+- [x] target net policy net (mak)
+- [x] Add one more linear layer and make it normal sizes (Mak)
+- [x] epsilon decay over episodes (mak)
+- [x] Better parameterization for epsilon decay (and other hyperparams, ex. decay over) (Cam)
+- [x] Test different state encodings (Cam & Mak)
 
 ### Up next
 
 - [ ] Try dx and dy?
 - [ ] Try stacking
 - [ ] Try disallowing certain actions (it's not getting stuck on walls really anymore)
-- [x] Add one more linear layer and make it normal sizes (Mak)
-- [x] epsilon decay over episodes (mak)
 - [ ] Plot max reward over episodes
 - [ ] Plot survival time over episodes
-- [ ] target net policy net (mak)
 - [ ] Have encode agent state return a tensor, look where it is used (Cam)
 - [ ] Remove time from state encoding, try radically simplifying things (Cam)
 - [ ] Test state encoding, make sure it is seemingly correct (Cam)
-- [ ] Better parameterization for epsilon decay (and other hyperparams, ex. decay over) (Cam)
-- [ ] Look at more examples online (Cam)
-- [ ] Test different state encodings (Cam & Mak)
 - [ ] CNN hyperparams (Sam + Salib)
 
 ### Lower priority
@@ -68,8 +67,3 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [ ] Smarter datastructure for checking collisions
 - [ ] Move with mouse? Could move in directions other than the 8 we currently support
 - [ ] Shooting viruses
-- [ ] safe guards for when you're dead you don't have actions
-  - currently assumes game state properly keeps track which is ok i guess
-  - edge case is manualy start a game where agentmodel.done = True
-- [ ] Figure out what logs / graphs we will want on the writeup
-- [ ] Have a policy net and a target net
