@@ -603,7 +603,7 @@ class GameState():
 # -------------------------------
 # Functions for displaying trained models mid-training
 # -------------------------------
-def start_game(other_models):
+def start_game(other_models, eval_mode=False):
     game = GameState()
 
     # initialize player agent
@@ -613,7 +613,9 @@ def start_game(other_models):
     for (name, model) in other_models:
         game.init_ai_agent(model, name=name)
 
-    game.main_loop()
+    scores = game.main_loop(eval_mode=eval_mode, eval_model_id='AgarAI')
+    if scores is not None:
+        return scores
 
 
 def start_ai_only_game(main_model, other_models, eval_mode=False):
