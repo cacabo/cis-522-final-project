@@ -5,7 +5,6 @@ from models.DeepCNNModel import DeepCNNModel
 from gamestate import GameState, start_ai_only_game
 import fsutils as fs
 import sys
-# from train import test_models
 
 # CNN hyperparams
 TAU = 4
@@ -25,10 +24,11 @@ def test(model_type, model_name):
         agarai_model = DeepRLModel()
         fs.load_net_from_disk(agarai_model.model, model_name)
     elif model_type == 'cnn':
-        agarai_model = DeepCNNModel(tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
-                                    eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
-                                    replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT, lr=LR,
-                                    downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
+        agarai_model = DeepCNNModel(
+            tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
+            eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
+            replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT, lr=LR,
+            downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
         agarai_model.net = fs.load_net_from_disk(agarai_model.net, model_name)
         agarai_model.net.eval()
 
@@ -62,5 +62,3 @@ if __name__ == "__main__":
         test(model_type, model_name)
     else:
         raise ValueError('Usage: test.py {drl/cnn} {model_name}')
-# else:
-#     train()

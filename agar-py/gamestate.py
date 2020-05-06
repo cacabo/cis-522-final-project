@@ -64,7 +64,7 @@ class GameState():
             n : number of food to spawn
         """
         if n is None or n <= 0:
-            raise Exception('n must be positive')
+            raise ValueError('n must be positive')
 
         radius = utils.mass_to_radius(conf.FOOD_MASS)
         for _ in range(n):
@@ -77,10 +77,10 @@ class GameState():
 
         Parameters
 
-            n : number of viruses to spawn
+            n (number) : how many viruses to spawn
         """
         if n is None or n <= 0:
-            raise Exception('n must be positive')
+            raise ValueError('n must be positive')
 
         radius = utils.mass_to_radius(conf.VIRUS_MASS)
         for _ in range(n):
@@ -88,7 +88,7 @@ class GameState():
             self.viruses.append(Virus(pos[0], pos[1], radius, conf.VIRUS_MASS))
 
     def balance_mass(self):
-        """ensure that the total mass of the game is balanced between food and players"""
+        """Ensure that the total mass of the game is balanced between food and players"""
         total_food_mass = len(self.foods) * conf.FOOD_MASS
         total_agent_mass = sum([agent.get_mass()
                                 for agent in self.agents.values()])
@@ -100,8 +100,6 @@ class GameState():
         num_food_to_add = min(max_num_food_to_add, max_mass_food_to_add)
         if num_food_to_add > 0:
             self.add_food(num_food_to_add)
-
-        # TODO removing food if necessary
 
         if not self.with_viruses:
             return
@@ -116,7 +114,9 @@ class GameState():
         Check if two generic objects with `get_pos` function and `radius`
         properties overlap with each other
 
-        @returns boolean
+        Returns
+
+            boolean
         """
         return utils.is_point_in_circle(b.get_pos(), a.get_pos(), a.radius)
 
@@ -149,7 +149,6 @@ class GameState():
                 or not agent.is_alive):
             return 0
 
-        # consumed = []
         mass_consumed = 0
 
         for agent_cell in agent.cells:
@@ -197,8 +196,10 @@ class GameState():
 
     def handle_virus(self, agent, virus):
         """
-        @return None if virus not effected
-        @return virus if virus should be deleted
+        Returns
+
+            None if virus not effected
+            virus if virus should be deleted
         """
         new_cells = []
         ate_virus = False

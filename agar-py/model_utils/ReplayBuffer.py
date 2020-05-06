@@ -4,7 +4,7 @@ import random
 class ReplayBuffer():
     def __init__(self, capacity, prefill_amt=1):
         if capacity is None or capacity <= 0:
-            raise ValueError('capacity must be a positive integer')
+            raise ValueError('Capacity must be a positive integer')
 
         self.capacity = capacity
         self.prefill_amt = prefill_amt
