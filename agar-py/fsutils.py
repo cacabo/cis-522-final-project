@@ -50,11 +50,15 @@ def load_net_from_disk(net, filename):
     return load_net_from_device(net, filename, device)
 
 
-def load_net_from_device(net, filename, device):
+def load_net_from_device(net, filename, device=None):
     if not filename.endswith('.pt'):
         filename = filename + '.pt'
 
-    checkpoint = torch.load(NET_PATH + filename, map_location=device)
+    if device:
+        checkpoint = torch.load(NET_PATH + filename, map_location=device)
+    else:
+        checkpoint = torch.load(NET_PATH + filename)
+
     net.load_state_dict(checkpoint['net'])
     return net
 

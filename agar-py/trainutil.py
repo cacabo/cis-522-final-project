@@ -90,6 +90,8 @@ def train_models(
     save_every = int(episodes / num_checkpoints)
 
     for episode in range(episodes):
+        epsilon = 1
+
         # print('=== Starting Episode %s ===' % episode)
 
         # done = False  # whether game is done or not (terminal state)
@@ -160,7 +162,11 @@ def train_models(
         training_rewards.append(episode_rewards[0])
 
         print('{}\tMean Episode Loss: {:.4f}\tEpisode Reward: {:.4f}\tMean Reward: {:.4f}\tEpsilon: {:.4f}'.format(
-            episode, np.mean(episode_loss), episode_rewards[0], np.mean(training_rewards[-mean_window:]), epsilon))
+            episode,
+            np.mean(episode_loss) if len(episode_loss) else -1,
+            episode_rewards[0],
+            np.mean(training_rewards[-mean_window:]),
+            epsilon))
 
     plot_episode_avg_train_loss(
         training_losses, model_name, plot_mean=True, window_size=mean_window)
@@ -192,7 +198,7 @@ def test_models(env, models, steps=2500, print_every=200):
         episode_rewards = list(
             map(add, episode_rewards, rewards))  # update rewards
 
-        # check for termination of our player #TODO
+        # check for termination of our player
         if dones[0]:
             break
 
