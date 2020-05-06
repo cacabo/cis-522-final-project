@@ -99,9 +99,9 @@ def train_models(
         episode_rewards = [0 for _ in models]
         episode_loss = []
 
-        for model in models:
-            model.done = False
-            model.eval = False
+        for m in models:
+            m.done = False
+            m.eval = False
 
         env.reset(models)
         state = env.get_state()  # get the first state
@@ -115,16 +115,19 @@ def train_models(
 
             episode_rewards = list(
                 map(add, episode_rewards, rewards))  # update rewards
-            update_models_memory(models, state, actions, next_state,
-                                 rewards, dones)  # update replay memory
+
+            # update replay memory
+            update_models_memory(
+                models, state, actions, next_state, rewards, dones)
 
             # optimize models
             loss = model.optimize()
             episode_loss.append(loss)
 
-            # check for termination of our player #TODO
+            # check for termination of our player
             if dones[0]:
                 break
+
             # terminate if all other players are dead
             if (len(dones) > 1):
                 if reduce(and_, dones[1:]):
@@ -142,9 +145,11 @@ def train_models(
         # for idx, model in enumerate(models):
         #     print("Model %s: %s" % (model.id, episode_rewards[idx]))
 
+        model = models[0]
+
         # decay epsilon
         if model.learning_start:
-            epsilon = models[0].decay_epsilon()
+            epsilon = model.decay_epsilon()
             # print("epsilon after decay: ", epsilon)
 
         # sync target net with policy
@@ -178,9 +183,9 @@ def train_models(
 def test_models(env, models, steps=2500, print_every=200):
     print("\nTEST MODE")
     episode_rewards = [0 for _ in models]
-    for model in models:
-        model.done = False
-        model.eval = True
+    for m in models:
+        m.done = False
+        m.eval = True
 
     env.reset(models)
     state = env.get_state()  # get the first state

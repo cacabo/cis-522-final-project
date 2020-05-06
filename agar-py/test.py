@@ -46,7 +46,7 @@ def test(model_type, model_name):
         ('Random3', rand_model_3),
         ('Heur1', heur_model_1),
         ('Heur2', heur_model_2)]
-    start_ai_only_game(main_model, [])
+    start_ai_only_game(main_model, other_models)
 
 
 if __name__ == "__main__":

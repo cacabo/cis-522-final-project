@@ -40,7 +40,8 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     print("Running Train | Episodes: {} | Steps: {}".format(episodes, steps))
 
     # Define environment
-    env = GameState(with_masses=False, with_viruses=False)
+    env = GameState(with_masses=False, with_viruses=False,
+                    with_random_mass_init=True)
 
     epsilon_decay = get_epsilon_decay_factor(
         START_EPSILON, MIN_EPSILON, DECAY_EPISODE_WINDOW)
@@ -58,20 +59,21 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     # deep_rl_model.model = fs.load_net_from_device(
     #     deep_rl_model.model, "train_drl_54143_200.pt")
 
-    models = [deep_rl_model]
+    heuristic_model = HeuristicModel()
+    rand_model_1 = RandomModel(min_steps=5, max_steps=10)
+    rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-    # heuristic_model = HeuristicModel()
-    # rand_model_1 = RandomModel(min_steps=5, max_steps=10)
-    # rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-
-    # models = [deep_rl_model, rand_model_1, rand_model_2]
+    models = [deep_rl_model, heuristic_model, rand_model_1, rand_model_2]
+    # models = [deep_rl_model]
 
     train_models(
-        env, models,
+        env,
+        models,
         episodes=episodes,
         steps=steps,
         print_every=PRINT_EVERY,
-        model_name="train_drl_{}".format(random.randint(0, 2 ** 16)),
+        model_name="train_drl_with_others_{}".format(
+            random.randint(0, 2 ** 16)),
         num_checkpoints=NUM_CHECKPOINTS)
     test_models(env, models, steps=steps)
 

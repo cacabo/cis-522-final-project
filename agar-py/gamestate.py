@@ -594,8 +594,11 @@ class GameState():
                 self.update_interactive_state(agent)
 
             self.tick_game_state(None)
-            if eval_model_id is not None:
-                running_scores.append(self.agents[eval_model_id].get_mass())
+
+            if eval_model_id is not None and eval_model_id in self.agents:
+                agent = self.agents[eval_model_id]
+                if agent is not None:
+                    running_scores.append(agent.get_mass())
             # print(encode_agent_state(self.agents[0].model,self.get_state()))
 
             # take in user input and draw/update the game board
@@ -630,7 +633,7 @@ def start_game(other_models):
         with_random_mass_init=True)
 
     # initialize player agent
-    game.init_manual_agent('AgarAI')
+    game.init_manual_agent("AgarAI")
 
     # initialize all other agents
     for (name, model) in other_models:
@@ -642,7 +645,10 @@ def start_game(other_models):
 
 
 def start_ai_only_game(main_model, other_models):
-    game = GameState(with_masses=False, with_viruses=False)
+    game = GameState(
+        with_masses=False,
+        with_viruses=False,
+        with_random_mass_init=True)
 
     # initialize main_model as the agent that the game camera will follow
     (main_name, model) = main_model
@@ -652,6 +658,6 @@ def start_ai_only_game(main_model, other_models):
     for (name, model) in other_models:
         game.init_ai_agent(model, name=name)
 
-    scores = game.main_loop(eval_mode=eval_mode, eval_model_id=model.id)
+    scores = game.main_loop(eval_mode=True, eval_model_id=model.id)
     if scores is not None:
         return scores

@@ -11,7 +11,7 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 8
+STATE_ENCODING_LENGTH = 25
 # INERTIA_PROB = 0.05
 # NOISE = 0
 # STUCK_BUFFER_SIZE = 20
@@ -260,7 +260,7 @@ def encode_agent_state(model, state):
         return np.zeros((STATE_ENCODING_LENGTH,))
 
     agent = agents[model.id]
-    # agent_mass = agent.get_mass()
+    agent_mass = agent.get_mass()
     # angle = agent.get_angle()
     # angle_penalites = get_angle_penalties(angle)
     # angle_weights = (1 + angle_penalites).numpy()
@@ -271,28 +271,28 @@ def encode_agent_state(model, state):
     # TODO include mass in other agent cell score calculations? especially if eating them...
 
     # Compute a list of all cells in the game not belonging to this model's agent
-    # all_agent_cells = []
-    # for other_agent in agents.values():
-    #     if other_agent == agent:
-    #         continue
-    #     all_agent_cells.extend(other_agent.cells)
+    all_agent_cells = []
+    for other_agent in agents.values():
+        if other_agent == agent:
+            continue
+        all_agent_cells.extend(other_agent.cells)
 
     # Partition all other cells into sets of those larger and smaller than
     # the current agent in aggregate
-    # all_larger_agent_cells = []
-    # all_smaller_agent_cells = []
-    # for cell in all_agent_cells:
-    #     if cell.mass >= agent_mass:
-    #         all_larger_agent_cells.append(cell)
-    #     else:
-    #         all_smaller_agent_cells.append(cell)
+    all_larger_agent_cells = []
+    all_smaller_agent_cells = []
+    for cell in all_agent_cells:
+        if cell.mass >= agent_mass:
+            all_larger_agent_cells.append(cell)
+        else:
+            all_smaller_agent_cells.append(cell)
 
     # Compute scores for cells for each direction
-    # larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
-    # smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
+    larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
+    smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
 
-    # other_agent_state = np.concatenate(
-    #     (larger_agent_state, smaller_agent_state))
+    other_agent_state = np.concatenate(
+        (larger_agent_state, smaller_agent_state))
     food_state = torch.Tensor(get_direction_scores(agent, foods))
     # food_state = food_state * torch.Tensor(angle_weights)
 
@@ -310,24 +310,22 @@ def encode_agent_state(model, state):
     # mass_state = get_direction_scores(agent, masses)
 
     # Encode important attributes about this agent
-    # this_agent_state = [
-    #     agent_mass,
-    #     len(agent.cells),
-    #     agent.get_avg_x_pos() / conf.BOARD_WIDTH,
-    #     agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
-    #     agent.get_angle() / 360,
-    #     agent.get_stdev_mass(),
-    # ]
+    this_agent_state = [
+        agent_mass,
+        #     len(agent.cells),
+        #     agent.get_avg_x_pos() / conf.BOARD_WIDTH,
+        #     agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
+        #     agent.get_angle() / 360,
+        #     agent.get_stdev_mass(),
+    ]
 
-    # encoded_state = np.concatenate((
-    #     this_agent_state,
-    #     food_state,
-    #     other_agent_state,
-    #     virus_state,
-    #     mass_state,
-    # ))
-
-    encoded_state = food_state
+    encoded_state = np.concatenate((
+        this_agent_state,
+        food_state,
+        other_agent_state,
+        # virus_state,
+        # mass_state,
+    ))
 
     return encoded_state
 
@@ -341,7 +339,8 @@ class DQN(nn.Module):
 
         self.fc1 = nn.Linear(self.input_dim, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, self.output_dim)
+        self.fc3 = nn.Linear(hidden_size, hidden_size)
+        self.fc4 = nn.Linear(hidden_size, self.output_dim)
 
         self.relu = nn.ReLU()
 
@@ -349,7 +348,8 @@ class DQN(nn.Module):
         x = state
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.relu(self.fc3(x))
+        x = self.fc4(x)
         return x
 
 
@@ -523,7 +523,6 @@ class DeepRLModel(ModelInterface):
         if self.done:
             return
 
-        # TODO: could toggle batch_size to be diff from minibatch below
         if len(self.replay_buffer) < self.batch_size:
             return
 
