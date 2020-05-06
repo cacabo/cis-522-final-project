@@ -370,6 +370,7 @@ class GameState():
 
     def get_pixels(self):
         """get game board pixels"""
+
         # pygame board needs to be initialized the first time
         if not self.board:
             self.setup_display(render_gui=False)
@@ -640,8 +641,8 @@ def start_game(other_models):
         return scores
 
 
-def start_ai_only_game(main_model, other_models, eval_mode=False):
-    game = GameState()
+def start_ai_only_game(main_model, other_models):
+    game = GameState(with_masses=False, with_viruses=False)
 
     # initialize main_model as the agent that the game camera will follow
     (main_name, model) = main_model

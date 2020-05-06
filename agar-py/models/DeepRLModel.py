@@ -59,11 +59,11 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
 
     Parameters
 
-        agent      : Agent
-        obj_angles : tensor of angles between agent and each object
-        obj_dists  : tensor of distance between agent and each object
-        min_angle  : number
-        max_angle  : number greater than min_angle
+        agent      (Agent)        : player to compute state relative to
+        obj_angles (torch.Tensor) : angles between agent and each object
+        obj_dists  (torch.Tensor) : distance between agent and each object
+        min_angle  (number)       :
+        max_angle  (number)       : greater than min_angle
 
     Returns
 
@@ -81,12 +81,13 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
         return 0
 
     # If just number of food, use this:
-    return filtered_obj_dists.shape[0]
+    # return filtered_obj_dists.shape[0]
 
-    # TODO A/B test this encoding
     # obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
-    # obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
-    # return torch.sum(obj_dists_inv).item()
+
+    obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
+    return torch.sum(obj_dists_inv).item()
+
     # return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
 
 
@@ -225,6 +226,11 @@ def get_direction_scores(agent, objs):
 
 
 def get_angle_penalties(angle):
+    """
+    Penalty of 0 if moving in same direction, negative penalty if moving in a
+    different direction, with a more negative value the more different the
+    direction is
+    """
     if angle is None:
         return torch.zeros(len(conf.ANGLES))
     angle_penalties = torch.Tensor(conf.ANGLES)
@@ -240,7 +246,7 @@ def encode_agent_state(model, state):
         return np.zeros((STATE_ENCODING_LENGTH,))
 
     agent = agents[model.id]
-    agent_mass = agent.get_mass()
+    # agent_mass = agent.get_mass()
     angle = agent.get_angle()
     angle_penalites = get_angle_penalties(angle)
     angle_weights = (1 + angle_penalites).numpy()
@@ -253,21 +259,21 @@ def encode_agent_state(model, state):
     # TODO include mass in other agent cell score calculations? especially if eating them...
 
     # Compute a list of all cells in the game not belonging to this model's agent
-    all_agent_cells = []
-    for other_agent in agents.values():
-        if other_agent == agent:
-            continue
-        all_agent_cells.extend(other_agent.cells)
+    # all_agent_cells = []
+    # for other_agent in agents.values():
+    #     if other_agent == agent:
+    #         continue
+    #     all_agent_cells.extend(other_agent.cells)
 
     # Partition all other cells into sets of those larger and smaller than
     # the current agent in aggregate
-    all_larger_agent_cells = []
-    all_smaller_agent_cells = []
-    for cell in all_agent_cells:
-        if cell.mass >= agent_mass:
-            all_larger_agent_cells.append(cell)
-        else:
-            all_smaller_agent_cells.append(cell)
+    # all_larger_agent_cells = []
+    # all_smaller_agent_cells = []
+    # for cell in all_agent_cells:
+    #     if cell.mass >= agent_mass:
+    #         all_larger_agent_cells.append(cell)
+    #     else:
+    #         all_smaller_agent_cells.append(cell)
 
     # Compute scores for cells for each direction
     # larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
@@ -331,16 +337,18 @@ class DQN(nn.Module):
 
 class DeepRLModel(ModelInterface):
     def __init__(
-            self,
-            epsilon=1,
-            min_epsilon=0.01,
-            epsilon_decay=0.999,
-            buffer_capacity=1000,
-            gamma=0.9,
-            batch_size=64,
-            replay_buffer_learn_thresh=0.5,
-            lr=1e-3,
-            model=None):
+        self,
+        epsilon=1,
+        min_epsilon=0.01,
+        epsilon_decay=0.999,
+        buffer_capacity=1000,
+        gamma=0.9,
+        batch_size=64,
+        replay_buffer_learn_thresh=0.5,
+        lr=1e-3,
+        model=None,
+        # tau=4,
+    ):
         super().__init__()
 
         # init replay buffer
@@ -377,39 +385,50 @@ class DeepRLModel(ModelInterface):
         self.gamma = gamma
         self.batch_size = batch_size
         self.done = False
+        # self.tau = tau
 
         self.prev_action = None
+
+        # self.state_buffer = deque(maxlen=self.tau)
+        # self.next_state_buffer = deque(maxlen=self.tau)
+
+        # Fill the buffers
+        # for _ in range(self.tau):
+        #     self.state_buffer.append(np.zeros(STATE_ENCODING_LENGTH))
+        #     self.next_state_buffer.append(np.zeros(STATE_ENCODING_LENGTH))
 
     def is_replay_buffer_ready(self):
         """Wait until the replay buffer has reached a certain thresh"""
         return len(self.replay_buffer) >= self.replay_buffer_learn_thresh * self.replay_buffer.capacity
+
+    def get_policy_action(self, state):
+        with torch.no_grad():
+            state = encode_agent_state(self, state)
+            state = torch.Tensor(state).to(self.device)
+            q_values = self.model(state)
+            action = torch.argmax(q_values).item()
+            action = Action(action)
+            return action
+
+    def get_random_action(self):
+        action = Action(np.random.randint(len(Action)))
+        return action
 
     def get_action(self, state):
         if self.eval:
             if random.random() <= INERTIA_PROB and self.prev_action:
                 action = self.prev_action
             else:
-                with torch.no_grad():
-                    state = encode_agent_state(self, state)
-                    state = torch.Tensor(state)
-                    q_values = self.model(state)
-                    action = torch.argmax(q_values).item()
-                    action = Action(action)
+                action = self.get_policy_action(state)
         elif self.done:
             return None
         elif not self.is_replay_buffer_ready():
-            return Action(np.random.randint(len(Action)))
+            action = self.get_random_action()
         elif random.random() > self.epsilon:
             # take the action which maximizes expected reward
-            with torch.no_grad():
-                state = encode_agent_state(self, state)
-                state = torch.Tensor(state).to(self.device)
-                q_values = self.model(state)
-                action = torch.argmax(q_values).item()
-                action = Action(action)
+            action = self.get_policy_action(state)
         else:
-            # take a random action
-            action = Action(np.random.randint(len(Action)))  # random action
+            action = self.get_random_action()
 
         self.prev_action = action
         return action

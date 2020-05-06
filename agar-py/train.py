@@ -22,7 +22,7 @@ START_EPSILON = 1.0  # NOTE this is the starting value, which decays over time
 MIN_EPSILON = 0.05
 DECAY_EPISODE_WINDOW = 50
 
-GAMMA = 0.75
+GAMMA = 0.8
 BATCH_SIZE = 32
 
 REPLAY_BUFFER_LEARN_THRESH = 0.1
