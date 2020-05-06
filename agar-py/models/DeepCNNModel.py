@@ -100,12 +100,15 @@ class DeepCNNModel(ModelInterface):
 
     def get_action(self, state):
         """Used when playing the actual game"""
-        pp_state = self.preprocess_state(state)
-        self.state_buffer.append(pp_state)
-        stacked_state = np.stack([self.state_buffer])
-        q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
-        action_idx = torch.argmax(q_vals).item()
-        return Action(action_idx)
+        if random.random() < self.end_epsilon:
+            return get_random_action()
+        else:
+            pp_state = self.preprocess_state(state)
+            self.state_buffer.append(pp_state)
+            stacked_state = np.stack([self.state_buffer])
+            q_vals = self.net(torch.FloatTensor(stacked_state).to(self.device)).to(self.device)
+            action_idx = torch.argmax(q_vals).item()
+            return Action(action_idx)
 
     def get_stacked_action(self, stacked_state):
         """Given the current (stacked) game state, determine what action the model will output"""

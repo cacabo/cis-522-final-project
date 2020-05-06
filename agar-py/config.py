@@ -4,7 +4,7 @@ import pygame
 # Display settings
 # ------------------------------------------------------------------------------
 
-FULL_SCREEN = True
+FULL_SCREEN = False
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 AGENT_NAME_FONT = 'comicsans'
@@ -22,8 +22,8 @@ BOARD_HEIGHT = 830
 FOOD_MASS = 1
 GAME_MASS = 20000
 MAX_FOOD = 200
-ENABLE_TIME_LIMIT = False
-TIME_LIMIT = 1000
+ENABLE_TIME_LIMIT = True
+TIME_LIMIT = 500
 
 # ------------------------------------------------------------------------------
 # Virus state
@@ -64,7 +64,7 @@ AGENT_TICKS_TO_MERGE_CELLS = 500
 # must wait a certain number of ticks after splitting before splitting again
 AGENT_TICKS_TO_SPLIT_AGAIN = 5
 
-ENABLE_RANDOM_MASS_INIT = True
+ENABLE_RANDOM_MASS_INIT = False
 RANDOM_MASS_INIT_LO = 50
 RANDOM_MASS_INIT_HI = 150
 

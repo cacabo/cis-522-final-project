@@ -553,7 +553,7 @@ class GameState():
             self.window = pygame.Surface((conf.SCREEN_WIDTH, conf.SCREEN_HEIGHT))
 
 
-    def main_loop(self):
+    def main_loop(self, eval_mode=False, eval_model_id=None):
         if self.camera == None:
             raise ValueError(
                 'Camera needs to be set to have GUI be rendered. Did you remember to attach the camera to an agent?')
@@ -563,6 +563,9 @@ class GameState():
 
         clock = pygame.time.Clock()
         running = True
+
+        running_scores = []
+
         while running:
             clock.tick(conf.CLOCK_TICK)
 
@@ -570,6 +573,8 @@ class GameState():
                 self.update_interactive_state(agent)
 
             self.tick_game_state(None)
+            if eval_model_id is not None:
+                running_scores.append(self.agents[eval_model_id].get_mass())
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
@@ -584,9 +589,12 @@ class GameState():
             if conf.ENABLE_TIME_LIMIT:
                 if self.time >= conf.TIME_LIMIT:
                     running = False
-
-        pygame.quit()
-        quit()
+        
+        if eval_mode:
+            return running_scores
+        else:
+            pygame.quit()
+            quit()
 
 
 # -------------------------------
@@ -605,7 +613,7 @@ def start_game(other_models):
     game.main_loop()
 
 
-def start_ai_only_game(main_model, other_models):
+def start_ai_only_game(main_model, other_models, eval_mode=False):
     game = GameState()
 
     # initialize main_model as the agent that the game camera will follow
@@ -616,4 +624,6 @@ def start_ai_only_game(main_model, other_models):
     for (name, model) in other_models:
         game.init_ai_agent(model, name=name)
 
-    game.main_loop()
+    scores = game.main_loop(eval_mode=eval_mode, eval_model_id=model.id)
+    if scores is not None:
+        return scores
