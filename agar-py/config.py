@@ -64,7 +64,7 @@ AGENT_TICKS_TO_MERGE_CELLS = 500
 # must wait a certain number of ticks after splitting before splitting again
 AGENT_TICKS_TO_SPLIT_AGAIN = 5
 
-ENABLE_RANDOM_MASS_INIT = True
+ENABLE_RANDOM_MASS_INIT = False
 RANDOM_MASS_INIT_LO = 50
 RANDOM_MASS_INIT_HI = 150
 

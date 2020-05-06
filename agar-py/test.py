@@ -40,7 +40,7 @@ def test(model_type, model_name):
     heur_model_1 = HeuristicModel()
     heur_model_2 = HeuristicModel()
     other_models = [('Random1', rand_model_1), ('Random2', rand_model_2), ('Random3', rand_model_3), ('Heur1', heur_model_1), ('Heur2', heur_model_2)]
-    start_ai_only_game(main_model, other_models)
+    start_ai_only_game(main_model, [])
 
 if __name__ == "__main__":
     num_args = len(sys.argv)

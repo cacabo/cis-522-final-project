@@ -563,13 +563,16 @@ class GameState():
 
         clock = pygame.time.Clock()
         running = True
+        step = 0
         while running:
+            # print(step)
             clock.tick(conf.CLOCK_TICK)
 
             for agent in self.agents.values():
                 self.update_interactive_state(agent)
 
             self.tick_game_state(None)
+            # print(encode_agent_state(self.agents[0].model,self.get_state()))
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
@@ -584,6 +587,7 @@ class GameState():
             if conf.ENABLE_TIME_LIMIT:
                 if self.time >= conf.TIME_LIMIT:
                     running = False
+            step +=1
 
         pygame.quit()
         quit()
