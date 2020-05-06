@@ -341,10 +341,9 @@ class GameState():
                     rewards[idx] -= sum([cell.mass for cell in agent.cells_lost])
                     agent.cells_lost = []
                 else:
-                    # TODO: testing if reward for dying should be negative your mass
                     dones.append(True)
-                    rewards[idx] = -1 * \
-                        self.dead_agent_store[model.id].get_mass()
+                    rewards[idx] = (-1 *
+                                    self.dead_agent_store[model.id].get_mass())
 
         self.time += 1
 

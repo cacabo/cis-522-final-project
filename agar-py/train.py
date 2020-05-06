@@ -18,9 +18,9 @@ NUM_CHECKPOINTS = 5
 Hyperparameters
 """
 
-START_EPSILON = 0.1  # NOTE this is the starting value, which decays over time
-MIN_EPSILON = 0.05
-DECAY_EPISODE_WINDOW = 100
+START_EPSILON = 1.0  # NOTE this is the starting value, which decays over time
+MIN_EPSILON = 0.02
+DECAY_EPISODE_WINDOW = 200
 
 GAMMA = 0.8
 BATCH_SIZE = 32
@@ -30,8 +30,7 @@ REPLAY_BUFFER_CAPACITY = 100000
 
 EPISODES = 200
 STEPS_PER_EPISODE = 1000
-# LEARNING_RATE = 0.000025
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 
 
 def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):

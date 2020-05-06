@@ -50,18 +50,15 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Better parameterization for epsilon decay (and other hyperparams, ex. decay over) (Cam)
 - [x] Test different state encodings (Cam & Mak)
 - [x] Remove time from state encoding, try radically simplifying things (Cam)
+- [x] Try disallowing certain actions (it's not getting stuck on walls really anymore)
+- [x] CNN hyperparams (Sam + Salib)
 
 ### Up next
 
-- [ ] Try dx and dy?
-  - [ ] Reward to promote exploration
+- [ ] Try dx and dy
 - [ ] Try stacking
-- [ ] Try disallowing certain actions (it's not getting stuck on walls really anymore)
 - [ ] Plot max reward over episodes
 - [ ] Plot survival time over episodes
-- [ ] Have encode agent state return a tensor, look where it is used (Cam)
-- [ ] Test state encoding, make sure it is seemingly correct (Cam)
-- [ ] CNN hyperparams (Sam + Salib)
 
 ### Lower priority
 

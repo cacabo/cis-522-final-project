@@ -11,17 +11,13 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 16
-INERTIA_PROB = 0.05
-NOISE = 0
-STUCK_BUFFER_SIZE = 20
+STATE_ENCODING_LENGTH = 8
+# INERTIA_PROB = 0.05
+# NOISE = 0
+# STUCK_BUFFER_SIZE = 20
 
 # 0.2 is too high
-ANGLE_PENALTY_FACTOR = 0.05
-
-# TODO we could account for radius in making this decision
-# TODO this could also be based on actual screen dimensions, not just the
-# longest radius
+# ANGLE_PENALTY_FACTOR = 0.05
 
 # Anything further than this will (likely, unless very large) be outside
 # of the agent's field of view
@@ -52,22 +48,24 @@ def get_avg_angles(angles):
 avg_angles = get_avg_angles(conf.ANGLES)
 
 
-def get_all_angles(angles):
-    angles = angles + [360]
-    all_angles = []
-    for idx in range(0, len(angles) - 1):
-        angle = angles[idx]
-        next_angle = angles[idx + 1]
-        avg_angle = (angle + next_angle) / 2
-        all_angles.append(angle)
-        all_angles.append(avg_angle)
-    all_angles = all_angles + [360]
-    return all_angles
+# def get_all_angles(angles):
+#     """
+#     Get list of all angles and average angles:
+#     [0, 22.5, 45, ..., 360]
+#     """
+#     angles = angles + [360]
+#     all_angles = []
+#     for idx in range(0, len(angles) - 1):
+#         angle = angles[idx]
+#         next_angle = angles[idx + 1]
+#         avg_angle = (angle + next_angle) / 2
+#         all_angles.append(angle)
+#         all_angles.append(avg_angle)
+#     all_angles = all_angles + [360]
+#     return all_angles
 
 
-all_angles = get_all_angles(conf.ANGLES)
-
-# print(all_angles)
+# all_angles = get_all_angles(conf.ANGLES)
 
 
 def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
@@ -86,7 +84,7 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
 
     Returns
 
-        score      : number
+        score (number)
     """
     if min_angle is None or max_angle is None or min_angle < 0 or max_angle < 0:
         raise Exception('max_angle and min_angle must be positive numbers')
@@ -102,12 +100,9 @@ def get_direction_score(agent, obj_angles, obj_dists, min_angle, max_angle):
     # If just number of food, use this:
     # return filtered_obj_dists.shape[0]
 
-    # obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
-
-    obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
+    obj_dists_inv = 1 / torch.sqrt(filtered_obj_dists)
+    # obj_dists_inv = torch.sqrt(MAX_DIST - filtered_obj_dists) / MAX_DIST
     return torch.sum(obj_dists_inv).item()
-
-    # return (torch.max(MAX_DIST - filtered_obj_dists) / MAX_DIST).item()
 
 
 def get_obj_poses_tensor(objs):
@@ -117,11 +112,11 @@ def get_obj_poses_tensor(objs):
 
     Parameters
 
-        objs : list of objects with get_pos() method implemented
+        objs (list) : objects with get_pos() method implemented
 
     Returns
 
-        positions : torch.Tensor
+        positions (torch.Tensor)
     """
     obj_poses = []
     for obj in objs:
@@ -137,12 +132,12 @@ def get_diff_tensor(agent, objs):
 
     Parameters:
 
-        agent : object with get_pos() method implemented
-        objs  : list of n objects with get_pos() method implemented
+        agent (object) : object with get_pos() method implemented
+        objs  (list)   : n objects with get_pos() method implemented
 
     Returns:
 
-        torch.Tensor of size n by 2
+        diff tensor (torch.Tensor) of size n by 2
     """
     obj_poses_tensor = get_obj_poses_tensor(objs)
     (agent_x, agent_y) = agent.get_pos()
@@ -212,27 +207,26 @@ def get_direction_scores(agent, objs):
     This calculation is unique from the others because it requires summing the
     state across two edges based on how angles are stored
     """
-    # zero_to_first_angle = get_direction_score(
-    #     agent,
-    #     filtered_angles_tensor,
-    #     fitlered_dists_tensor,
-    #     avg_angles[-1],
-    #     360)
-    # last_angle_to_360 = get_direction_score(
-    #     agent,
-    #     filtered_angles_tensor,
-    #     fitlered_dists_tensor,
-    #     0,
-    #     avg_angles[0])
-    # first_direction_state = zero_to_first_angle + last_angle_to_360
+    zero_to_first_angle = get_direction_score(
+        agent,
+        filtered_angles_tensor,
+        fitlered_dists_tensor,
+        avg_angles[-1],
+        360)
+    last_angle_to_360 = get_direction_score(
+        agent,
+        filtered_angles_tensor,
+        fitlered_dists_tensor,
+        0,
+        avg_angles[0])
+    first_direction_state = zero_to_first_angle + last_angle_to_360
 
     # Compute score for each conic section
-    # direction_states = [first_direction_state]
-    direction_states = []
+    direction_states = [first_direction_state]
 
-    for i in range(0, len(all_angles) - 1):
-        min_angle = all_angles[i]
-        max_angle = all_angles[i + 1]
+    for i in range(0, len(avg_angles) - 1):
+        min_angle = avg_angles[i]
+        max_angle = avg_angles[i + 1]
         state = get_direction_score(
             agent,
             filtered_angles_tensor,
@@ -312,31 +306,28 @@ def encode_agent_state(model, state):
 
     food_state = food_state.numpy()
 
-    # print(food_state)
-
-    # print(food_state)
     # virus_state = get_direction_scores(agent, viruses)
     # mass_state = get_direction_scores(agent, masses)
 
     # Encode important attributes about this agent
-    this_agent_state = [
-        # agent_mass,
-        # len(agent.cells),
-        # agent.get_avg_x_pos() / conf.BOARD_WIDTH,
-        # agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
-        # agent.get_angle() / 360,
-        # agent.get_stdev_mass(),
-    ]
+    # this_agent_state = [
+    #     agent_mass,
+    #     len(agent.cells),
+    #     agent.get_avg_x_pos() / conf.BOARD_WIDTH,
+    #     agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
+    #     agent.get_angle() / 360,
+    #     agent.get_stdev_mass(),
+    # ]
 
-    # print(this_agent_state)
+    # encoded_state = np.concatenate((
+    #     this_agent_state,
+    #     food_state,
+    #     other_agent_state,
+    #     virus_state,
+    #     mass_state,
+    # ))
 
-    encoded_state = np.concatenate((
-        this_agent_state,
-        food_state,
-        # other_agent_state,
-        # virus_state,
-        # mass_state,
-    ))
+    encoded_state = food_state
 
     return encoded_state
 
@@ -374,7 +365,6 @@ class DeepRLModel(ModelInterface):
         replay_buffer_learn_thresh=0.5,
         lr=1e-3,
         model=None,
-        # tau=4,
     ):
         super().__init__()
 
@@ -412,12 +402,11 @@ class DeepRLModel(ModelInterface):
         self.gamma = gamma
         self.batch_size = batch_size
         self.done = False
-        # self.tau = tau
 
         self.prev_action = None
 
-        self.positions_buffer = deque(maxlen=STUCK_BUFFER_SIZE)
-        self.stuck_count = 0
+        # self.positions_buffer = deque(maxlen=STUCK_BUFFER_SIZE)
+        # self.stuck_count = 0
 
         # self.state_buffer = deque(maxlen=self.tau)
         # self.next_state_buffer = deque(maxlen=self.tau)
@@ -431,41 +420,41 @@ class DeepRLModel(ModelInterface):
         """Wait until the replay buffer has reached a certain thresh"""
         return len(self.replay_buffer) >= self.replay_buffer_learn_thresh * self.replay_buffer.capacity
 
-    def record_position(self, state):
-        (agents, _foods, _viruses, _masses, _time) = state
+    # def record_position(self, state):
+    #     (agents, _foods, _viruses, _masses, _time) = state
 
-        # If the agent is dead
-        if self.id not in agents:
-            return
+    #     # If the agent is dead
+    #     if self.id not in agents:
+    #         return
 
-        agent = agents[self.id]
-        self.positions_buffer.append(agent.get_pos())
+    #     agent = agents[self.id]
+    #     self.positions_buffer.append(agent.get_pos())
 
-    def get_radius(self, state):
-        (agents, _foods, _viruses, _masses, _time) = state
+    # def get_radius(self, state):
+    #     (agents, _foods, _viruses, _masses, _time) = state
 
-        # If the agent is dead
-        if self.id not in agents:
-            return 0
+    #     # If the agent is dead
+    #     if self.id not in agents:
+    #         return 0
 
-        agent = agents[self.id]
-        return agent.get_avg_radius()
+    #     agent = agents[self.id]
+    #     return agent.get_avg_radius()
 
-    def is_stuck(self):
-        if len(self.positions_buffer) < STUCK_BUFFER_SIZE:
-            return False
-        positions = torch.Tensor(self.positions_buffer)
-        maxpos, _ = torch.max(positions, 0)
-        minpos, _ = torch.min(positions, 0)
-        diff = maxpos - minpos
+    # def is_stuck(self):
+    #     if len(self.positions_buffer) < STUCK_BUFFER_SIZE:
+    #         return False
+    #     positions = torch.Tensor(self.positions_buffer)
+    #     maxpos, _ = torch.max(positions, 0)
+    #     minpos, _ = torch.min(positions, 0)
+    #     diff = maxpos - minpos
 
-        if diff[0].item() > 48:
-            return False
-        if diff[1].item() > 48:
-            return False
+    #     if diff[0].item() > 48:
+    #         return False
+    #     if diff[1].item() > 48:
+    #         return False
 
-        prod = torch.prod(diff)
-        return prod.item() < 1200
+    #     prod = torch.prod(diff)
+    #     return prod.item() < 1200
 
     def get_policy_action(self, state):
         with torch.no_grad():
@@ -480,34 +469,36 @@ class DeepRLModel(ModelInterface):
         action = Action(np.random.randint(len(Action)))
         return action
 
-    def get_prev_action(self, state):
-        action = self.prev_action
+    # def get_prev_action(self, state):
+    #     action = self.prev_action
 
-        if not action or not utils.is_action_feasible(
-            action,
-            self.positions_buffer[-1],
-            self.get_radius(state)
-        ):
-            action = self.get_random_action()
+    #     if not action or not utils.is_action_feasible(
+    #         action,
+    #         self.positions_buffer[-1],
+    #         self.get_radius(state)
+    #     ):
+    #         action = self.get_random_action()
 
-        return action
+    #     return action
 
     def get_action(self, state):
-        self.record_position(state)
+        # self.record_position(state)
 
         if not self.is_replay_buffer_ready() and not self.eval:
             action = self.get_random_action()
-        elif self.is_stuck():
-            self.stuck_count = 20
-            action = self.get_prev_action(state)
-        elif self.stuck_count > 0:
-            action = self.get_prev_action(state)
-            self.stuck_count = self.stuck_count - 1
+        # elif self.is_stuck():
+        #     self.stuck_count = 20
+        #     action = self.get_prev_action(state)
+        # elif self.stuck_count > 0:
+        #     action = self.get_prev_action(state)
+        #     self.stuck_count = self.stuck_count - 1
         elif self.eval:
-            if random.random() <= INERTIA_PROB:
-                action = self.get_prev_action(state)
-            else:
-                action = self.get_policy_action(state)
+            action = self.get_policy_action(state)
+
+            # if random.random() <= INERTIA_PROB:
+            #     action = self.get_prev_action(state)
+            # else:
+            #     action = self.get_policy_action(state)
         elif self.done:
             return None
         elif random.random() > self.epsilon:

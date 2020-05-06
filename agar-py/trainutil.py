@@ -90,7 +90,7 @@ def train_models(
     save_every = int(episodes / num_checkpoints)
 
     for episode in range(episodes):
-        epsilon = 1
+        epsilon = 1.0  # Hardcode to 1 until we start decaying when replay buffer is full enough
 
         # print('=== Starting Episode %s ===' % episode)
 
