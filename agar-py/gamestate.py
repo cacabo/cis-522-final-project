@@ -565,8 +565,9 @@ class GameState():
         running = True
 
         running_scores = []
-
+        step = 0
         while running:
+            # print(step)
             clock.tick(conf.CLOCK_TICK)
 
             for agent in self.agents.values():
@@ -575,6 +576,7 @@ class GameState():
             self.tick_game_state(None)
             if eval_model_id is not None:
                 running_scores.append(self.agents[eval_model_id].get_mass())
+            # print(encode_agent_state(self.agents[0].model,self.get_state()))
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
@@ -595,6 +597,7 @@ class GameState():
         else:
             pygame.quit()
             quit()
+            step +=1
 
 
 # -------------------------------
