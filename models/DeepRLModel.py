@@ -265,11 +265,6 @@ def encode_agent_state(model, state):
     # angle_penalites = get_angle_penalties(angle)
     # angle_weights = (1 + angle_penalites).numpy()
 
-    # TODO what about ones that are larger but can't eat you?
-    # TODO what if this agent is split up a bunch?? Many edge cases with bias to consider
-    # TODO factor in size of a given agent in computing score
-    # TODO include mass in other agent cell score calculations? especially if eating them...
-
     # Compute a list of all cells in the game not belonging to this model's agent
     all_agent_cells = []
     for other_agent in agents.values():
@@ -519,7 +514,7 @@ class DeepRLModel(ModelInterface):
             (encode_agent_state(self, state), action.value, encode_agent_state(self, next_state), reward, done))
         self.done = done
 
-    def optimize(self):  # or experience replay
+    def optimize(self):
         if self.done:
             return
 

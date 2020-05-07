@@ -73,20 +73,21 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
 
 def train_models(
         env,
-        models,
+        model,
+        enemies,
         episodes=10,
         steps=2500,
         print_every=200,
         model_name="train_drl",
         mean_window=10,
         target_update=10,
-        num_checkpoints=10):
-    print("\nTRAIN MODE")
+        num_checkpoints=1):
+    print("TRAIN MODE")
 
     training_losses = []
     training_rewards = []
+    models = [model] + enemies
 
-    model = models[0]
     save_every = int(episodes / num_checkpoints)
 
     for episode in range(episodes):
@@ -94,7 +95,6 @@ def train_models(
 
         # print('=== Starting Episode %s ===' % episode)
 
-        # done = False  # whether game is done or not (terminal state)
         # reset the environment to fresh starting state with game agents initialized for models
         episode_rewards = [0 for _ in models]
         episode_loss = []
@@ -141,26 +141,20 @@ def train_models(
                     print("Model %s | Reward: %s\tLoss: %s" %
                           (model.id, episode_rewards[idx], episode_loss[idx]))
 
-        # print("------EPISODE %s rewards------" % episode)
-        # for idx, model in enumerate(models):
-        #     print("Model %s: %s" % (model.id, episode_rewards[idx]))
-
-        model = models[0]
-
         # decay epsilon
         if model.learning_start:
             epsilon = model.decay_epsilon()
-            # print("epsilon after decay: ", epsilon)
 
         # sync target net with policy
         if episode % target_update == 0:
             model.sync_target_net()
 
-        if (episode + 1) % save_every == 0:
-            print('Saving checkpoint...')
-            fs.save_net_to_disk(
-                model.model,
-                "{}_{}".format(model_name, episode + 1))
+        if (save_every != 0):
+            if (episode + 1) % save_every == 0:
+                print('Saving checkpoint...')
+                fs.save_net_to_disk(
+                    model.model,
+                    "{}_{}".format(model_name, episode + 1))
 
         episode_loss = [loss for loss in episode_loss if loss is not None]
         training_losses.append(np.mean(episode_loss))
@@ -180,8 +174,9 @@ def train_models(
     plt.show()
 
 
-def test_models(env, models, steps=2500, print_every=200):
-    print("\nTEST MODE")
+def test_models(env, model, enemies, steps=2500, print_every=200):
+    print("TEST MODE")
+    models = [model] + enemies
     episode_rewards = [0 for _ in models]
     for m in models:
         m.done = False
@@ -195,8 +190,6 @@ def test_models(env, models, steps=2500, print_every=200):
 
         # environment determines new state, reward, whether terminal, based on actions taken by all models
         rewards, dones = env.update_game_state(models, actions)
-
-        # TODO: update dones for other models, persist (otherwise negative rewards)
 
         next_state = env.get_state()
 

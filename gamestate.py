@@ -306,7 +306,6 @@ class GameState():
                 mass.move()
 
         # check results of all agent actions
-        # TODO: get reward experienced by each agent depending on what happens to them
         if models == None:
             for agent in self.agents.values():
                 self.tick_agent(agent)
@@ -347,7 +346,6 @@ class GameState():
 
         self.time += 1
 
-        # TODO: return reward experienced by each agent depending on what happens to them
         if models:
             return (rewards, dones)
 
@@ -389,7 +387,6 @@ class GameState():
                 agent = self.agents[model.id]
                 agent.do_action(action)
 
-        # TODO: abstract away computation of rewards?
         rewards, dones = self.tick_game_state(models)
 
         return rewards, dones
