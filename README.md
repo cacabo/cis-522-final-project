@@ -72,8 +72,7 @@ You need python3 (and pip3) installed to run our project.
 
 To install dependencies, run:
 
-```
-bash
+```bash
 pip3 install -r requirements.txt
 ```
 
