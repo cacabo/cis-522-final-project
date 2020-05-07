@@ -18,9 +18,6 @@ We compared the models to better understand the impact that encoding biases into
 
 ```
 .
-├── .vscode/                     Editor config
-├── __pycache__/                 Cached build files
-|
 ├── model_utils/                 Code shared by models
 |   └── ReplayBuffer.py          Replay buffer datastructure
 |
