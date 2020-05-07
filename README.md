@@ -18,6 +18,9 @@ We compared the models to better understand the impact that encoding biases into
 
 ```text
 .
+├── demo/
+|   └── *                        GIFs and Videos demoing agents
+|
 ├── model_utils/                 Code shared by models
 |   ├── train_utils.py           Shared functions by the two training scripts
 |   ├── fs_utils.py              Helper functions for saving
@@ -107,6 +110,8 @@ To train the CNN-based model, run:
 ```bash
 python3 train_cnn.py
 ```
+
+**Training and model hyperparameters can be modified at the top of each train file.**
 
 <br />
 
