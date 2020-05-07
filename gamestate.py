@@ -596,7 +596,6 @@ class GameState():
                 agent = self.agents[eval_model_id]
                 if agent is not None:
                     running_scores.append(agent.get_mass())
-            # print(encode_agent_state(self.agents[0].model,self.get_state()))
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
