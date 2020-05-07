@@ -99,14 +99,14 @@ cnn_food_model = DeepCNNModel(tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end
                     eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
                     replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT, lr=LR,
                     downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
-cnn_food_model.net = fs.load_net_from_disk(cnn_food_model.net, 'dqn_cnn_add_enemies_to_trained_food_250ep')
+cnn_food_model.net = fs.load_net_from_disk(cnn_food_model.net, 'important/dqn_cnn_add_enemies_to_trained_food_250ep')
 cnn_food_model.eval = True
 
 cnn_scratch_model = DeepCNNModel(tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
                     eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
                     replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT, lr=LR,
                     downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
-cnn_scratch_model.net = fs.load_net_from_disk(cnn_scratch_model.net, 'dqn_cnn_dan_run_enemies_from_scratch_250ep')
+cnn_scratch_model.net = fs.load_net_from_disk(cnn_scratch_model.net, 'important/dqn_cnn_dan_run_enemies_from_scratch_250ep')
 cnn_scratch_model.eval = True
 
 # rl_model = DeepRLModel()
@@ -124,5 +124,5 @@ adversaries = [('Rand1', RandomModel(min_steps=5, max_steps=10)),
                ('Heur1', HeuristicModel()),
                ('Heur2', HeuristicModel()),
                ('Heur3', HeuristicModel())]
-#evaluate_model_eating_food(models, num_trials=10)
-evaluate_model_full_game(models, adversaries, num_trials=10)
+evaluate_model_eating_food(models, num_trials=2)
+#evaluate_model_full_game(models, adversaries, num_trials=10)
