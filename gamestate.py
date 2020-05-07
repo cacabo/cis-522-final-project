@@ -623,6 +623,8 @@ class GameState():
 # -------------------------------
 # Functions for displaying trained models mid-training
 # -------------------------------
+
+
 def start_game(other_models):
     game = GameState(
         with_viruses=True,

@@ -20,11 +20,15 @@ DOWNSAMPLE_SIZE = (112, 112)
 BATCH_SIZE = 32
 
 
+DRL = 'drl'
+CNN = 'cnn'
+
+
 def test(model_type, model_name):
-    if model_type == 'drl':
+    if model_type is DRL:
         agarai_model = DeepRLModel()
         fs.load_net_from_disk(agarai_model.model, model_name)
-    elif model_type == 'cnn':
+    elif model_type is CNN:
         agarai_model = DeepCNNModel(
             tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
             eps_decay_window=EPS_DECAY_WINDOW, replay_buf_capacity=REPLAY_BUF_CAPACITY,
@@ -57,7 +61,7 @@ if __name__ == "__main__":
         model_type = sys.argv[1]
         model_name = sys.argv[2]
 
-        if not ((model_type == 'drl') | (model_type == 'cnn')):
+        if not (model_type in [DRL, CNN]) or not model_name:
             raise ValueError('Usage: test.py {drl/cnn} {model_name}')
 
         test(model_type, model_name)
