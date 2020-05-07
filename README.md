@@ -1,8 +1,16 @@
-# agar-py
+# Agar.ai
 
-Implementing agar.io to run locally as a Python process. This will optimize for our model being able to hook into the game state and learn in rapid iterations. We are developing a set of models to learn to play this game via Reinforcement Learning.
+Final project for CIS 522: Deep Learning at the University of Pennsylvania.
 
-TODO
+Python-based implementation of agar.io in Pygame and a set of models built in vanilla Python and PyTorch for learning to play this game with the objective of maximizing change in mass.
+
+---
+
+### Introduction
+
+Agar.io is an online multiplayer game in which players control an agent with the objective ofmaximizing their score by consuming various objects including food, viruses, mass pellets, and other players. We built a variety of reinforcement learning models and other agents on a custom Python-based implementation of the Agar.io game.
+
+We compared the models to better understand the impact that encoding biases into policies and architectures has on performance, both for the "full" game (a complete environment with other agents, viruses, and food) and subsets of the game(e.g., an environment with only food and no other agents). Our implementations range in their level of bias, from a strongly biased heuristic model with a hard-coded greedy policy, to a semi-biased deep reinforcement learning model which uses input vectors representing encoded game state, to a relatively unbiased deep reinforcement learning model which takes in screenshots of the GUI andencodes game state using a CNN.
 
 ---
 
