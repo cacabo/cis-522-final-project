@@ -1,12 +1,109 @@
-# agar-py
+# Agar.ai
 
-Implementing agar.io to run locally as a Python process. This will optimize for our model being able to hook into the game state and learn in rapid iterations. We are developing a set of models to learn to play this game via Reinforcement Learning.
+Final project for CIS 522: Deep Learning at the University of Pennsylvania.
+
+Python-based implementation of agar.io in Pygame and a set of models built in vanilla Python and PyTorch for learning to play this game with the objective of maximizing change in mass.
 
 ---
 
-# TODO
+### Introduction
 
-### Done
+Agar.io is an online multiplayer game in which players control an agent with the objective ofmaximizing their score by consuming various objects including food, viruses, mass pellets, and other players. We built a variety of reinforcement learning models and other agents on a custom Python-based implementation of the Agar.io game.
+
+We compared the models to better understand the impact that encoding biases into policies and architectures has on performance, both for the "full" game (a complete environment with other agents, viruses, and food) and subsets of the game(e.g., an environment with only food and no other agents). Our implementations range in their level of bias, from a strongly biased heuristic model with a hard-coded greedy policy, to a semi-biased deep reinforcement learning model which uses input vectors representing encoded game state, to a relatively unbiased deep reinforcement learning model which takes in screenshots of the GUI andencodes game state using a CNN.
+
+---
+
+### Repo structure
+
+```
+.
+├── .vscode/                     Editor config
+├── __pycache__/                 Cached build files
+|
+├── model_utils/                 Code shared by models
+|   └── ReplayBuffer.py          Replay buffer datastructure
+|
+├── models/                      Agar.io models
+|   ├── DeepCNNModel.py          CNN-based RL agent on screenshot state
+|   ├── DeepRLModel.py           FC-based RL agent on encoded state
+|   ├── HeuristicModel.py        Greedy baseline model
+|   ├── ModelInterface.py        Shared interface for all models
+|   └── RandomModel.py           Random action baseline model
+|
+├── notebooks/                   Set of notebooks used for training on Sagemaker
+|   ├── cam-notebook.ipynb       There is one for each team member
+|   ├── daniel-notebook.ipynb
+|   ├── mak-notebook.ipynb
+|   └── sam-notebook.ipynb
+|
+├── plots/
+|   ├── important/               Best performing plots
+|   └── *                        Plots generated over the course of training and test
+|
+├── store/
+|   └── nets/                    Nets generated over the course of training
+|       ├── important/           Best performing nets
+|       └── *                    Nets generated over the course of training
+|
+├── __test-encoded-state__.py    Tests that RL agenet state encoding works as expected
+├── __test-fsutils__.py          Tests that saving and loading net params works as expected
+|
+├── actions.py                   Set of allowed actions for an agent to take
+├── agario.py                    Script for running game manually in GUI
+├── agent.py                     Agent and AgentCell classes
+├── camera.py                    Handles moving viewport in GUI to follow agent
+├── config.py                    Set of constants used throughout the repo
+├── evaluate.py                  Plots performance of set of models
+├── food.py                      Food object
+├── fsutils.py                   Helper functions for saving
+├── gamestate.py                 Implementation of headless game state
+├── mass.py                      Mass pellet object
+├── test.py                      Run trained model on GUI
+├── train_cnn.py                 Train CNN model
+├── train.py                     Train RL model
+├── trainutil.py                 Shared functions by the two training scripts
+├── utils.py                     Helper functions for dealing with object interactions
+├── virus.py                     Virus object
+|
+├── requirements.txt             Python dependencies
+├── .gitignore                   Files to not include in git
+└── README.md                    Documentation
+```
+
+---
+
+### Running the code
+
+First, clone this repo and change directories into the root of the repo.
+
+#### Installing dependencies
+
+You need python3 (and pip3) installed to run our project.
+
+To install dependencies, run:
+
+```bash
+pip3 install -r requirements.txt
+```
+
+TODO
+
+TODO pygame especially
+
+#### Running locally
+
+TODO
+
+#### Running on AWS Sagemaker
+
+TODO
+
+---
+
+### Tasks
+
+#### Done
 
 - [x] Split via space bar
 - [x] Shoot via `q` as we are currently using `w` for motion
@@ -53,14 +150,14 @@ Implementing agar.io to run locally as a Python process. This will optimize for 
 - [x] Try disallowing certain actions (it's not getting stuck on walls really anymore)
 - [x] CNN hyperparams (Sam + Salib)
 
-### Up next
+#### Up next
 
 - [ ] Try dx and dy
 - [ ] Try stacking
 - [ ] Plot max reward over episodes
 - [ ] Plot survival time over episodes
 
-### Lower priority
+#### Lower priority
 
 - [ ] Smarter datastructure for checking collisions
 - [ ] Move with mouse? Could move in directions other than the 8 we currently support
