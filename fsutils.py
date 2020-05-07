@@ -4,7 +4,6 @@ import pickle
 from copy import deepcopy
 
 ROOT = './store/'
-DF_PATH = ROOT + 'dfs/'
 NET_PATH = ROOT + 'nets/'
 REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
 
@@ -76,8 +75,3 @@ def load_replay_buf_from_disk(filename):
         return pickle.load(f)
 
 
-def save_df_to_disk(df, fname):
-    if not os.path.exists(DF_PATH):
-        os.mkdir(DF_PATH)
-
-    df.to_csv(DF_PATH + fname + ".csv")
