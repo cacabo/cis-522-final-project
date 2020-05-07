@@ -92,9 +92,12 @@ TODO pygame especially
 
 TODO
 
-#### Running on AWS Sagemaker
+#### Running on AWS SageMaker
+To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter. 
 
-TODO
+Once open, create a new notebook and be sure to install dependencies. Finally, simply import the train file for the model you wish to train.
+
+Note - GUIs will not appear in SageMaker.
 
 ---
 
