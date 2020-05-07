@@ -90,18 +90,19 @@ To play the game, run:
 ```bash
 python3 agario.py
 ```
-To modify the enemies, modify the `ai_models` variable in `agario.py`
+To modify the enemies, modify the `ai_models` variable in `agario.py`.
 
+<br />
 
 To train the DRL model, run:
 ```bash
 python3 train_drl.py
 ```
-
 To train the CNN-based model, run:
 ```bash
 python3 train_cnn.py
 ```
+<br />
 
 To run the game with a specific model as the main player, first select a model you wish to run. The name description of each model can be found in the file tree above in the `store/nets` directory. Once selected, run:
 ```bash
