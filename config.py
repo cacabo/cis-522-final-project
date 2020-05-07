@@ -23,7 +23,7 @@ FOOD_MASS = 1
 GAME_MASS = 20000
 MAX_FOOD = 200
 ENABLE_TIME_LIMIT = True
-TIME_LIMIT = 500
+TIME_LIMIT = 1000
 
 # ------------------------------------------------------------------------------
 # Virus state
@@ -49,15 +49,27 @@ BLUE_COLOR = (0, 0, 255)
 # Agent state
 # ------------------------------------------------------------------------------
 
+# Fraction of mass preserved per clock tick
 MASS_DECAY_FACTOR = 0.9999
+
+# Directions the cell can move in
 ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]
+
+# Default starting mass for an agent
 AGENT_STARTING_MASS = 50
+
+# Cells must be at least this big to fire out mass
 MIN_MASS_TO_SHOOT = 50
-MASS_MASS = 20  # The mass which cells can shoot out
+
+# The mass which cells can shoot out
+MASS_MASS = 20
 MIN_CELL_MASS = 50
 CELL_CONSUME_MASS_FACTOR = 1.1
 AGENT_STARTING_SPEED = 20
-AGENT_CELL_LIMIT = 16  # max number of individual cells a single agent can have
+
+# max number of individual cells a single agent can have
+AGENT_CELL_LIMIT = 16
+
 # can merge cells this many ticks after splitting
 AGENT_TICKS_TO_MERGE_CELLS = 500
 

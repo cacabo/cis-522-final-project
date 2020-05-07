@@ -2,6 +2,12 @@ import config as conf
 
 
 class Food():
+    """
+    Implementation of food objects
+
+    These are small pellets dispersed randomly throughout the game board
+    """
+
     ID_counter = 0
 
     def __init__(self, x, y, r, color):
