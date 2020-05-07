@@ -1,5 +1,5 @@
 from gamestate import GameState, start_ai_only_game
-import fsutils as fs
+import model_utils.fs_utils as fs
 import sys
 
 from models.DeepRLModel import DeepRLModel

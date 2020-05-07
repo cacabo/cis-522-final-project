@@ -4,7 +4,7 @@ from models.HeuristicModel import HeuristicModel
 from models.DeepRLModel import DeepRLModel
 from model_utils.train_utils import train_models, test_models, get_epsilon_decay_factor
 import random
-import fsutils as fs
+import model_utils.fs_utils as fs
 import sys
 
 """

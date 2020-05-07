@@ -8,7 +8,7 @@ import torch
 from gamestate import GameState
 import utils
 import config as conf
-import fsutils as fs
+import model_utils.fs_utils as fs
 
 
 # below are helper functions for plotting

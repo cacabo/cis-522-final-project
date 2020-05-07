@@ -8,7 +8,7 @@ from models.DeepCNNModel import DeepCNNModel
 from models.DeepRLModel import DeepRLModel
 from gamestate import start_game, start_ai_only_game
 import config as conf
-import fsutils as fs
+import model_utils.fs_utils as fs
 
 
 def evaluate_human_eating_food(num_trials):
