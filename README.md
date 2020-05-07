@@ -36,10 +36,10 @@ We compared the models to better understand the impact that encoding biases into
 |
 ├── store/
 |   └── nets/                    Nets generated over the course of training
-|       ├── food_trained_cnn                        CNN-based RL agent for only food
-|       ├── food_trained_drl                        FC-based RL (DRL) agent for only food
-|       ├── full_food_pretrained_trained_cnn        CNN-based RL agent for enemies (pretrained from food_trained_cnn)
-|       └── full_from_scratch_trained_cnn           CNN-based RL agent for enemies (trained from scratch)
+|       ├── food_trained_cnn.pt                        CNN-based RL agent for only food
+|       ├── food_trained_drl.pt                        FC-based RL (DRL) agent for only food
+|       ├── full_food_pretrained_trained_cnn.pt        CNN-based RL agent for enemies (pretrained from food_trained_cnn)
+|       └── full_from_scratch_trained_cnn.pt           CNN-based RL agent for enemies (trained from scratch)
 |
 ├── __test-encoded-state__.py    Tests that RL agent state encoding works as expected
 ├── __test-fsutils__.py          Tests that saving and loading net params works as expected
@@ -109,7 +109,7 @@ To run the game with a specific model as the main player, first select a model y
 python3 test.py [drl | cnn] [model_name]
 ```
 
-For example, to run `food_trained_cnn`, run:
+For example, to run `food_trained_cnn.pt`, run:
 ```bash
 python3 test.py cnn food_trained_cnn
 ```
