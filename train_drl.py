@@ -18,7 +18,7 @@ NUM_CHECKPOINTS = 5
 Hyperparameters
 """
 
-START_EPSILON = 1.0  # NOTE this is the starting value, which decays over time
+START_EPSILON = 1.0 
 MIN_EPSILON = 0.02
 DECAY_EPISODE_WINDOW = 200
 
@@ -33,11 +33,11 @@ STEPS_PER_EPISODE = 1000
 LEARNING_RATE = 0.001
 
 
-def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
+def train():
     """
     Training loop for training the DeepRLModel
     """
-    print("Running Train | Episodes: {} | Steps: {}".format(episodes, steps))
+    print("Running Train | Episodes: {} | Steps: {}".format(EPISODES, STEPS_PER_EPISODE))
 
     # Define environment
     env = GameState(with_masses=False, with_viruses=False,
@@ -63,35 +63,19 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     rand_model_2 = RandomModel(min_steps=5, max_steps=10)
     enemies = [heuristic_model, rand_model_1, rand_model_2]
 
+    model_name = "train_drl_with_others_{}".format(random.randint(0, 2 ** 16))
     train_models(
         env,
         deep_rl_model,
         enemies,
-        episodes=episodes,
-        steps=steps,
+        episodes=EPISODES,
+        steps=STEPS_PER_EPISODE,
         print_every=PRINT_EVERY,
-        model_name="train_drl_with_others_{}".format(
-            random.randint(0, 2 ** 16)),
+        model_name=model_name,
         num_checkpoints=NUM_CHECKPOINTS)
-    test_models(env, deep_rl_model, enemies, steps=steps)
 
     #save the model
-    fs.save_net_to_disk(deep_rl_model.model, "deep_rl_model")
+    fs.save_net_to_disk(deep_rl_model.model, "model_name")
 
 if __name__ == "__main__":
-    num_args = len(sys.argv)
-
-    if num_args == 3:
-        episodes = int(sys.argv[1])
-        steps = int(sys.argv[2])
-
-        if not (episodes > 0 and steps > 0):
-            raise ValueError('Usage: train.py {episodes} {steps}')
-
-        train(episodes, steps)
-    elif num_args == 1:
-        train()
-    else:
-        raise ValueError('Usage: train.py {episodes} {steps}')
-else:
     train()
