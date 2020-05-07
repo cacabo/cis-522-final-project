@@ -28,12 +28,6 @@ We compared the models to better understand the impact that encoding biases into
 |   ├── ModelInterface.py        Shared interface for all models
 |   └── RandomModel.py           Random action baseline model
 |
-├── notebooks/                   Set of notebooks used for training on Sagemaker
-|   ├── cam-notebook.ipynb       There is one for each team member
-|   ├── daniel-notebook.ipynb
-|   ├── mak-notebook.ipynb
-|   └── sam-notebook.ipynb
-|
 ├── plots/
 |   ├── important/               Best performing plots
 |   └── *                        Plots generated over the course of training and test
