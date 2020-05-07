@@ -11,3 +11,6 @@ __pycache__/
 .vscode/
 
 .ipynb_checkpoints/
+
+# Compile python files
+*.pyc

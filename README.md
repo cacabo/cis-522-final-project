@@ -84,7 +84,7 @@ To install dependencies, run:
 pip3 install -r requirements.txt
 ```
 
-TODO
+If you have errors along the lines of `Could not build wheels for ..., since package 'wheel' is not installed.`, run `pip3 install wheel` and then try re-running the install command.
 
 TODO pygame especially
 
