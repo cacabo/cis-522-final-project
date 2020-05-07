@@ -19,6 +19,8 @@ We compared the models to better understand the impact that encoding biases into
 ```
 .
 ├── model_utils/                 Code shared by models
+|   ├── train_utils.py           Shared functions by the two training scripts
+|   ├── fs_utils.py              Helper functions for saving
 |   └── ReplayBuffer.py          Replay buffer datastructure
 |
 ├── models/                      Agar.io models
@@ -34,6 +36,10 @@ We compared the models to better understand the impact that encoding biases into
 |
 ├── store/
 |   └── nets/                    Nets generated over the course of training
+|       ├── food_trained_cnn                        CNN-based RL agent for only food
+|       ├── food_trained_drl                        FC-based RL (DRL) agent for only food
+|       ├── full_food_pretrained_trained_cnn        CNN-based RL agent for enemies (pretrained from food_trained_cnn)
+|       └── full_from_scratch_trained_cnn           CNN-based RL agent for enemies (trained from scratch)
 |
 ├── __test-encoded-state__.py    Tests that RL agent state encoding works as expected
 ├── __test-fsutils__.py          Tests that saving and loading net params works as expected
@@ -45,13 +51,11 @@ We compared the models to better understand the impact that encoding biases into
 ├── config.py                    Set of constants used throughout the repo
 ├── evaluate.py                  Plots performance of set of models
 ├── food.py                      Food object
-├── fsutils.py                   Helper functions for saving
 ├── gamestate.py                 Implementation of headless game state
 ├── mass.py                      Mass pellet object
 ├── test.py                      Run trained model on GUI
 ├── train_cnn.py                 Train CNN model
 ├── train_drl.py                 Train RL model
-├── trainutil.py                 Shared functions by the two training scripts
 ├── utils.py                     Helper functions for dealing with object interactions
 ├── virus.py                     Virus object
 |
@@ -72,7 +76,8 @@ You need python3 (and pip3) installed to run our project.
 
 To install dependencies, run:
 
-```bash
+```
+bash
 pip3 install -r requirements.txt
 ```
 
@@ -81,6 +86,12 @@ If you have errors along the lines of `Could not build wheels for ..., since pac
 Pygame does not always install correctly on MacOS Mojave and more recent. Even if pip says that the dependency was added, when it comes to actually running a file which imports Pygame it may not actually perform as expected (i.e. you won't be able to see the GUI for the game). To get around this, you can follow [this SO post](https://stackoverflow.com/questions/52718921/problems-getting-pygame-to-show-anything-but-a-blank-screen-on-macos-mojave) to install Pygame from source.
 
 #### Running locally
+To play the game, run:
+```bash
+python3 agario.py
+```
+To modify the enemies, modify the `ai_models` variable in `agario.py`
+
 
 To train the DRL model, run:
 ```bash
@@ -90,6 +101,16 @@ python3 train_drl.py
 To train the CNN-based model, run:
 ```bash
 python3 train_cnn.py
+```
+
+To run the game with a specific model as the main player, first select a model you wish to run. The name description of each model can be found in the file tree above in the `store/nets` directory. Once selected, run:
+```bash
+python3 test.py [drl | cnn] [model_name]
+```
+
+For example, to run `food_trained_cnn`, run:
+```bash
+python3 test.py cnn food_trained_cnn
 ```
 
 #### Running on AWS SageMaker
