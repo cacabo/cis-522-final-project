@@ -161,13 +161,14 @@ def train_models(
                     "{}_{}".format(model_name, episode + 1))
 
         episode_loss = [loss for loss in episode_loss if loss is not None]
-        training_loss = np.mean(episode_loss) if len(episode_loss) else None
-        training_losses.append(training_loss)
+        training_loss = np.mean(episode_loss) if len(episode_loss) else -1
+        if training_loss >= 0:
+            training_losses.append(training_loss)
         training_rewards.append(episode_rewards[0])
 
         print('{}\tMean Episode Loss: {:.4f}\tEpisode Reward: {:.4f}\tMean Reward: {:.4f}\tEpsilon: {:.4f}'.format(
             episode,
-            training_loss if training_loss else -1,
+            training_loss,
             episode_rewards[0],
             np.mean(training_rewards[-mean_window:]),
             epsilon))
