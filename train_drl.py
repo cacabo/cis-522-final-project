@@ -2,7 +2,7 @@ from gamestate import GameState, start_ai_only_game
 from models.RandomModel import RandomModel
 from models.HeuristicModel import HeuristicModel
 from models.DeepRLModel import DeepRLModel
-from trainutil import train_models, test_models, get_epsilon_decay_factor
+from model_utils.train_utils import train_models, test_models, get_epsilon_decay_factor
 import random
 import fsutils as fs
 import sys

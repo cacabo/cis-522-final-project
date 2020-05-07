@@ -1,5 +1,5 @@
 from models.DeepCNNModel import DeepCNNModel
-from trainutil import train_deepcnn_model, get_epsilon_decay_factor
+from model_utils.train_utils import train_deepcnn_model, get_epsilon_decay_factor
 
 # model hyperparameters
 MODEL_NAME = 'my_cnn_model'
