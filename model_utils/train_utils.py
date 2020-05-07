@@ -56,10 +56,14 @@ def plot_episode_steps_survived(episode_steps_survived, model_name, plot_mean=Fa
 
 # helper function to calculate epsilon decay factor according to starting & finishing epsilon, and how many
 #   episode to decay over
+
+
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
     return math.exp(math.log(e_min / e_max) / e_decay_window)
 
 # helper function used to iterate through all the models and select an action
+
+
 def select_model_actions(models, state):
     model_actions = []
     for model in models:
@@ -67,11 +71,15 @@ def select_model_actions(models, state):
     return model_actions
 
 # helper function used to iterate through all the models and train them
+
+
 def optimize_models(models):
     for model in models:
         model.optimize()
 
 # helper function used to iterate through all the models and update their replay buffer
+
+
 def update_models_memory(models, state, actions, next_state, rewards, dones):
     for (model, action, reward, done) in zip(models, actions, rewards, dones):
         model.remember(state, action, next_state, reward, done)
@@ -236,7 +244,8 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
     # if specified, burn in the replay buffer to fill it with some examples before starting to train
     if prefill_buffer:
-        print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt * 100 / cnn_model.replay_buffer.capacity) + '% capacity...')
+        print('Filling replay buffer to ' + str(cnn_model.replay_buffer.prefill_amt *
+                                                100 / cnn_model.replay_buffer.capacity) + '% capacity...')
         env.reset(models)
         pixels = env.get_pixels()
         while cnn_model.replay_buffer.prefill_capacity() < 1.0:
@@ -246,8 +255,10 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
             rewards, dones = env.update_game_state(models, actions)
 
             next_pixels = env.get_pixels()
-            cnn_model.next_state_buffer.append(cnn_model.preprocess_state(pixels))
-            cnn_model.remember(pixels, actions[0], next_pixels, rewards[0], dones[0])
+            cnn_model.next_state_buffer.append(
+                cnn_model.preprocess_state(pixels))
+            cnn_model.remember(
+                pixels, actions[0], next_pixels, rewards[0], dones[0])
 
             if dones[0]:
                 env.reset(models)
@@ -255,16 +266,17 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
             else:
                 pixels = next_pixels
 
-        print('Replay buffer filled with ' + str(len(cnn_model.replay_buffer)) + ' samples!')
+        print('Replay buffer filled with ' +
+              str(len(cnn_model.replay_buffer)) + ' samples!')
     else:
         print('Replay buffer prefill disabled.')
 
-    print ('Beginning training...')
+    print('Beginning training...')
     for ep in range(max_eps):
         env.reset(models)
         state = env.get_state()
         pixels = env.get_pixels()
-        
+
         # used for frame skipping, to simply repeat the last action chosen
         action = None
 
@@ -297,10 +309,12 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
             # get the next pixel state and append to next state buffer
             next_state = env.get_state()
             next_pixels = env.get_pixels()
-            cnn_model.next_state_buffer.append(cnn_model.preprocess_state(next_pixels))
+            cnn_model.next_state_buffer.append(
+                cnn_model.preprocess_state(next_pixels))
 
             # push to replay buffer
-            cnn_model.remember(pixels, action, next_pixels, rewards[0], dones[0])
+            cnn_model.remember(pixels, action, next_pixels,
+                               rewards[0], dones[0])
 
             # optimize model
             if step % update_freq == 0:
@@ -316,7 +330,7 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
 
             if dones[0]:
                 break
-            
+
             # move state and pixels one step forward
             state = next_state
             pixels = next_pixels
@@ -333,23 +347,29 @@ def train_deepcnn_model(cnn_model, model_name, adversary_models, frame_skip=4,
         # episode reward, and mean score/reward over last {mean_window} episodes
         training_losses.append(np.mean(update_losses))
         training_rewards.append(ep_reward)
-        training_scores.append(cnn_agent.max_mass - cnn_agent.starting_mass)        # subtract starting mass to get accurate count of maximum growth even with random init mass
+        # subtract starting mass to get accurate count of maximum growth even with random init mass
+        training_scores.append(cnn_agent.max_mass - cnn_agent.starting_mass)
         training_steps_survived.append(cnn_agent.steps_taken)
 
         print('Ep Score: {:.4f} | Mean Score: {:.4f} | Steps Survived: {:d} | Mean Steps Survived: {:.2f}'.format(
-            cnn_agent.max_mass - cnn_agent.starting_mass, np.mean(training_scores[-mean_window:]),
+            cnn_agent.max_mass -
+            cnn_agent.starting_mass, np.mean(training_scores[-mean_window:]),
             cnn_agent.steps_taken, np.mean(training_steps_survived[-mean_window:])))
         print('Mean Ep Loss: {:.4f} | Ep Reward: {:.4f} | Mean Reward: {:.4f}'.format(
             np.mean(update_losses), ep_reward, np.mean(training_scores[-mean_window:])))
-        print('Model has been training for {:.4f} minutes.'.format((utils.current_milli_time() - start_time) / 60000))
-    
+        print('Model has been training for {:.4f} minutes.'.format(
+            (utils.current_milli_time() - start_time) / 60000))
 
     # save the full model!
     fs.save_deep_cnn_to_disk(cnn_model, model_name)
 
     # plot training loss, training score, reward, and steps survived
-    plot_episode_avg_train_loss(training_losses, model_name, plot_mean=True, window_size=mean_window)
-    plot_episode_rewards(training_rewards, model_name, plot_mean=True, window_size=mean_window)
-    plot_episode_scores(training_scores, model_name, plot_mean=True, window_size=mean_window)
-    plot_episode_steps_survived(training_steps_survived, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_avg_train_loss(
+        training_losses, model_name, plot_mean=True, window_size=mean_window)
+    plot_episode_rewards(training_rewards, model_name,
+                         plot_mean=True, window_size=mean_window)
+    plot_episode_scores(training_scores, model_name,
+                        plot_mean=True, window_size=mean_window)
+    plot_episode_steps_survived(
+        training_steps_survived, model_name, plot_mean=True, window_size=mean_window)
     plt.show()

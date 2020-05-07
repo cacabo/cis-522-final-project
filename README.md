@@ -19,6 +19,8 @@ We compared the models to better understand the impact that encoding biases into
 ```
 .
 ├── model_utils/                 Code shared by models
+|   ├── train_utils.py           Shared functions by the two training scripts
+|   ├── fs_utils.py              Helper functions for saving
 |   └── ReplayBuffer.py          Replay buffer datastructure
 |
 ├── models/                      Agar.io models
@@ -34,6 +36,10 @@ We compared the models to better understand the impact that encoding biases into
 |
 ├── store/
 |   └── nets/                    Nets generated over the course of training
+|       ├── food_trained_cnn.pt                        CNN-based RL agent for only food
+|       ├── food_trained_drl.pt                        FC-based RL (DRL) agent for only food
+|       ├── full_food_pretrained_trained_cnn.pt        CNN-based RL agent for enemies (pretrained from food_trained_cnn)
+|       └── full_from_scratch_trained_cnn.pt           CNN-based RL agent for enemies (trained from scratch)
 |
 ├── __test-encoded-state__.py    Tests that RL agent state encoding works as expected
 ├── __test-fsutils__.py          Tests that saving and loading net params works as expected
@@ -45,13 +51,11 @@ We compared the models to better understand the impact that encoding biases into
 ├── config.py                    Set of constants used throughout the repo
 ├── evaluate.py                  Plots performance of set of models
 ├── food.py                      Food object
-├── fsutils.py                   Helper functions for saving
 ├── gamestate.py                 Implementation of headless game state
 ├── mass.py                      Mass pellet object
 ├── test.py                      Run trained model on GUI
 ├── train_cnn.py                 Train CNN model
 ├── train_drl.py                 Train RL model
-├── trainutil.py                 Shared functions by the two training scripts
 ├── utils.py                     Helper functions for dealing with object interactions
 ├── virus.py                     Virus object
 |
@@ -72,7 +76,8 @@ You need python3 (and pip3) installed to run our project.
 
 To install dependencies, run:
 
-```bash
+```
+bash
 pip3 install -r requirements.txt
 ```
 
@@ -82,22 +87,61 @@ Pygame does not always install correctly on MacOS Mojave and more recent. Even i
 
 #### Running locally
 
+To play the game, run:
+
+```bash
+python3 agario.py
+```
+
+To modify the enemies, modify the `ai_models` variable in `agario.py`.
+
+<br />
+
 To train the DRL model, run:
+
 ```bash
 python3 train_drl.py
 ```
 
 To train the CNN-based model, run:
+
 ```bash
 python3 train_cnn.py
 ```
 
+<br />
+
+To run the game with a specific model as the main player, first select a model you wish to run. The name description of each model can be found in the file tree above in the `store/nets` directory. Once selected, run:
+
+```bash
+python3 test.py [drl | cnn] [model_name]
+```
+
+For example, to run `food_trained_cnn.pt`, run:
+
+```bash
+python3 test.py cnn food_trained_cnn
+```
+
 #### Running on AWS SageMaker
-To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter. 
+
+To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter.
 
 Once open, create a new notebook and be sure to install dependencies. Finally, simply import the train file for the model you wish to train.
 
 Note that GUIs will not appear in SageMaker.
+
+---
+
+### Demo
+
+DRL agent eating food:
+
+![DRL](demo/drl-food.gif)
+
+CNN agent eating food:
+
+![CNN](demo/cnn-food.gif)
 
 ---
 

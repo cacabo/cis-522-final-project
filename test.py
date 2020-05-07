@@ -32,13 +32,15 @@ def test(model_type, model_name):
     elif model_type == CNN:
         agarai_model = DeepCNNModel(
             tau=TAU, gamma=GAMMA, eps_start=EPS_START, eps_end=EPS_END,
-            eps_decay_factor=get_epsilon_decay_factor(EPS_START, EPS_END, EPS_DECAY_WINDOW),
+            eps_decay_factor=get_epsilon_decay_factor(
+                EPS_START, EPS_END, EPS_DECAY_WINDOW),
             replay_buf_capacity=REPLAY_BUF_CAPACITY, replay_buf_prefill_amt=REPLAY_BUF_PREFILL_AMT,
             lr=LR, downsample_size=DOWNSAMPLE_SIZE, batch_size=BATCH_SIZE)
         agarai_model.net = fs.load_net_from_disk(agarai_model.net, model_name)
         agarai_model.net.eval()
     else:
-        raise ValueError('Invalid model type, please use one of \'cnn\' or \'drl\'')
+        raise ValueError(
+            'Invalid model type, please use one of \'cnn\' or \'drl\'')
 
     agarai_model.eval = True
     main_model = ('AgarAI', agarai_model)
@@ -52,8 +54,9 @@ def test(model_type, model_name):
         ('Random1', rand_model_1),
         ('Random2', rand_model_2),
         ('Random3', rand_model_3),
-        ('Heur1', heur_model_1),
-        ('Heur2', heur_model_2)]
+        # ('Heur1', heur_model_1),
+        # ('Heur2', heur_model_2),
+    ]
     start_ai_only_game(main_model, other_models)
 
 
