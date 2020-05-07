@@ -34,8 +34,6 @@ We compared the models to better understand the impact that encoding biases into
 |
 ├── store/
 |   └── nets/                    Nets generated over the course of training
-|       ├── important/           Best performing nets
-|       └── *                    Nets generated over the course of training
 |
 ├── __test-encoded-state__.py    Tests that RL agent state encoding works as expected
 ├── __test-fsutils__.py          Tests that saving and loading net params works as expected
@@ -52,7 +50,7 @@ We compared the models to better understand the impact that encoding biases into
 ├── mass.py                      Mass pellet object
 ├── test.py                      Run trained model on GUI
 ├── train_cnn.py                 Train CNN model
-├── train.py                     Train RL model
+├── train_drl.py                 Train RL model
 ├── trainutil.py                 Shared functions by the two training scripts
 ├── utils.py                     Helper functions for dealing with object interactions
 ├── virus.py                     Virus object
@@ -80,19 +78,26 @@ pip3 install -r requirements.txt
 
 If you have errors along the lines of `Could not build wheels for ..., since package 'wheel' is not installed.`, run `pip3 install wheel` and then try re-running the install command.
 
-Pygame does not always install correctly on MacOS Mojave and more recent. Even if pip says that the dependency was added, when it comes to actually running a file which imports Pygame it may not actually perform as expected (i.e. you won't be able to see the GUI for the game). To get around this, you can follow [this SO post](https://stackoverflow.com/questions/52718921/problems-getting-pygame-to-show-anything-but-a-blank-screen-on-macos-mojave) to install Pygame from source.
+TODO pygame especially
 
 #### Running locally
 
-TODO
+To train the DRL model, run:
+```bash
+python3 train_drl.py
+```
+
+To train the CNN-based model, run:
+```bash
+python3 train_cnn.py
+```
 
 #### Running on AWS SageMaker
-
-To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter.
+To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter. 
 
 Once open, create a new notebook and be sure to install dependencies. Finally, simply import the train file for the model you wish to train.
 
-Note that GUIs will not appear in SageMaker.
+Note - GUIs will not appear in SageMaker.
 
 ---
 
