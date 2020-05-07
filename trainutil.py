@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import fsutils as fs
 
 
+# below are helper functions for plotting
+
 def get_means_over_window(vals, window_size):
     means = []
     for i in range(len(vals)):
@@ -49,23 +51,24 @@ def plot_episode_steps_survived(episode_steps_survived, model_name, plot_mean=Fa
     plot_vals(episode_steps_survived, 'Steps Survived per Training Episode', 'episode', 'steps survived',
               str(model_name) + '_steps_survived_plot.png', plot_mean=plot_mean, mean_window=window_size)
 
-
+# helper function to calculate epsilon decay factor according to starting & finishing epsilon, and how many
+#   episode to decay over
 def get_epsilon_decay_factor(e_max, e_min, e_decay_window):
     return math.exp(math.log(e_min / e_max) / e_decay_window)
 
-
+# helper function used to iterate through all the models and select an action
 def select_model_actions(models, state):
     model_actions = []
     for model in models:
         model_actions.append(model.get_action(state))
     return model_actions
 
-
+# helper function used to iterate through all the models and train them
 def optimize_models(models):
     for model in models:
         model.optimize()
 
-
+# helper function used to iterate through all the models and update their replay buffer
 def update_models_memory(models, state, actions, next_state, rewards, dones):
     for (model, action, reward, done) in zip(models, actions, rewards, dones):
         model.remember(state, action, next_state, reward, done)
@@ -92,8 +95,6 @@ def train_models(
 
     for episode in range(episodes):
         epsilon = 1.0  # Hardcode to 1 until we start decaying when replay buffer is full enough
-
-        # print('=== Starting Episode %s ===' % episode)
 
         # reset the environment to fresh starting state with game agents initialized for models
         episode_rewards = [0 for _ in models]
