@@ -1,10 +1,11 @@
+from gamestate import GameState, start_ai_only_game
+import fsutils as fs
+import sys
+
 from models.DeepRLModel import DeepRLModel
 from models.RandomModel import RandomModel
 from models.HeuristicModel import HeuristicModel
 from models.DeepCNNModel import DeepCNNModel
-from gamestate import GameState, start_ai_only_game
-import fsutils as fs
-import sys
 
 # CNN hyperparams
 TAU = 4
