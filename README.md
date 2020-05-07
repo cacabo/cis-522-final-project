@@ -86,40 +86,62 @@ If you have errors along the lines of `Could not build wheels for ..., since pac
 Pygame does not always install correctly on MacOS Mojave and more recent. Even if pip says that the dependency was added, when it comes to actually running a file which imports Pygame it may not actually perform as expected (i.e. you won't be able to see the GUI for the game). To get around this, you can follow [this SO post](https://stackoverflow.com/questions/52718921/problems-getting-pygame-to-show-anything-but-a-blank-screen-on-macos-mojave) to install Pygame from source.
 
 #### Running locally
+
 To play the game, run:
+
 ```bash
 python3 agario.py
 ```
+
 To modify the enemies, modify the `ai_models` variable in `agario.py`.
 
 <br />
 
 To train the DRL model, run:
+
 ```bash
 python3 train_drl.py
 ```
+
 To train the CNN-based model, run:
+
 ```bash
 python3 train_cnn.py
 ```
+
 <br />
 
 To run the game with a specific model as the main player, first select a model you wish to run. The name description of each model can be found in the file tree above in the `store/nets` directory. Once selected, run:
+
 ```bash
 python3 test.py [drl | cnn] [model_name]
 ```
 
 For example, to run `food_trained_cnn.pt`, run:
+
 ```bash
 python3 test.py cnn food_trained_cnn
 ```
 
 #### Running on AWS SageMaker
-To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter. 
+
+To run on AWS Sagemaker, create a notebook instance in the SageMaker console and associate this repository with the notebook. Documentation on how to do this can be found [here](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html). Once your instance has been set up, click open Jupyter.
 
 Once open, create a new notebook and be sure to install dependencies. Finally, simply import the train file for the model you wish to train.
 
 Note that GUIs will not appear in SageMaker.
+
+---
+
+### Demo
+
+DRL agent eating food:
+
+![DRL](demo/drl-food.gif)
+
+CNN agent eating food:
+
+![CNN](demo/cnn-food.gif)
 
 ---
 

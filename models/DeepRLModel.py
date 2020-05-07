@@ -11,7 +11,7 @@ from actions import Action
 import config as conf
 import utils
 
-STATE_ENCODING_LENGTH = 25
+STATE_ENCODING_LENGTH = 9
 # INERTIA_PROB = 0.05
 # NOISE = 0
 # STUCK_BUFFER_SIZE = 20
@@ -274,20 +274,20 @@ def encode_agent_state(model, state):
 
     # Partition all other cells into sets of those larger and smaller than
     # the current agent in aggregate
-    all_larger_agent_cells = []
-    all_smaller_agent_cells = []
-    for cell in all_agent_cells:
-        if cell.mass >= agent_mass:
-            all_larger_agent_cells.append(cell)
-        else:
-            all_smaller_agent_cells.append(cell)
+    # all_larger_agent_cells = []
+    # all_smaller_agent_cells = []
+    # for cell in all_agent_cells:
+    #     if cell.mass >= agent_mass:
+    #         all_larger_agent_cells.append(cell)
+    #     else:
+    #         all_smaller_agent_cells.append(cell)
 
-    # Compute scores for cells for each direction
-    larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
-    smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
+    # # Compute scores for cells for each direction
+    # larger_agent_state = get_direction_scores(agent, all_larger_agent_cells)
+    # smaller_agent_state = get_direction_scores(agent, all_smaller_agent_cells)
 
-    other_agent_state = np.concatenate(
-        (larger_agent_state, smaller_agent_state))
+    # other_agent_state = np.concatenate(
+    #     (larger_agent_state, smaller_agent_state))
     food_state = torch.Tensor(get_direction_scores(agent, foods))
     # food_state = food_state * torch.Tensor(angle_weights)
 
@@ -307,17 +307,17 @@ def encode_agent_state(model, state):
     # Encode important attributes about this agent
     this_agent_state = [
         agent_mass,
-        #     len(agent.cells),
-        #     agent.get_avg_x_pos() / conf.BOARD_WIDTH,
-        #     agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
-        #     agent.get_angle() / 360,
-        #     agent.get_stdev_mass(),
+        # len(agent.cells),
+        # agent.get_avg_x_pos() / conf.BOARD_WIDTH,
+        # agent.get_avg_y_pos() / conf.BOARD_HEIGHT,
+        # agent.get_angle() / 360,
+        # agent.get_stdev_mass(),
     ]
 
     encoded_state = np.concatenate((
         this_agent_state,
         food_state,
-        other_agent_state,
+        # other_agent_state,
         # virus_state,
         # mass_state,
     ))
@@ -329,6 +329,7 @@ class DQN(nn.Module):
     """
     Neural network model for the deep learning agent with fully connected layers
     """
+
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
         self.input_dim = input_dim
@@ -395,7 +396,7 @@ class DeepRLModel(ModelInterface):
             self.model = model
         else:
             self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
-        
+
         # optimizer and loss function
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.loss = torch.nn.MSELoss()

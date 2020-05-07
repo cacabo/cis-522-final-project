@@ -18,14 +18,14 @@ NUM_CHECKPOINTS = 5
 Hyperparameters
 """
 
-START_EPSILON = 1.0 
+START_EPSILON = 1.0
 MIN_EPSILON = 0.02
 DECAY_EPISODE_WINDOW = 200
 
 GAMMA = 0.8
 BATCH_SIZE = 32
 
-REPLAY_BUFFER_LEARN_THRESH = 0.1
+REPLAY_BUFFER_LEARN_THRESH = 0.05
 REPLAY_BUFFER_CAPACITY = 100000
 
 EPISODES = 200
@@ -37,11 +37,12 @@ def train():
     """
     Training loop for training the DeepRLModel
     """
-    print("Running Train | Episodes: {} | Steps: {}".format(EPISODES, STEPS_PER_EPISODE))
+    print("Running Train | Episodes: {} | Steps: {}".format(
+        EPISODES, STEPS_PER_EPISODE))
 
     # Define environment
     env = GameState(with_masses=False, with_viruses=False,
-                    with_random_mass_init=True)
+                    with_random_mass_init=False)
 
     # Define and pass in model parameters
     epsilon_decay = get_epsilon_decay_factor(
@@ -58,10 +59,11 @@ def train():
     )
 
     # define enemy players
-    heuristic_model = HeuristicModel()
-    rand_model_1 = RandomModel(min_steps=5, max_steps=10)
-    rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-    enemies = [heuristic_model, rand_model_1, rand_model_2]
+    # heuristic_model = HeuristicModel()
+    # rand_model_1 = RandomModel(min_steps=5, max_steps=10)
+    # rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+    # enemies = [heuristic_model, rand_model_1, rand_model_2]
+    enemies = []
 
     model_name = "train_drl_with_others_{}".format(random.randint(0, 2 ** 16))
     train_models(
@@ -74,8 +76,9 @@ def train():
         model_name=model_name,
         num_checkpoints=NUM_CHECKPOINTS)
 
-    #save the model
+    # save the model
     fs.save_net_to_disk(deep_rl_model.model, "model_name")
+
 
 if __name__ == "__main__":
     train()
