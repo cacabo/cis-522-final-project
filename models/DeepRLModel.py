@@ -326,6 +326,9 @@ def encode_agent_state(model, state):
 
 
 class DQN(nn.Module):
+    """
+    Neural network model for the deep learning agent with fully connected layers
+    """
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
         self.input_dim = input_dim
@@ -349,13 +352,29 @@ class DQN(nn.Module):
 
 
 class DeepRLModel(ModelInterface):
+    """
+    Model agent class that contains the deep learning network, as well as performs actions,
+    remembers state for the model, and executes the training.
+
+    Params:
+        epsilon: starting epsilon for epsilon greedy action (with probability epsilon does random action)
+        min_epsilon: smallest epsilon for the agent
+        epsilon_decay: the decay factor for epsilon
+        buffer_capacity: how large the replay memory is
+        gamma: discount factor
+        batch_size: batch size for training
+        replay_buffer_learn_thresh: threshold for how full the replay buffer should be before starting training
+        lr: learning rate for optimizer
+        model: if inserting pretrained model
+    """
+
     def __init__(
         self,
         epsilon=1,
         min_epsilon=0.01,
         epsilon_decay=0.999,
-        buffer_capacity=1000,
-        gamma=0.9,
+        buffer_capacity=10000,
+        gamma=0.99,
         batch_size=64,
         replay_buffer_learn_thresh=0.5,
         lr=1e-3,
@@ -376,6 +395,8 @@ class DeepRLModel(ModelInterface):
             self.model = model
         else:
             self.model = DQN(STATE_ENCODING_LENGTH, len(Action))
+        
+        # optimizer and loss function
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.loss = torch.nn.MSELoss()
 
@@ -391,12 +412,12 @@ class DeepRLModel(ModelInterface):
         self.target_net.load_state_dict(self.model.state_dict())
         self.target_net.eval()
 
+        # other parameters
         self.epsilon = epsilon
         self.min_epsilon = min_epsilon
         self.epsilon_decay = epsilon_decay
         self.gamma = gamma
         self.batch_size = batch_size
-        self.done = False
 
         self.prev_action = None
 
@@ -452,6 +473,7 @@ class DeepRLModel(ModelInterface):
     #     return prod.item() < 1200
 
     def get_policy_action(self, state):
+        """ returns an action based on policy from state input"""
         with torch.no_grad():
             state = encode_agent_state(self, state)
             state = torch.Tensor(state).to(self.device)
@@ -461,6 +483,7 @@ class DeepRLModel(ModelInterface):
             return action
 
     def get_random_action(self):
+        """ returns a random action"""
         action = Action(np.random.randint(len(Action)))
         return action
 
@@ -515,6 +538,7 @@ class DeepRLModel(ModelInterface):
         self.done = done
 
     def optimize(self):
+        """Training method for agent"""
         if self.done:
             return
 
@@ -534,11 +558,8 @@ class DeepRLModel(ModelInterface):
 
         states = torch.Tensor(states).to(self.device)
         actions = torch.LongTensor(list(actions)).to(self.device)
-
         rewards = torch.Tensor(list(rewards)).to(self.device)
         next_states = torch.Tensor(next_states).to(self.device)
-
-        # what about these/considering terminating states
         dones = torch.Tensor(list(dones)).to(self.device)
 
         # do Q computation
@@ -566,4 +587,5 @@ class DeepRLModel(ModelInterface):
         return self.epsilon
 
     def sync_target_net(self):
+        """Syncs target and policy net"""
         self.target_net.load_state_dict(self.model.state_dict())
