@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 BATCH_SIZE = 32
 
 
-# CNN which takes in the game state as TODO and returns Q-values for each possible action
+# CNN which takes in the game state as stack of frames and returns Q-values for each possible action
 class CNN(nn.Module):
     def __init__(self, tau, downsample_size):
         super(CNN, self).__init__()
