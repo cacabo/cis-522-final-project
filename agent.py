@@ -45,7 +45,6 @@ class AgentCell():
         if self.mass > 0:
             return max(utils.mass_to_velocity(self.mass), 1)
         else:
-            # TODO what is this case for?
             return 1
 
     def add_mass(self, mass_to_add):
@@ -429,8 +428,6 @@ class Agent():
         self.game.add_mass(mass)
 
     def handle_merge(self):
-        # TODO merge with actual sibling cell if possible, not just arbitrary index?
-        # TODO normally this should only happen if the user moves cells near each other
         if len(self.cells) <= 1:
             return
 
