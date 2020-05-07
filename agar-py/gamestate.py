@@ -567,7 +567,6 @@ class GameState():
         running_scores = []
         step = 0
         while running:
-            # print(step)
             clock.tick(conf.CLOCK_TICK)
 
             for agent in self.agents.values():
@@ -575,8 +574,11 @@ class GameState():
 
             self.tick_game_state(None)
             if eval_model_id is not None:
-                running_scores.append(self.agents[eval_model_id].get_mass())
-            # print(encode_agent_state(self.agents[0].model,self.get_state()))
+                if eval_model_id in self.agents:
+                    ag = self.agents[eval_model_id]
+                    running_scores.append(ag.get_mass() - ag.starting_mass)
+                else:
+                    return running_scores
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
@@ -626,9 +628,8 @@ def start_ai_only_game(main_model, other_models, eval_mode=False):
     game.init_ai_agent(model, name=main_name, camera_follow=True)
 
     # initialize all other agents
-    for (name, model) in other_models:
-        game.init_ai_agent(model, name=name)
-
+    for (name, other_model) in other_models:
+        game.init_ai_agent(other_model, name=name)
     scores = game.main_loop(eval_mode=eval_mode, eval_model_id=model.id)
     if scores is not None:
         return scores
