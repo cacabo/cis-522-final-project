@@ -584,18 +584,18 @@ class GameState():
         running_scores = []
         step = 0
         while running:
-            # print(step)
             clock.tick(conf.CLOCK_TICK)
 
             for agent in self.agents.values():
                 self.update_interactive_state(agent)
 
             self.tick_game_state(None)
-
-            if eval_model_id is not None and eval_model_id in self.agents:
-                agent = self.agents[eval_model_id]
-                if agent is not None:
-                    running_scores.append(agent.get_mass())
+            if eval_model_id is not None:
+                if eval_model_id in self.agents:
+                    ag = self.agents[eval_model_id]
+                    running_scores.append(ag.get_mass() - ag.starting_mass)
+                else:
+                    return running_scores
 
             # take in user input and draw/update the game board
             for event in pygame.event.get():
@@ -622,7 +622,7 @@ class GameState():
 # -------------------------------
 # Functions for displaying trained models mid-training
 # -------------------------------
-def start_game(other_models):
+def start_game(other_models, eval_mode=False):
     game = GameState(
         with_viruses=True,
         with_masses=True,
@@ -640,7 +640,7 @@ def start_game(other_models):
         return scores
 
 
-def start_ai_only_game(main_model, other_models):
+def start_ai_only_game(main_model, other_models, eval_mode=False):
     game = GameState(
         with_masses=False,
         with_viruses=False,
@@ -651,9 +651,8 @@ def start_ai_only_game(main_model, other_models):
     game.init_ai_agent(model, name=main_name, camera_follow=True)
 
     # initialize all other agents
-    for (name, model) in other_models:
-        game.init_ai_agent(model, name=name)
-
-    scores = game.main_loop(eval_mode=True, eval_model_id=model.id)
+    for (name, other_model) in other_models:
+        game.init_ai_agent(other_model, name=name)
+    scores = game.main_loop(eval_mode=eval_mode, eval_model_id=model.id)
     if scores is not None:
         return scores
