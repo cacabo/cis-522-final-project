@@ -73,7 +73,8 @@ def update_models_memory(models, state, actions, next_state, rewards, dones):
 
 def train_models(
         env,
-        models,
+        model,
+        enemies,
         episodes=10,
         steps=2500,
         print_every=200,
@@ -81,10 +82,11 @@ def train_models(
         mean_window=10,
         target_update=10,
         num_checkpoints=10):
-    print("\nTRAIN MODE")
+    print("TRAIN MODE")
 
     training_losses = []
     training_rewards = []
+    models = model + [enemies]
 
     model = models[0]
     save_every = int(episodes / num_checkpoints)
@@ -145,8 +147,6 @@ def train_models(
         # for idx, model in enumerate(models):
         #     print("Model %s: %s" % (model.id, episode_rewards[idx]))
 
-        model = models[0]
-
         # decay epsilon
         if model.learning_start:
             epsilon = model.decay_epsilon()
@@ -181,7 +181,7 @@ def train_models(
 
 
 def test_models(env, models, steps=2500, print_every=200):
-    print("\nTEST MODE")
+    print("TEST MODE")
     episode_rewards = [0 for _ in models]
     for m in models:
         m.done = False
@@ -195,8 +195,6 @@ def test_models(env, models, steps=2500, print_every=200):
 
         # environment determines new state, reward, whether terminal, based on actions taken by all models
         rewards, dones = env.update_game_state(models, actions)
-
-        # TODO: update dones for other models, persist (otherwise negative rewards)
 
         next_state = env.get_state()
 
