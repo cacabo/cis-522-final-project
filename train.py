@@ -63,19 +63,19 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     rand_model_1 = RandomModel(min_steps=5, max_steps=10)
     rand_model_2 = RandomModel(min_steps=5, max_steps=10)
 
-    models = [deep_rl_model, heuristic_model, rand_model_1, rand_model_2]
-    # models = [deep_rl_model]
+    enemies = [heuristic_model, rand_model_1, rand_model_2]
 
     train_models(
         env,
-        models,
+        deep_rl_model,
+        enemies,
         episodes=episodes,
         steps=steps,
         print_every=PRINT_EVERY,
         model_name="train_drl_with_others_{}".format(
             random.randint(0, 2 ** 16)),
         num_checkpoints=NUM_CHECKPOINTS)
-    test_models(env, models, steps=steps)
+    test_models(env, deep_rl_model, enemies, steps=steps)
 
     # deep_rl_model.eval = True
     # main_model = ('DeepRL', deep_rl_model)
