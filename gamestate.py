@@ -9,6 +9,7 @@ from virus import Virus
 from agent import Agent
 from camera import Camera
 from models.DeepRLModel import encode_agent_state
+from models.DeepCNNModel import DeepCNNModel
 
 # ------------------------------------------------------------------------------
 # Constants and config
