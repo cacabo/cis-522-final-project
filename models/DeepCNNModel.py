@@ -1,7 +1,6 @@
 from models.ModelInterface import ModelInterface
 from model_utils.ReplayBuffer import ReplayBuffer
 from actions import Action
-from trainutil import get_epsilon_decay_factor
 from utils import get_random_action
 
 from collections import deque
@@ -61,7 +60,7 @@ class CNN(nn.Module):
 
 # tau is the number of frames to stack to create one "state"
 class DeepCNNModel(ModelInterface):
-    def __init__(self, tau=4, gamma=0.95, eps_start=1.0, eps_end=0.05, eps_decay_window=50,
+    def __init__(self, tau=4, gamma=0.95, eps_start=1.0, eps_end=0.05, eps_decay_factor=0.99,
                  replay_buf_capacity=10000, replay_buf_prefill_amt=1000, lr=0.001,
                  downsample_size=(112, 112), batch_size=32, camera_follow=True):
         super(DeepCNNModel, self).__init__()
@@ -72,7 +71,7 @@ class DeepCNNModel(ModelInterface):
         self.gamma = gamma
         self.epsilon = eps_start
         self.end_epsilon = eps_end
-        self.epsilon_decay_fac = get_epsilon_decay_factor(eps_start, eps_end, eps_decay_window)
+        self.epsilon_decay_fac = eps_decay_factor
         self.replay_buffer = ReplayBuffer(replay_buf_capacity, replay_buf_prefill_amt)
 
         self.net = CNN(tau, downsample_size)
