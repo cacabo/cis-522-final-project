@@ -43,6 +43,7 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     env = GameState(with_masses=False, with_viruses=False,
                     with_random_mass_init=True)
 
+    # Define and pass in model parameters
     epsilon_decay = get_epsilon_decay_factor(
         START_EPSILON, MIN_EPSILON, DECAY_EPISODE_WINDOW)
     deep_rl_model = DeepRLModel(
@@ -56,13 +57,10 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
         lr=LEARNING_RATE,
     )
 
-    # deep_rl_model.model = fs.load_net_from_device(
-    #     deep_rl_model.model, "train_drl_54143_200.pt")
-
+    # define enemy players
     heuristic_model = HeuristicModel()
     rand_model_1 = RandomModel(min_steps=5, max_steps=10)
     rand_model_2 = RandomModel(min_steps=5, max_steps=10)
-
     enemies = [heuristic_model, rand_model_1, rand_model_2]
 
     train_models(
@@ -77,11 +75,8 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
         num_checkpoints=NUM_CHECKPOINTS)
     test_models(env, deep_rl_model, enemies, steps=steps)
 
-    # deep_rl_model.eval = True
-    # main_model = ('DeepRL', deep_rl_model)
-    # other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-    # start_ai_only_game(main_model, other_models)
-
+    #save the model
+    fs.save_net_to_disk(deep_rl_model.model, "deep_rl_model")
 
 if __name__ == "__main__":
     num_args = len(sys.argv)
