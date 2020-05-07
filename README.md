@@ -16,7 +16,7 @@ We compared the models to better understand the impact that encoding biases into
 
 ### Repo structure
 
-```
+```text
 .
 ├── model_utils/                 Code shared by models
 |   ├── train_utils.py           Shared functions by the two training scripts
@@ -76,8 +76,7 @@ You need python3 (and pip3) installed to run our project.
 
 To install dependencies, run:
 
-```
-bash
+```bash
 pip3 install -r requirements.txt
 ```
 
