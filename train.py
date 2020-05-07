@@ -11,26 +11,26 @@ import sys
 Constants
 """
 
-PRINT_EVERY = 1000
+PRINT_EVERY = 2000
+NUM_CHECKPOINTS = 5
 
 """
 Hyperparameters
 """
 
 START_EPSILON = 1.0  # NOTE this is the starting value, which decays over time
-MIN_EPSILON = 0.001
-DECAY_EPISODE_WINDOW = 150
+MIN_EPSILON = 0.02
+DECAY_EPISODE_WINDOW = 200
 
-GAMMA = 0.99
-BATCH_SIZE = 128
+GAMMA = 0.8
+BATCH_SIZE = 32
 
 REPLAY_BUFFER_LEARN_THRESH = 0.1
-REPLAY_BUFFER_CAPACITY = 10000
+REPLAY_BUFFER_CAPACITY = 100000
 
 EPISODES = 200
-STEPS_PER_EPISODE = 500
-
-# TODO learning rate
+STEPS_PER_EPISODE = 1000
+LEARNING_RATE = 0.001
 
 
 def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
@@ -40,8 +40,10 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
     print("Running Train | Episodes: {} | Steps: {}".format(episodes, steps))
 
     # Define environment
-    env = GameState()
+    env = GameState(with_masses=False, with_viruses=False,
+                    with_random_mass_init=True)
 
+    # Define and pass in model parameters
     epsilon_decay = get_epsilon_decay_factor(
         START_EPSILON, MIN_EPSILON, DECAY_EPISODE_WINDOW)
     deep_rl_model = DeepRLModel(
@@ -52,27 +54,29 @@ def train(episodes=EPISODES, steps=STEPS_PER_EPISODE):
         replay_buffer_learn_thresh=REPLAY_BUFFER_LEARN_THRESH,
         gamma=GAMMA,
         batch_size=BATCH_SIZE,
+        lr=LEARNING_RATE,
     )
 
-    models = [deep_rl_model]
+    # define enemy players
+    heuristic_model = HeuristicModel()
+    rand_model_1 = RandomModel(min_steps=5, max_steps=10)
+    rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+    enemies = [heuristic_model, rand_model_1, rand_model_2]
 
-    # heuristic_model = HeuristicModel()
-    # rand_model_1 = RandomModel(min_steps=5, max_steps=10)
-    # rand_model_2 = RandomModel(min_steps=5, max_steps=10)
+    train_models(
+        env,
+        deep_rl_model,
+        enemies,
+        episodes=episodes,
+        steps=steps,
+        print_every=PRINT_EVERY,
+        model_name="train_drl_with_others_{}".format(
+            random.randint(0, 2 ** 16)),
+        num_checkpoints=NUM_CHECKPOINTS)
+    test_models(env, deep_rl_model, enemies, steps=steps)
 
-    # models = [deep_rl_model, rand_model_1, rand_model_2]
-
-    train_models(env, models, episodes=episodes,
-                 steps=steps, print_every=PRINT_EVERY)
-    test_models(env, models, steps=steps)
-    fs.save_net_to_disk(deep_rl_model.model,
-                        "deep-rl-temp-{}".format(random.uniform(0, 2 ** 16)))
-
-    # deep_rl_model.eval = True
-    # main_model = ('DeepRL', deep_rl_model)
-    # other_models = [('Random1', rand_model_1), ('Random2', rand_model_2)]
-    # start_ai_only_game(main_model, other_models)
-
+    #save the model
+    fs.save_net_to_disk(deep_rl_model.model, "deep_rl_model")
 
 if __name__ == "__main__":
     num_args = len(sys.argv)

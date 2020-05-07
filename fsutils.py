@@ -4,7 +4,6 @@ import pickle
 from copy import deepcopy
 
 ROOT = './store/'
-DF_PATH = ROOT + 'dfs/'
 NET_PATH = ROOT + 'nets/'
 REPLAY_BUF_PATH = ROOT + 'replay_bufs/'
 
@@ -31,9 +30,12 @@ def save_net_to_disk(net, filename):
     if not os.path.exists(NET_PATH):
         os.mkdir(NET_PATH)
 
+    if not filename.endswith('.pt'):
+        filename = filename + '.pt'
+
     # Set up checkpoint
     checkpoint = {'net': net.state_dict()}
-    torch.save(checkpoint, NET_PATH + filename + '.pt')
+    torch.save(checkpoint, NET_PATH + filename)
 
 
 def load_net_from_disk(net, filename):
@@ -47,8 +49,15 @@ def load_net_from_disk(net, filename):
     return load_net_from_device(net, filename, device)
 
 
-def load_net_from_device(net, filename, device):
-    checkpoint = torch.load(NET_PATH + filename + '.pt', map_location=device)
+def load_net_from_device(net, filename, device=None):
+    if not filename.endswith('.pt'):
+        filename = filename + '.pt'
+
+    if device:
+        checkpoint = torch.load(NET_PATH + filename, map_location=device)
+    else:
+        checkpoint = torch.load(NET_PATH + filename)
+
     net.load_state_dict(checkpoint['net'])
     return net
 
@@ -56,7 +65,7 @@ def load_net_from_device(net, filename, device):
 def save_replay_buf_to_disk(buf, filename):
     if not os.path.exists(REPLAY_BUF_PATH):
         os.mkdir(REPLAY_BUF_PATH)
-    
+
     with open(REPLAY_BUF_PATH + filename + '.dill', 'wb') as f:
         pickle.dump(buf, f)
 
@@ -66,8 +75,3 @@ def load_replay_buf_from_disk(filename):
         return pickle.load(f)
 
 
-def save_df_to_disk(df, fname):
-    if not os.path.exists(DF_PATH):
-        os.mkdir(DF_PATH)
-
-    df.to_csv(DF_PATH + fname + ".csv")

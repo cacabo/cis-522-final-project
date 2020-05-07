@@ -54,7 +54,6 @@ class HeuristicModel(ModelInterface):
         # if no nearest enemy or no consuming relationship, do nothing
         return None
 
-    # TODO: technically only considers the agent as one single cell. Could feasibly reach "unreachable" foods if its multiple cells
     def get_nearest_food_action(self, my_agent, foods):
         my_pos = my_agent.get_avg_pos()
         my_rad = my_agent.get_avg_radius()

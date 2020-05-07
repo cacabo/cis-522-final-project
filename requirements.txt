@@ -1,0 +1,5 @@
+torch
+pygame
+numpy
+matplotlib
+scikit-image
