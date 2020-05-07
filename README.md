@@ -18,9 +18,6 @@ We compared the models to better understand the impact that encoding biases into
 
 ```
 .
-├── .vscode/                     Editor config
-├── __pycache__/                 Cached build files
-|
 ├── model_utils/                 Code shared by models
 |   └── ReplayBuffer.py          Replay buffer datastructure
 |
@@ -46,7 +43,7 @@ We compared the models to better understand the impact that encoding biases into
 |       ├── important/           Best performing nets
 |       └── *                    Nets generated over the course of training
 |
-├── __test-encoded-state__.py    Tests that RL agenet state encoding works as expected
+├── __test-encoded-state__.py    Tests that RL agent state encoding works as expected
 ├── __test-fsutils__.py          Tests that saving and loading net params works as expected
 |
 ├── actions.py                   Set of allowed actions for an agent to take
